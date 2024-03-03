@@ -17,7 +17,7 @@ void VulkanBase::pickPhysicalDevice() {
 
 	for (const auto& device : devices) {
 		if (isDeviceSuitable(device)) {
-			physicalDevice = device;
+			physicalDevice = device;	
 			break;
 		}
 	}
