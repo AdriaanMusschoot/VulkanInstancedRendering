@@ -18,6 +18,7 @@
 #include <limits>
 #include <algorithm>
 
+#include "GP2CommandPool.h"
 #include "GP2Shader.h"
 
 
@@ -74,8 +75,8 @@ private:
 		createGraphicsPipeline();
 		createFrameBuffers();
 		// week 02
-		createCommandPool();
-		createCommandBuffer();
+		m_CommandPool.createCommandPool(device, findQueueFamilies(physicalDevice));
+		commandBuffer = m_CommandPool.createCommandBuffer(device);
 
 		// week 06
 		createSyncObjects();
@@ -94,8 +95,8 @@ private:
 		vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
 		vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
 		vkDestroyFence(device, inFlightFence, nullptr);
-
-		vkDestroyCommandPool(device, commandPool, nullptr);
+		//TODO fix so that this works
+		//vkDestroyCommandPool(device, commandPool, nullptr);
 		for (auto framebuffer : swapChainFramebuffers) {
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
 		}
@@ -132,7 +133,7 @@ private:
 	}
 
 	GP2Shader m_GradientShader{ "shaders/shader.vert.spv", "shaders/shader.frag.spv" };
-
+	CommandPool m_CommandPool{};
 	// Week 01: 
 	// Actual window
 	// simple fragment + vertex shader creation functions
@@ -148,14 +149,13 @@ private:
 	// Queue families
 	// CommandBuffer concept
 
-	VkCommandPool commandPool;
 	VkCommandBuffer commandBuffer;
 
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
 	void drawFrame(uint32_t imageIndex);
-	void createCommandBuffer();
-	void createCommandPool(); 
+	//void createCommandBuffer();
+	//void createCommandPool(); 
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	
 	// Week 03
