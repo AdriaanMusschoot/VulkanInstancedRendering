@@ -2,7 +2,7 @@
 #include <vulkan/vulkan_core.h>
 #include <vector>
 #include <string>
-
+#include <array>
 class GP2Shader
 {
 public:
@@ -28,6 +28,9 @@ private:
     std::string m_FragmentShaderFile;
 
     std::vector<VkPipelineShaderStageCreateInfo> m_ShaderStages;
+
+    VkVertexInputBindingDescription m_VertexInputBindingDescription;
+    std::vector<VkVertexInputAttributeDescription> m_VertexInputAttributeDescriptors;
 
     GP2Shader(const GP2Shader&) = delete;
     GP2Shader& operator=(const GP2Shader&) = delete;

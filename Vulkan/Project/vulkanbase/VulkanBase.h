@@ -17,9 +17,9 @@
 #include <set>
 #include <limits>
 #include <algorithm>
-
 #include "GP2CommandPool.h"
 #include "GP2Shader.h"
+#include "GP2CommandBuffer.h"
 
 
 const std::vector<const char*> validationLayers = {
@@ -75,9 +75,9 @@ private:
 		createGraphicsPipeline();
 		createFrameBuffers();
 		// week 02
-		m_CommandPool.createCommandPool(device, findQueueFamilies(physicalDevice));
-		commandBuffer = m_CommandPool.createCommandBuffer(device);
-
+		m_CommandPool.CreateCommandPool(device, findQueueFamilies(physicalDevice));
+		m_CommandBuffer.SetCommandBuffer(m_CommandPool.CreateCommandBuffer(device));
+		CreateVertexBuffer();
 		// week 06
 		createSyncObjects();
 	}
@@ -92,11 +92,15 @@ private:
 	}
 
 	void cleanup() {
+
 		vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
 		vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
 		vkDestroyFence(device, inFlightFence, nullptr);
-		//TODO fix so that this works
-		//vkDestroyCommandPool(device, commandPool, nullptr);
+		m_CommandPool.DestroyCommandPool(device);
+
+		vkDestroyBuffer(device, vertexBuffer, nullptr);
+		vkFreeMemory(device, vertexBufferMemory, nullptr);
+
 		for (auto framebuffer : swapChainFramebuffers) {
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
 		}
@@ -134,6 +138,7 @@ private:
 
 	GP2Shader m_GradientShader{ "shaders/shader.vert.spv", "shaders/shader.frag.spv" };
 	CommandPool m_CommandPool{};
+	CommandBuffer m_CommandBuffer{};
 	// Week 01: 
 	// Actual window
 	// simple fragment + vertex shader creation functions
@@ -148,20 +153,27 @@ private:
 	// Week 02
 	// Queue families
 	// CommandBuffer concept
-
-	VkCommandBuffer commandBuffer;
-
+	VkBuffer vertexBuffer;
+	VkDeviceMemory vertexBufferMemory;
+	
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-
-	void drawFrame(uint32_t imageIndex);
-	//void createCommandBuffer();
-	//void createCommandPool(); 
+	void CreateVertexBuffer();
+	int FindMemoryTypes(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+	void drawFrame(uint32_t imageIndex, const VkCommandBuffer& commandBuffer);
+	
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	
 	// Week 03
 	// Renderpass concept
 	// Graphics pipeline
 	
+	const std::vector<Vertex> verticesVec =
+	{
+		{ { 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f } },
+		{ { -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } }
+	};
+
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;

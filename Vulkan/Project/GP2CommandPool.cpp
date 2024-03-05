@@ -2,7 +2,7 @@
 
 #include "vulkanbase/VulkanBase.h"
 
-void CommandPool::createCommandPool(const VkDevice& device, const QueueFamilyIndices& queueFamilyIndices)
+void CommandPool::CreateCommandPool(const VkDevice& device, const QueueFamilyIndices& queueFamilyIndices)
 {
 	//move it to the base pass it as parameter
 
@@ -16,7 +16,7 @@ void CommandPool::createCommandPool(const VkDevice& device, const QueueFamilyInd
 	}
 }
 
-VkCommandBuffer CommandPool::createCommandBuffer(const VkDevice& device)
+VkCommandBuffer CommandPool::CreateCommandBuffer(const VkDevice& device)
 {
 	VkCommandBuffer commandBuffer;
 
@@ -30,4 +30,9 @@ VkCommandBuffer CommandPool::createCommandBuffer(const VkDevice& device)
 		throw std::runtime_error("failed to allocate command buffers!");
 	}
 	return commandBuffer;
+}
+
+void CommandPool::DestroyCommandPool(const VkDevice& device)
+{
+	vkDestroyCommandPool(device, m_CommandPool, nullptr);
 }

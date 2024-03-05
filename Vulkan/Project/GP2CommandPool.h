@@ -6,9 +6,9 @@ struct QueueFamilyIndices;
 class CommandPool
 {
 public:
-	//also responsible for creating command buffers (the abstraction I made)
-	void createCommandPool(const VkDevice& device, const QueueFamilyIndices& queueFamilyIndices);
-	VkCommandBuffer  createCommandBuffer(const VkDevice& device);
+	void CreateCommandPool(const VkDevice& device, const QueueFamilyIndices& queueFamilyIndices);
+	VkCommandBuffer  CreateCommandBuffer(const VkDevice& device);
+	void DestroyCommandPool(const VkDevice& device);
 private:
-	VkCommandPool m_CommandPool;
+	VkCommandPool m_CommandPool{};
 };
