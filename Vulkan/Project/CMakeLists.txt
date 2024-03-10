@@ -26,8 +26,6 @@ add_custom_target(
 
 set(SOURCES
     "main.cpp"
-    "vulkanbase/VulkanBase.h" 
-    "vulkanbase/VulkanUtil.h"
     "vulkanbase/VulkanUtil.cpp" 
     # Add other source files here
     "labwork/Week01.cpp"
@@ -36,15 +34,14 @@ set(SOURCES
     "labwork/Week04.cpp" 
     "labwork/Week05.cpp"
     "labwork/Week06.cpp"
-    "GP2Shader.h" 
     "GP2Shader.cpp"
-    "GP2CommandPool.h" 
     "GP2CommandPool.cpp" 
-    "GP2CommandBuffer.h" 
-    "GP2CommandBuffer.cpp")
+    "GP2CommandBuffer.cpp"
+    "GP2GraphicsPipeline.cpp"
+    "GP2Mesh.cpp")
 
 # Create the executable
-add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES} "GP2GraphicsPipeline.h" "vulkanbase/GP2GraphicsPipeline.cpp")
+add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})
 add_dependencies(${PROJECT_NAME} Shaders)
 # Link libraries
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

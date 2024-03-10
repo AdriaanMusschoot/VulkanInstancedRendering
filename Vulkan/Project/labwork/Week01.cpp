@@ -8,7 +8,3 @@ void VulkanBase::initWindow() {
 
 	window = glfwCreateWindow(WIDTH, HEIGHT, "Not Vulkan", nullptr, nullptr);
 }
-
-void VulkanBase::drawScene() {
-	vkCmdDraw(m_CommandBuffer.GetCommandBuffer(), 6, 1, 0, 0);
-}

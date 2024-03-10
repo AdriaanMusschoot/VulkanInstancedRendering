@@ -1,21 +1,26 @@
 #pragma once
 #include "vulkanbase/VulkanUtil.h"
 
-class CommandBuffer
+namespace amu
 {
-public:
-	//TODO make the command buffer owned by the commandpool maybe
-	void SetCommandBuffer(const VkCommandBuffer& cmdBuffer)
-	{
-		m_CommandBuffer = cmdBuffer;
-	}
-	const VkCommandBuffer& GetCommandBuffer() const
-	{
-		return m_CommandBuffer;
-	}
 
-	void BeginCommandBuffer();
-	void EndCommandBuffer();
-private:
-	VkCommandBuffer m_CommandBuffer;
-};
+	class CommandBuffer
+	{
+	public:
+		//TODO make the command buffer owned by the commandpool maybe
+		void SetCommandBuffer(const VkCommandBuffer& cmdBuffer)
+		{
+			m_CommandBuffer = cmdBuffer;
+		}
+		const VkCommandBuffer& GetCommandBuffer() const
+		{
+			return m_CommandBuffer;
+		}
+	
+		void BeginCommandBuffer();
+		void EndCommandBuffer();
+	private:
+		VkCommandBuffer m_CommandBuffer;
+	};
+
+}

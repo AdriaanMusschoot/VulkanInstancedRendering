@@ -2,9 +2,10 @@
 
 #include "vulkanbase/VulkanBase.h"
 
-void CommandPool::CreateCommandPool(const VkDevice& device, const QueueFamilyIndices& queueFamilyIndices)
+void amu::CommandPool::CreateCommandPool(const VkDevice& device, const QueueFamilyIndices& queueFamilyIndices)
 {
 	//move it to the base pass it as parameter
+	m_Device = device;
 
 	VkCommandPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -16,7 +17,7 @@ void CommandPool::CreateCommandPool(const VkDevice& device, const QueueFamilyInd
 	}
 }
 
-VkCommandBuffer CommandPool::CreateCommandBuffer(const VkDevice& device)
+VkCommandBuffer amu::CommandPool::CreateCommandBuffer()
 {
 	VkCommandBuffer commandBuffer;
 
@@ -26,13 +27,13 @@ VkCommandBuffer CommandPool::CreateCommandBuffer(const VkDevice& device)
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	allocInfo.commandBufferCount = 1;
 
-	if (vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer) != VK_SUCCESS) {
+	if (vkAllocateCommandBuffers(m_Device, &allocInfo, &commandBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("failed to allocate command buffers!");
 	}
 	return commandBuffer;
 }
 
-void CommandPool::DestroyCommandPool(const VkDevice& device)
+void amu::CommandPool::DestroyCommandPool()
 {
-	vkDestroyCommandPool(device, m_CommandPool, nullptr);
+	vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
 }

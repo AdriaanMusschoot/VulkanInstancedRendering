@@ -1,6 +1,6 @@
 #include "GP2CommandBuffer.h"
 
-void CommandBuffer::BeginCommandBuffer()
+void amu::CommandBuffer::BeginCommandBuffer()
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -12,7 +12,7 @@ void CommandBuffer::BeginCommandBuffer()
 	}
 }
 
-void CommandBuffer::EndCommandBuffer()
+void amu::CommandBuffer::EndCommandBuffer()
 {
 	if (vkEndCommandBuffer(m_CommandBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("failed to record command buffer!");

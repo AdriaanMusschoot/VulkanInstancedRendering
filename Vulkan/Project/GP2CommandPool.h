@@ -2,13 +2,19 @@
 #include "vulkanbase/VulkanUtil.h"
 
 struct QueueFamilyIndices;
-
-class CommandPool
+namespace amu
 {
-public:
-	void CreateCommandPool(const VkDevice& device, const QueueFamilyIndices& queueFamilyIndices);
-	VkCommandBuffer  CreateCommandBuffer(const VkDevice& device);
-	void DestroyCommandPool(const VkDevice& device);
-private:
-	VkCommandPool m_CommandPool{};
-};
+
+	class CommandPool
+	{
+	public:
+		void CreateCommandPool(const VkDevice& device, const QueueFamilyIndices& queueFamilyIndices);
+		VkCommandBuffer  CreateCommandBuffer();
+		void DestroyCommandPool();
+	private:
+		VkCommandPool m_CommandPool{};
+		//TODO add device make it so that you dont need the device in all the other functions
+		VkDevice m_Device{};
+	};
+
+}
