@@ -1,13 +1,23 @@
 #pragma once
 #include "vulkanbase/VulkanUtil.h"
+#include "GP2Shader.h"
 
-class GraphicsPipeline
+namespace amu
 {
-public:
-	void BeginRenderPass(const VkCommandBuffer& commandBuffer);
-	void SetViewPort(const VkCommandBuffer& commandBuffer);
-	void SetScissor(const VkCommandBuffer& commandBuffer);
-	void EndRenderPass(const VkCommandBuffer& commandBuffer);
-private:
-	VkPipeline m_GraphicsPipeline;
-};
+
+	class GraphicsPipeline
+	{
+	public:
+		void CreateGraphicsPipeline(VkDevice device, Shader& shader, VkRenderPass renderPass);
+		void DrawFrame(const VkCommandBuffer& commandBuffer, VkExtent2D swapchainExtent);
+		void Destroy();
+		//Main thin that should be configurable is the shaders u use in the pipeline
+		//You could make one massive struct render context to pass to here
+	private:
+		VkPipeline m_GraphicsPipeline;
+		VkPipelineLayout m_PipelineLayout;
+
+		VkDevice m_Device;
+	};
+
+}

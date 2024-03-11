@@ -21,6 +21,9 @@
 #include "GP2Shader.h"
 #include "GP2CommandBuffer.h"
 #include "GP2Mesh.h"
+#include "GP2GraphicsPipeline.h"
+#include "GP2RenderPass.h"
+
 
 
 const std::vector<const char*> validationLayers = {
@@ -72,13 +75,12 @@ private:
 
 		// week 03
 		m_GradientShader.Initialize(device);
-		createRenderPass();
-		createGraphicsPipeline();
+		m_RenderPass.CreateRenderPass(device, swapChainImageFormat);
 		createFrameBuffers();
+		m_Pipeline.CreateGraphicsPipeline(device, m_GradientShader, m_RenderPass.GetRenderPass());
 		// week 02
 		m_CommandPool.CreateCommandPool(device, findQueueFamilies(physicalDevice));
 		m_CommandBuffer.SetCommandBuffer(m_CommandPool.CreateCommandBuffer());
-
 		CreateCircle();
 		CreateTriangle();
 
@@ -101,17 +103,15 @@ private:
 		vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
 		vkDestroyFence(device, inFlightFence, nullptr);
 
-		m_CommandPool.DestroyCommandPool();
+		m_CommandPool.Destroy();
 		m_CircleMesh.Destroy();
 		m_TriangleMesh.Destroy();
-
+		m_Pipeline.Destroy();
+		m_RenderPass.Destroy();
 		for (auto framebuffer : swapChainFramebuffers) {
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
 		}
 
-		vkDestroyPipeline(device, graphicsPipeline, nullptr);
-		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-		vkDestroyRenderPass(device, renderPass, nullptr);
 
 		for (auto imageView : swapChainImageViews) {
 			vkDestroyImageView(device, imageView, nullptr);
@@ -186,6 +186,8 @@ private:
 	amu::CommandBuffer m_CommandBuffer{};
 	amu::Mesh m_CircleMesh{};
 	amu::Mesh m_TriangleMesh{};
+	amu::GraphicsPipeline m_Pipeline{};
+	amu::RenderPass m_RenderPass{};
 	// Week 01: 
 	// Actual window
 	// simple fragment + vertex shader creation functions
@@ -214,11 +216,8 @@ private:
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;
-	VkRenderPass renderPass;
 
 	void createFrameBuffers();
-	void createRenderPass();
-	void createGraphicsPipeline();
 
 	// Week 04
 	// Swap chain and image view support

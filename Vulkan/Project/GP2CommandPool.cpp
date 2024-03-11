@@ -33,7 +33,7 @@ VkCommandBuffer amu::CommandPool::CreateCommandBuffer()
 	return commandBuffer;
 }
 
-void amu::CommandPool::DestroyCommandPool()
+void amu::CommandPool::Destroy()
 {
 	vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
 }
