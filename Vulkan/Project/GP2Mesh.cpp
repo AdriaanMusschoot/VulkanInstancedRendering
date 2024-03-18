@@ -7,19 +7,64 @@ void amu::Mesh::Initialize(VkPhysicalDevice physicalDevice, VkDevice device)
 	m_Device = device;
 }
 
-void amu::Mesh::InitializeVertexBuffers()
+void amu::Mesh::InitializeVertexBuffers(VkQueue graphicsQueue, CommandPool& commandPool)
 {
 	VkDeviceSize bufferSize = sizeof(m_VertexVec[0]) * m_VertexVec.size();
-	CreateBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		m_VertexBuffer, m_VertexBufferMemory);
+	
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
+	CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+	stagingBuffer, stagingBufferMemory);
+	
+	 void* data;
+	vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	 memcpy(data, m_VertexVec.data(), (size_t)bufferSize);
+	 vkUnmapMemory(m_Device, stagingBufferMemory);
+	
+	CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			m_VertexBuffer, m_VertexBufferMemory);
 
-	void* data;
-	vkMapMemory(m_Device, m_VertexBufferMemory, 0, bufferSize, 0, &data);
-	memcpy(data, m_VertexVec.data(), (size_t)bufferSize);
-	vkUnmapMemory(m_Device, m_VertexBufferMemory);
+	CopyBuffer(stagingBuffer, m_VertexBuffer, bufferSize, graphicsQueue, commandPool);
+
+	vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
+	vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
 }
 
+void amu::Mesh::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkQueue graphicsQueue, CommandPool& commandPool) 
+{
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = commandPool.GetCommandPool();
+	allocInfo.commandBufferCount = 1;
+	
+	 VkCommandBuffer commandBuffer;
+	vkAllocateCommandBuffers(m_Device, &allocInfo, &commandBuffer);
+	
+	VkCommandBufferBeginInfo beginInfo{};
+	 beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	 beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	
+	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+	
+	VkBufferCopy copyRegion{};
+	copyRegion.size = size;
+	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+	
+	vkEndCommandBuffer(commandBuffer);
+	
+	VkSubmitInfo submitInfo{};
+	 submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	 submitInfo.commandBufferCount = 1;
+	 submitInfo.pCommandBuffers = &commandBuffer;
+	
+	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+	 vkQueueWaitIdle(graphicsQueue);
+	
+	vkFreeCommandBuffers(m_Device, commandPool.GetCommandPool(), 1, &commandBuffer);	
+}
 
 
 void amu::Mesh::Draw(const VkCommandBuffer& commandBuffer) const

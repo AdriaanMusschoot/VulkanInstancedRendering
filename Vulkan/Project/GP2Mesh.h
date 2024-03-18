@@ -2,7 +2,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "vulkan/vulkan.h"
-
+#include "GP2CommandPool.h"
 namespace amu
 {
 
@@ -45,15 +45,14 @@ namespace amu
 		};
 	
 		void Initialize(VkPhysicalDevice physicalDevice, VkDevice device);
-		void InitializeVertexBuffers();
+		void InitializeVertexBuffers(VkQueue graphicsQueue, CommandPool& commandPool);
 		void Draw(const VkCommandBuffer& commandBuffer) const;
 		
 		void Destroy();
 
 		void AddVertex(Vertex&& vertex);
 
-		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-		
+
 		VkBuffer m_StagingBuffer;
 		VkDeviceMemory m_StagingBufferMemory;
 		
@@ -66,6 +65,8 @@ namespace amu
 		VkPhysicalDevice m_PhysicalDevice;
 
 		int FindMemoryTypes(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkQueue graphicsQueue, CommandPool & commandPool);
 	};
 
 }

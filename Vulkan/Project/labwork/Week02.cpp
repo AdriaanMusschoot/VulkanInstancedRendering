@@ -16,7 +16,8 @@ void VulkanBase::CreateTriangle()
 	temp.AddVertex({ { -0.5f, 0.5f },{ 0.0f, 0.0f, 1.0f } });
 
 	temp.Initialize(physicalDevice, device);
-	temp.InitializeVertexBuffers();
+	temp.InitializeVertexBuffers(graphicsQueue, m_CommandPool);
+
 	m_Scene.AddMesh(std::move(temp));
 }
 
