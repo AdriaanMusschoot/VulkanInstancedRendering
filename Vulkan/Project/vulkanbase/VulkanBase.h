@@ -23,7 +23,7 @@
 #include "GP2Mesh.h"
 #include "GP2GraphicsPipeline.h"
 #include "GP2RenderPass.h"
-
+#include "GP2Scene.h"
 
 
 const std::vector<const char*> validationLayers = {
@@ -81,9 +81,9 @@ private:
 		// week 02
 		m_CommandPool.CreateCommandPool(device, findQueueFamilies(physicalDevice));
 		m_CommandBuffer.SetCommandBuffer(m_CommandPool.CreateCommandBuffer());
-		CreateCircle();
+		
+		m_Scene.CreateScene(physicalDevice, device);
 		CreateTriangle();
-
 		// week 06
 		createSyncObjects();
 	}
@@ -104,15 +104,14 @@ private:
 		vkDestroyFence(device, inFlightFence, nullptr);
 
 		m_CommandPool.Destroy();
-		m_CircleMesh.Destroy();
-		m_TriangleMesh.Destroy();
+		//TODO destroy the scene
 		m_Pipeline.Destroy();
 		m_RenderPass.Destroy();
 		for (auto framebuffer : swapChainFramebuffers) {
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
 		}
 
-
+		m_Scene.Destroy();
 		for (auto imageView : swapChainImageViews) {
 			vkDestroyImageView(device, imageView, nullptr);
 		}
@@ -130,51 +129,6 @@ private:
 		glfwTerminate();
 	}
 
-	void CreateCircle()
-	{
-		constexpr double radius{ 0.7 };
-		constexpr int nrOfPoints{ 20000 };
-		std::vector<amu::Mesh::Vertex> temp;
-		for (int idx{ 0 }; idx < nrOfPoints; ++idx)
-		{
-			double theta = 2.0 * 3.14 * idx / nrOfPoints;
-			amu::Mesh::Vertex vert{};
-			vert.pos.x = radius * std::cos(theta);
-			vert.pos.y = radius * std::sin(theta);
-
-			const float hue = static_cast<float>(idx) / static_cast<float>(nrOfPoints);
-			vert.color = glm::vec3(glm::abs(glm::cos(hue * 3.14 * 2.0f)), glm::abs(glm::sin(hue * 3.14 * 2.0f)), 0.5f);
-			temp.emplace_back(std::move(vert));
-		}
-
-		for (int idx{ 0 }; idx < temp.size(); ++idx)
-		{
-			if (idx < temp.size() - 1)
-			{
-				m_CircleMesh.AddVertex(std::move(temp[idx + 1]));
-				m_CircleMesh.AddVertex(amu::Mesh::Vertex{ glm::vec2{ 0, 0 }, glm::vec3{ 1, 1, 1 } });
-				m_CircleMesh.AddVertex(std::move(temp[idx]));
-			}
-			else
-			{
-				m_CircleMesh.AddVertex(std::move(temp[0]));
-				m_CircleMesh.AddVertex(amu::Mesh::Vertex{ glm::vec2{ 0, 0 }, glm::vec3{ 1, 1, 1 } });
-				m_CircleMesh.AddVertex(std::move(temp[idx]));
-			}
-		}
-
-		m_CircleMesh.Initialize(physicalDevice, device);
-	}
-
-	void CreateTriangle()
-	{
-		m_TriangleMesh.AddVertex({ { 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f } });
-		m_TriangleMesh.AddVertex({ { 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f } });
-		m_TriangleMesh.AddVertex({ { -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } });
-
-		m_TriangleMesh.Initialize(physicalDevice, device);
-	}
-
 	void createSurface() {
 		if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create window surface!");
@@ -184,10 +138,9 @@ private:
 	amu::Shader m_GradientShader{ "shaders/shader.vert.spv", "shaders/shader.frag.spv" };
 	amu::CommandPool m_CommandPool{};
 	amu::CommandBuffer m_CommandBuffer{};
-	amu::Mesh m_CircleMesh{};
-	amu::Mesh m_TriangleMesh{};
 	amu::GraphicsPipeline m_Pipeline{};
 	amu::RenderPass m_RenderPass{};
+	amu::Scene m_Scene{};
 	// Week 01: 
 	// Actual window
 	// simple fragment + vertex shader creation functions
@@ -200,8 +153,6 @@ private:
 	// Week 02
 	// Queue families
 	// CommandBuffer concept
-	VkBuffer vertexBuffer;
-	VkDeviceMemory vertexBufferMemory;
 	
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
@@ -212,6 +163,8 @@ private:
 	// Week 03
 	// Renderpass concept
 	// Graphics pipeline
+	void CreateTriangle();
+
 
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 	VkPipelineLayout pipelineLayout;

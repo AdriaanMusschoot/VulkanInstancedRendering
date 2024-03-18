@@ -38,10 +38,12 @@ set(SOURCES
     "GP2CommandPool.cpp" 
     "GP2CommandBuffer.cpp"
     "GP2GraphicsPipeline.cpp"
-    "GP2Mesh.cpp")
+    "GP2Mesh.cpp"
+    "GP2RenderPass.cpp"
+    "GP2Scene.cpp")
 
 # Create the executable
-add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES} "GP2RenderPass.h" "Gp2RenderPass.cpp")
+add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})
 add_dependencies(${PROJECT_NAME} Shaders)
 # Link libraries
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

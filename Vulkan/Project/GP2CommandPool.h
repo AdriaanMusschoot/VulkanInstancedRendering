@@ -10,6 +10,7 @@ namespace amu
 	public:
 		void CreateCommandPool(const VkDevice& device, const QueueFamilyIndices& queueFamilyIndices);
 		VkCommandBuffer  CreateCommandBuffer();
+		const VkCommandPool& GetCommandPool();	
 		void Destroy();
 	private:
 		VkCommandPool m_CommandPool{};

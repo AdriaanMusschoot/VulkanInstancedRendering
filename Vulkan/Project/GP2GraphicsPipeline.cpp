@@ -83,7 +83,7 @@ void amu::GraphicsPipeline::CreateGraphicsPipeline(VkDevice device, Shader& shad
 
 	shader.DestroyShaderModules();
 }
-void amu::GraphicsPipeline::DrawFrame(const VkCommandBuffer& commandBuffer, VkExtent2D swapchainExtent)
+void amu::GraphicsPipeline::BindPipeline(const VkCommandBuffer& commandBuffer, VkExtent2D swapchainExtent)
 {
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
 

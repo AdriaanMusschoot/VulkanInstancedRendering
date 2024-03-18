@@ -50,6 +50,11 @@ void amu::RenderPass::BeginRenderPass(VkCommandBuffer commandBuffer, VkExtent2D 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
+void amu::RenderPass::EndRenderPass(VkCommandBuffer commandBuffer)
+{
+	vkCmdEndRenderPass(commandBuffer);
+}
+
 void amu::RenderPass::Destroy()
 {
 	vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);

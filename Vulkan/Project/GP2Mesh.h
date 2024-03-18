@@ -45,18 +45,23 @@ namespace amu
 		};
 	
 		void Initialize(VkPhysicalDevice physicalDevice, VkDevice device);
-	
+		void InitializeVertexBuffers();
 		void Draw(const VkCommandBuffer& commandBuffer) const;
 		
 		void Destroy();
 
 		void AddVertex(Vertex&& vertex);
-	private:
-		std::vector<Vertex> m_VertexVec
-		{};
+
+		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 		
-		VkBuffer m_Buffer;
-		VkDeviceMemory m_BufferMemory;
+		VkBuffer m_StagingBuffer;
+		VkDeviceMemory m_StagingBufferMemory;
+		
+	private:
+		std::vector<Vertex> m_VertexVec{};
+
+		VkBuffer m_VertexBuffer;
+		VkDeviceMemory m_VertexBufferMemory;
 		VkDevice m_Device;
 		VkPhysicalDevice m_PhysicalDevice;
 

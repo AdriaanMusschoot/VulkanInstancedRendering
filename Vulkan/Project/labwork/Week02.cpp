@@ -8,16 +8,27 @@ void VulkanBase::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 	m_CommandBuffer.EndCommandBuffer();
 }
 
+void VulkanBase::CreateTriangle()
+{
+	amu::Mesh temp{};
+	temp.AddVertex({ { 0.0f, -0.5f },{ 1.0f, 0.0f, 0.0f } });
+	temp.AddVertex({ { 0.5f, 0.5f },{ 0.0f, 1.0f, 0.0f } });
+	temp.AddVertex({ { -0.5f, 0.5f },{ 0.0f, 0.0f, 1.0f } });
+
+	temp.Initialize(physicalDevice, device);
+	temp.InitializeVertexBuffers();
+	m_Scene.AddMesh(std::move(temp));
+}
+
 void VulkanBase::drawFrame(uint32_t imageIndex, const VkCommandBuffer& commandBuffer) 
 {
 	m_RenderPass.BeginRenderPass(commandBuffer, swapChainExtent, swapChainFramebuffers, imageIndex);
 	
-	m_Pipeline.DrawFrame(commandBuffer, swapChainExtent);
+	m_Pipeline.BindPipeline(commandBuffer, swapChainExtent);
 
-	m_CircleMesh.Draw(commandBuffer);
-	m_TriangleMesh.Draw(commandBuffer);
+	m_Scene.Render(commandBuffer);
 
-	vkCmdEndRenderPass(commandBuffer);
+	m_RenderPass.EndRenderPass(commandBuffer);
 }
 
 //goes in utils, maybe
