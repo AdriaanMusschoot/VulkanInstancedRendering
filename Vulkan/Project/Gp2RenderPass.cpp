@@ -12,7 +12,7 @@ void amu::RenderPass::CreateRenderPass(VkDevice device, VkFormat swapChainImageF
 	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
+	
 	VkAttachmentReference colorAttachmentRef{};
 	colorAttachmentRef.attachment = 0;
 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -29,7 +29,7 @@ void amu::RenderPass::CreateRenderPass(VkDevice device, VkFormat swapChainImageF
 	renderPassInfo.subpassCount = 1;
 	renderPassInfo.pSubpasses = &subpass;
 
-	if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &m_RenderPass) != VK_SUCCESS) {
+	if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &m_VkRenderPass) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create render pass!");
 	}
 }
@@ -38,7 +38,7 @@ void amu::RenderPass::BeginRenderPass(VkCommandBuffer commandBuffer, VkExtent2D 
 {
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = m_RenderPass;
+	renderPassInfo.renderPass = m_VkRenderPass;
 	renderPassInfo.framebuffer = frameBuffers[idx];
 	renderPassInfo.renderArea.offset = { 0, 0 };
 	renderPassInfo.renderArea.extent = swapChainExtent;
@@ -57,5 +57,5 @@ void amu::RenderPass::EndRenderPass(VkCommandBuffer commandBuffer)
 
 void amu::RenderPass::Destroy()
 {
-	vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
+	vkDestroyRenderPass(m_Device, m_VkRenderPass, nullptr);
 }
