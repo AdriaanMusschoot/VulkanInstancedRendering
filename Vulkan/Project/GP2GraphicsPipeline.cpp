@@ -2,7 +2,7 @@
 
 void amu::GraphicsPipeline::CreateGraphicsPipeline(VkDevice device, Shader& shader, VkRenderPass renderPass)
 {
-	m_Device = device;
+	m_VkDevice = device;
 	
 	VkPipelineViewportStateCreateInfo viewportState{};
 	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -53,7 +53,7 @@ void amu::GraphicsPipeline::CreateGraphicsPipeline(VkDevice device, Shader& shad
 	pipelineLayoutInfo.setLayoutCount = 0;
 	pipelineLayoutInfo.pushConstantRangeCount = 0;
 
-	if (vkCreatePipelineLayout(m_Device, &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) {
+	if (vkCreatePipelineLayout(m_VkDevice, &pipelineLayoutInfo, nullptr, &m_VkPipelineLayout) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create pipeline layout!");
 	}
 
@@ -72,12 +72,12 @@ void amu::GraphicsPipeline::CreateGraphicsPipeline(VkDevice device, Shader& shad
 	pipelineInfo.pMultisampleState = &multisampling;
 	pipelineInfo.pColorBlendState = &colorBlending;
 	pipelineInfo.pDynamicState = &dynamicState;
-	pipelineInfo.layout = m_PipelineLayout;
+	pipelineInfo.layout = m_VkPipelineLayout;
 	pipelineInfo.renderPass = renderPass;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 #pragma endregion
-	if (vkCreateGraphicsPipelines(m_Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_GraphicsPipeline) != VK_SUCCESS) {
+	if (vkCreateGraphicsPipelines(m_VkDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_VkGraphicsPipeline) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create graphics pipeline!");
 	}
 
@@ -85,7 +85,7 @@ void amu::GraphicsPipeline::CreateGraphicsPipeline(VkDevice device, Shader& shad
 }
 void amu::GraphicsPipeline::BindPipeline(const VkCommandBuffer& commandBuffer, VkExtent2D swapchainExtent)
 {
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkGraphicsPipeline);
 
 	//todo the vertex buffer is now in the mesh fix it
 
@@ -105,8 +105,8 @@ void amu::GraphicsPipeline::BindPipeline(const VkCommandBuffer& commandBuffer, V
 }
 void amu::GraphicsPipeline::Destroy()
 {
-	vkDestroyPipeline(m_Device, m_GraphicsPipeline, nullptr);
-	vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
+	vkDestroyPipeline(m_VkDevice, m_VkGraphicsPipeline, nullptr);
+	vkDestroyPipelineLayout(m_VkDevice, m_VkPipelineLayout, nullptr);
 }
 //
 //void amu::GraphicsPipeline::BeginRenderPass(const VkCommandBuffer& commandBuffer)

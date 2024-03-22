@@ -51,18 +51,14 @@ namespace amu
 		void Destroy();
 
 		void AddVertex(Vertex&& vertex);
-
-
-		VkBuffer m_StagingBuffer;
-		VkDeviceMemory m_StagingBufferMemory;
 		
 	private:
 		std::vector<Vertex> m_VertexVec{};
 
-		VkBuffer m_VertexBuffer;
-		VkDeviceMemory m_VertexBufferMemory;
-		VkDevice m_Device;
-		VkPhysicalDevice m_PhysicalDevice;
+		VkBuffer m_VkVertexBuffer;
+		VkDeviceMemory m_VkVertexBufferMemory;
+		VkDevice m_VkDevice;
+		VkPhysicalDevice m_VkPhysicalDevice;
 
 		int FindMemoryTypes(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);

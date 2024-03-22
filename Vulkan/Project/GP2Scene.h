@@ -16,7 +16,7 @@ namespace amu
 	private:
 		std::vector<Mesh> m_MeshVec;
 
-		VkPhysicalDevice m_PhysicalDevice;
-		VkDevice m_Device;
+		VkPhysicalDevice m_VkPhysicalDevice;
+		VkDevice m_VkDevice;
 	};
 }

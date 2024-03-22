@@ -7,14 +7,14 @@ void amu::CommandBuffer::BeginCommandBuffer()
 	beginInfo.flags = 0; // Optional
 	beginInfo.pInheritanceInfo = nullptr; // Optional
 
-	if (vkBeginCommandBuffer(m_CommandBuffer, &beginInfo) != VK_SUCCESS) {
+	if (vkBeginCommandBuffer(m_VkCommandBuffer, &beginInfo) != VK_SUCCESS) {
 		throw std::runtime_error("failed to begin recording command buffer!");
 	}
 }
 
 void amu::CommandBuffer::EndCommandBuffer()
 {
-	if (vkEndCommandBuffer(m_CommandBuffer) != VK_SUCCESS) {
+	if (vkEndCommandBuffer(m_VkCommandBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("failed to record command buffer!");
 	}
 }

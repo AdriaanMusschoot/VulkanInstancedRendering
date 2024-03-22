@@ -3,8 +3,8 @@
 
 void amu::Mesh::Initialize(VkPhysicalDevice physicalDevice, VkDevice device)
 {	
-	m_PhysicalDevice = physicalDevice;
-	m_Device = device;
+	m_VkPhysicalDevice = physicalDevice;
+	m_VkDevice = device;
 }
 
 void amu::Mesh::InitializeVertexBuffers(VkQueue graphicsQueue, CommandPool& commandPool)
@@ -18,18 +18,18 @@ void amu::Mesh::InitializeVertexBuffers(VkQueue graphicsQueue, CommandPool& comm
 	stagingBuffer, stagingBufferMemory);
 	
 	 void* data;
-	vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	vkMapMemory(m_VkDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
 	 memcpy(data, m_VertexVec.data(), (size_t)bufferSize);
-	 vkUnmapMemory(m_Device, stagingBufferMemory);
+	 vkUnmapMemory(m_VkDevice, stagingBufferMemory);
 	
 	CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT |
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-			m_VertexBuffer, m_VertexBufferMemory);
+			m_VkVertexBuffer, m_VkVertexBufferMemory);
 
-	CopyBuffer(stagingBuffer, m_VertexBuffer, bufferSize, graphicsQueue, commandPool);
+	CopyBuffer(stagingBuffer, m_VkVertexBuffer, bufferSize, graphicsQueue, commandPool);
 
-	vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
-	vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
+	vkDestroyBuffer(m_VkDevice, stagingBuffer, nullptr);
+	vkFreeMemory(m_VkDevice, stagingBufferMemory, nullptr);
 }
 
 void amu::Mesh::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkQueue graphicsQueue, CommandPool& commandPool) 
@@ -41,7 +41,7 @@ void amu::Mesh::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize 
 	allocInfo.commandBufferCount = 1;
 	
 	 VkCommandBuffer commandBuffer;
-	vkAllocateCommandBuffers(m_Device, &allocInfo, &commandBuffer);
+	vkAllocateCommandBuffers(m_VkDevice, &allocInfo, &commandBuffer);
 	
 	VkCommandBufferBeginInfo beginInfo{};
 	 beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -63,13 +63,13 @@ void amu::Mesh::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize 
 	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 	 vkQueueWaitIdle(graphicsQueue);
 	
-	vkFreeCommandBuffers(m_Device, commandPool.GetCommandPool(), 1, &commandBuffer);	
+	vkFreeCommandBuffers(m_VkDevice, commandPool.GetCommandPool(), 1, &commandBuffer);	
 }
 
 
 void amu::Mesh::Draw(const VkCommandBuffer& commandBuffer) const
 {
-	VkBuffer vertexBuffers[] = { m_VertexBuffer };
+	VkBuffer vertexBuffers[] = { m_VkVertexBuffer };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 	vkCmdDraw(commandBuffer, m_VertexVec.size(), 1, 0, 0);
@@ -77,8 +77,8 @@ void amu::Mesh::Draw(const VkCommandBuffer& commandBuffer) const
 
 void amu::Mesh::Destroy()
 {
-	vkDestroyBuffer(m_Device, m_VertexBuffer, nullptr);
-	vkFreeMemory(m_Device, m_VertexBufferMemory, nullptr);
+	vkDestroyBuffer(m_VkDevice, m_VkVertexBuffer, nullptr);
+	vkFreeMemory(m_VkDevice, m_VkVertexBufferMemory, nullptr);
 }
 
 void amu::Mesh::AddVertex(Vertex&& vertex)
@@ -94,29 +94,29 @@ void amu::Mesh::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemo
 		bufferInfo.usage = usage;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		if (vkCreateBuffer(m_Device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+		if (vkCreateBuffer(m_VkDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create buffer!");
 		}
 
 		VkMemoryRequirements memRequirements;
-		vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
+		vkGetBufferMemoryRequirements(m_VkDevice, buffer, &memRequirements);
 
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = FindMemoryTypes(memRequirements.memoryTypeBits, properties);
 
-		if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+		if (vkAllocateMemory(m_VkDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
 			throw std::runtime_error("failed to allocate buffer memory!");
 		}
 
-		vkBindBufferMemory(m_Device, buffer, bufferMemory, 0);
+		vkBindBufferMemory(m_VkDevice, buffer, bufferMemory, 0);
 }
 
 int amu::Mesh::FindMemoryTypes(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {	
 	VkPhysicalDeviceMemoryProperties memProperties;
-	vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memProperties);
+	vkGetPhysicalDeviceMemoryProperties(m_VkPhysicalDevice, &memProperties);
 
 	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
 		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {

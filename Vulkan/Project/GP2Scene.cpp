@@ -2,8 +2,8 @@
 
 void amu::Scene::CreateScene(VkPhysicalDevice physicalDevice, VkDevice device)
 {
-	m_PhysicalDevice = physicalDevice;
-	m_Device = device;
+	m_VkPhysicalDevice = physicalDevice;
+	m_VkDevice = device;
 }
 
 void amu::Scene::Render(VkCommandBuffer commandBuffer)

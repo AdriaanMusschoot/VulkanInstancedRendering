@@ -16,7 +16,7 @@ namespace amu
 	private:
 		VkRenderPass m_VkRenderPass;
 	
-		VkDevice m_Device;
+		VkDevice m_VkDevice;
 	};
 
 }

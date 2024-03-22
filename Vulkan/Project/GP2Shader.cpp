@@ -4,7 +4,7 @@
 
 void amu::Shader::Initialize(const VkDevice& vkDevice)
 {
-	m_Device = vkDevice;
+	m_VkDevice = vkDevice;
 	m_ShaderStages.push_back(CreateVertexShaderInfo());
 	m_ShaderStages.push_back(CreateFragmentShaderInfo());
 }
@@ -13,7 +13,7 @@ void amu::Shader::DestroyShaderModules()
 {
 	for (const auto& shaderStageInfo : m_ShaderStages)
 	{
-		vkDestroyShaderModule(m_Device, shaderStageInfo.module, nullptr);
+		vkDestroyShaderModule(m_VkDevice, shaderStageInfo.module, nullptr);
 	}
 	m_ShaderStages.clear();
 }
@@ -74,7 +74,7 @@ VkShaderModule amu::Shader::CreateShaderModule(const std::vector<char>& code) {
 	createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
 	VkShaderModule shaderModule;
-	if (vkCreateShaderModule(m_Device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+	if (vkCreateShaderModule(m_VkDevice, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create shader module!");
 	}
 

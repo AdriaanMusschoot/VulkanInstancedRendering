@@ -2,7 +2,7 @@
 
 void amu::RenderPass::CreateRenderPass(VkDevice device, VkFormat swapChainImageFormat)
 {
-	m_Device = device;
+	m_VkDevice = device;
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.format = swapChainImageFormat;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -57,5 +57,5 @@ void amu::RenderPass::EndRenderPass(VkCommandBuffer commandBuffer)
 
 void amu::RenderPass::Destroy()
 {
-	vkDestroyRenderPass(m_Device, m_VkRenderPass, nullptr);
+	vkDestroyRenderPass(m_VkDevice, m_VkRenderPass, nullptr);
 }

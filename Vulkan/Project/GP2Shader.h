@@ -26,7 +26,7 @@ namespace amu
         VkPipelineInputAssemblyStateCreateInfo CreateInputAssemblyStateInfo();
         VkShaderModule CreateShaderModule(const std::vector<char>& code);
     private:
-        VkDevice m_Device;
+        VkDevice m_VkDevice;
         std::string m_VertexShaderFile;
         std::string m_FragmentShaderFile;
     
