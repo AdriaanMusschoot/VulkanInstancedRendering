@@ -4,6 +4,7 @@
 
 namespace amu
 {
+
 	class Scene
 	{
 	public:
@@ -19,4 +20,5 @@ namespace amu
 		VkPhysicalDevice m_VkPhysicalDevice;
 		VkDevice m_VkDevice;
 	};
+
 }

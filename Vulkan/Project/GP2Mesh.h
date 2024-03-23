@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include "vulkan/vulkan.h"
 #include "GP2CommandPool.h"
+#include "GP2DataBuffer.h"
+
 namespace amu
 {
 
@@ -44,25 +46,22 @@ namespace amu
 			}
 		};
 	
-		void Initialize(VkPhysicalDevice physicalDevice, VkDevice device);
 		void InitializeVertexBuffers(VkQueue graphicsQueue, CommandPool& commandPool);
 		void Draw(const VkCommandBuffer& commandBuffer) const;
 		
-		void Destroy();
+		Mesh(VkPhysicalDevice physicalDevice, VkDevice device);
 
 		void AddVertex(Vertex&& vertex);
-		
+		void AddIndex(int&& index);
 	private:
 		std::vector<Vertex> m_VertexVec{};
+		std::vector<uint16_t> m_IndexVec{};
 
-		VkBuffer m_VkVertexBuffer;
-		VkDeviceMemory m_VkVertexBufferMemory;
+		std::unique_ptr<DataBuffer> m_VertexBuffer;
+		std::unique_ptr<DataBuffer> m_IndexBuffer;
+
 		VkDevice m_VkDevice;
 		VkPhysicalDevice m_VkPhysicalDevice;
-
-		int FindMemoryTypes(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkQueue graphicsQueue, CommandPool & commandPool);
 	};
 
 }

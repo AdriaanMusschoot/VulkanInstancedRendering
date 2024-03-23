@@ -99,19 +99,19 @@ private:
 
 	void cleanup() {
 
+		m_CommandPool.Destroy();
+		m_Pipeline.Destroy();
+		m_RenderPass.Destroy();
+		m_Scene.Destroy();
+
 		vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
 		vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
 		vkDestroyFence(device, inFlightFence, nullptr);
 
-		m_CommandPool.Destroy();
-		//TODO destroy the scene
-		m_Pipeline.Destroy();
-		m_RenderPass.Destroy();
 		for (auto framebuffer : swapChainFramebuffers) {
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
 		}
 
-		m_Scene.Destroy();
 		for (auto imageView : swapChainImageViews) {
 			vkDestroyImageView(device, imageView, nullptr);
 		}

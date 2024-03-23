@@ -21,8 +21,5 @@ void amu::Scene::AddMesh(Mesh&& mesh)
 
 void amu::Scene::Destroy()
 {
-	for (auto& mesh : m_MeshVec)
-	{
-		mesh.Destroy();
-	}
+	m_MeshVec.clear();
 }

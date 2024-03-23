@@ -40,7 +40,8 @@ set(SOURCES
     "GP2GraphicsPipeline.cpp"
     "GP2Mesh.cpp"
     "GP2RenderPass.cpp"
-    "GP2Scene.cpp")
+    "GP2Scene.cpp"
+    "GP2DataBuffer.cpp")
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})

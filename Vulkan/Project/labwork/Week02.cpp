@@ -10,12 +10,19 @@ void VulkanBase::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 
 void VulkanBase::CreateTriangle()
 {
-	amu::Mesh temp{};
-	temp.AddVertex({ { 0.0f, -0.5f },{ 1.0f, 0.0f, 0.0f } });
-	temp.AddVertex({ { 0.5f, 0.5f },{ 0.0f, 1.0f, 0.0f } });
-	temp.AddVertex({ { -0.5f, 0.5f },{ 0.0f, 0.0f, 1.0f } });
+	amu::Mesh temp{ physicalDevice, device };
+	temp.AddVertex({ { -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f } });
+	temp.AddVertex({ { 0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f } });
+	temp.AddVertex({ { 0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } });
+	temp.AddVertex({ { -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f } });
 
-	temp.Initialize(physicalDevice, device);
+	temp.AddIndex(uint16_t(0));
+	temp.AddIndex(uint16_t(1));
+	temp.AddIndex(uint16_t(2));
+	temp.AddIndex(uint16_t(2));
+	temp.AddIndex(uint16_t(3));
+	temp.AddIndex(uint16_t(0));
+
 	temp.InitializeVertexBuffers(graphicsQueue, m_CommandPool);
 
 	m_Scene.AddMesh(std::move(temp));
