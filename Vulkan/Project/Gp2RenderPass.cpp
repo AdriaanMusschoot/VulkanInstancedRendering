@@ -34,12 +34,12 @@ void amu::RenderPass::CreateRenderPass(VkDevice device, VkFormat swapChainImageF
 	}
 }
 
-void amu::RenderPass::BeginRenderPass(VkCommandBuffer commandBuffer, VkExtent2D swapChainExtent, const std::vector<VkFramebuffer>& frameBuffers, uint32_t idx)
+void amu::RenderPass::BeginRenderPass(VkCommandBuffer commandBuffer, VkExtent2D swapChainExtent, VkFramebuffer frameBuffer)
 {
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = m_VkRenderPass;
-	renderPassInfo.framebuffer = frameBuffers[idx];
+	renderPassInfo.framebuffer = frameBuffer;
 	renderPassInfo.renderArea.offset = { 0, 0 };
 	renderPassInfo.renderArea.extent = swapChainExtent;
 

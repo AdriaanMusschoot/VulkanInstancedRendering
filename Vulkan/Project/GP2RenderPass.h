@@ -8,7 +8,7 @@ namespace amu
 	{
 	public:
 		void CreateRenderPass(VkDevice device, VkFormat swapChainImageFormat);
-		void BeginRenderPass(VkCommandBuffer commandBuffer, VkExtent2D swapchainExtent, const std::vector<VkFramebuffer> & frameBuffers, uint32_t idx);
+		void BeginRenderPass(VkCommandBuffer commandBuffer, VkExtent2D swapchainExtent, VkFramebuffer frameBuffer);
 		void EndRenderPass(VkCommandBuffer commandBuffer);
 		VkRenderPass GetRenderPass() const { return m_VkRenderPass; }
 

@@ -135,12 +135,12 @@ private:
 		}
 	}
 
-	amu::Shader m_GradientShader{ "shaders/shader.vert.spv", "shaders/shader.frag.spv" };
+	amu::Shader<Vertex> m_GradientShader{ "shaders/shader.vert.spv", "shaders/shader.frag.spv" };
 	amu::CommandPool m_CommandPool{};
 	amu::CommandBuffer m_CommandBuffer{};
-	amu::GraphicsPipeline m_Pipeline{};
+	amu::GraphicsPipeline<Vertex> m_Pipeline{};
 	amu::RenderPass m_RenderPass{};
-	amu::Scene m_Scene{};
+	amu::Scene<Vertex> m_Scene{};
 	// Week 01: 
 	// Actual window
 	// simple fragment + vertex shader creation functions
@@ -156,8 +156,6 @@ private:
 	
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
-	void drawFrame(uint32_t imageIndex, const VkCommandBuffer& commandBuffer);
-	
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	
 	// Week 03

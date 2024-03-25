@@ -4,18 +4,34 @@
 
 namespace amu
 {
-
+	template<VertexConcept VS>
 	class Scene
 	{
 	public:
-		void CreateScene(VkPhysicalDevice physicalDevice, VkDevice device);
+		void CreateScene(VkPhysicalDevice physicalDevice, VkDevice device)
+		{
+			m_VkPhysicalDevice = physicalDevice;
+			m_VkDevice = device;
+		}
 
-		void Render(VkCommandBuffer commandBuffer);
-		void AddMesh(Mesh&& mesh);
+		void Render(VkCommandBuffer commandBuffer)
+		{
+			for (const auto& mesh : m_MeshVec)
+			{
+				mesh.Draw(commandBuffer);
+			}
+		}
+		void AddMesh(Mesh<VS>&& mesh)
+		{
+			m_MeshVec.emplace_back(std::move(mesh));
+		}
 
-		void Destroy();
+		void Destroy()
+		{
+			m_MeshVec.clear();
+		}
 	private:
-		std::vector<Mesh> m_MeshVec;
+		std::vector<Mesh<VS>> m_MeshVec;
 
 		VkPhysicalDevice m_VkPhysicalDevice;
 		VkDevice m_VkDevice;

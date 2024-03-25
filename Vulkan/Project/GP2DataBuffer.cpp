@@ -67,7 +67,8 @@ void amu::DataBuffer::CreateBuffer(VkBufferUsageFlags usage, VkMemoryPropertyFla
 	allocInfo.allocationSize = memRequirements.size;
 	allocInfo.memoryTypeIndex = FindMemoryTypes(memRequirements.memoryTypeBits, properties);
 
-	if (vkAllocateMemory(m_VkDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+	if (vkAllocateMemory(m_VkDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) 
+	{
 		throw std::runtime_error("failed to allocate buffer memory!");
 	}
 

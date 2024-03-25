@@ -3,18 +3,24 @@
 void VulkanBase::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
 	m_CommandBuffer.BeginCommandBuffer();
 
-	drawFrame(imageIndex, m_CommandBuffer.GetCommandBuffer());
+	m_RenderPass.BeginRenderPass(commandBuffer, swapChainExtent, swapChainFramebuffers[imageIndex]);
+
+	m_Pipeline.BindPipeline(commandBuffer, swapChainExtent);
+
+	m_Scene.Render(commandBuffer);
+
+	m_RenderPass.EndRenderPass(commandBuffer);
 
 	m_CommandBuffer.EndCommandBuffer();
 }
 
 void VulkanBase::CreateTriangle()
 {
-	amu::Mesh temp{ physicalDevice, device };
-	temp.AddVertex({ { -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f } });
-	temp.AddVertex({ { 0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f } });
-	temp.AddVertex({ { 0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } });
-	temp.AddVertex({ { -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f } });
+	amu::Mesh<Vertex> temp{ physicalDevice, device };
+	temp.AddVertex(Vertex{ { -0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f } });
+	temp.AddVertex(Vertex{ { 0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f } });
+	temp.AddVertex(Vertex{ { 0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } });
+	temp.AddVertex(Vertex{ { -0.5f, 0.5f }, { 1.0f, 1.0f, 1.0f } });
 
 	temp.AddIndex(uint16_t(0));
 	temp.AddIndex(uint16_t(1));
@@ -26,17 +32,6 @@ void VulkanBase::CreateTriangle()
 	temp.InitializeVertexBuffers(graphicsQueue, m_CommandPool);
 
 	m_Scene.AddMesh(std::move(temp));
-}
-
-void VulkanBase::drawFrame(uint32_t imageIndex, const VkCommandBuffer& commandBuffer) 
-{
-	m_RenderPass.BeginRenderPass(commandBuffer, swapChainExtent, swapChainFramebuffers, imageIndex);
-	
-	m_Pipeline.BindPipeline(commandBuffer, swapChainExtent);
-
-	m_Scene.Render(commandBuffer);
-
-	m_RenderPass.EndRenderPass(commandBuffer);
 }
 
 //goes in utils, maybe
