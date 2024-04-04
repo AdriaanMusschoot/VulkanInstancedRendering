@@ -60,7 +60,7 @@ namespace amu
 			pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 			pipelineLayoutInfo.setLayoutCount = 0;
 			pipelineLayoutInfo.pushConstantRangeCount = 0;
-
+			
 			if (vkCreatePipelineLayout(m_VkDevice, &pipelineLayoutInfo, nullptr, &m_VkPipelineLayout) != VK_SUCCESS) {
 				throw std::runtime_error("failed to create pipeline layout!");
 			}

@@ -72,3 +72,10 @@ struct Vertex
 		return attributeDescriptions;
 	}
 };
+
+struct UniformBufferObject
+{
+	glm::vec4 model;
+	glm::vec4 view;
+	glm::vec4 projection;
+};

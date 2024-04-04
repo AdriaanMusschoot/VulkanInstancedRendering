@@ -22,6 +22,7 @@ namespace amu
             m_VkDevice = vkDevice;
             m_ShaderStages.push_back(CreateVertexShaderInfo());
             m_ShaderStages.push_back(CreateFragmentShaderInfo());
+            //m_UBOBuffer = std::make_unique<DataBuffer>()
         }
 
         void DestroyShaderModules()
@@ -106,6 +107,11 @@ namespace amu
     
         VkPipelineInputAssemblyStateCreateInfo m_InputAssembly{};
         VkPipelineVertexInputStateCreateInfo m_VertexInputInfo{};
+
+        VkDescriptorSetLayout m_DescriptorSetLayout;
+        std::unique_ptr<DataBuffer> m_UBOBuffer;
+        UniformBufferObject m_UBOSource;
+
 
         Shader(const Shader&) = delete;
         Shader& operator=(const Shader&) = delete;
