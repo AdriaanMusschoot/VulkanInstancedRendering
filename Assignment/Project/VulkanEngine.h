@@ -1,7 +1,7 @@
 #ifndef VULKAN_ENGINE_H
 #define VULKAN_ENGINE_H
-#include <GLFW/glfw3.h>
 #include "Configuration.h"
+#include <GLFW/glfw3.h>
 
 class VulkanEngine final
 {
@@ -27,8 +27,12 @@ private:
 	vk::Instance m_Instance{ nullptr };
 	vk::DebugUtilsMessengerEXT m_DebugMessenger{ nullptr };
 	vk::DispatchLoaderDynamic m_DLDInstance;
+	vk::SurfaceKHR m_Surface;
 
 	vk::PhysicalDevice m_PhysicalDevice{ nullptr };
+	vk::Device m_Device{ nullptr };
+	vk::Queue m_GraphicsQueue{ nullptr };
+	vk::Queue m_PresentQueue{ nullptr };
 
 	void CreateGLFWWindow();
 	void CreateInstance();

@@ -3,6 +3,8 @@
 #include <vulkan/vulkan.hpp>
 #include <iostream>
 #include <vector>
+#include <set>
+#include <array>
 #include <memory>
-
+#include <optional>
 #endif

@@ -1,5 +1,4 @@
 #include "VulkanEngine.h"
-#include <iostream>
 #include "Instance.h"
 #include "Logging.h"
 #include "Device.h"
@@ -23,12 +22,15 @@ VulkanEngine::~VulkanEngine()
 		std::cout << "The engine died out\n";
 	}
 
+	m_Device.destroy();
+
+	m_Instance.destroySurfaceKHR(m_Surface);
 	if (m_IsDebugging)
 	{
 		m_Instance.destroyDebugUtilsMessengerEXT(m_DebugMessenger, nullptr, m_DLDInstance);
 	}
-
 	m_Instance.destroy();
+
 	glfwTerminate();
 }
 
@@ -43,7 +45,7 @@ void VulkanEngine::CreateGLFWWindow()
 	{
 		if (m_IsDebugging)
 		{
-			std::cout << "Window creation succesfull\n";
+			std::cout << "Window creation successful\n";
 		}
 	}
 	else
@@ -65,9 +67,30 @@ void VulkanEngine::CreateInstance()
 	{
 		m_DebugMessenger = vkInit::CreateDebugMessenger(m_Instance, m_DLDInstance);
 	}
+
+	VkSurfaceKHR oldStyleSurface;
+	if (glfwCreateWindowSurface(m_Instance, m_WindowPtr, nullptr, &oldStyleSurface) != VK_SUCCESS)
+	{
+		if (m_IsDebugging)
+		{
+			std::cout << "Window surface creation failure\n";
+		}
+	}
+	else if (m_IsDebugging)
+	{
+		std::cout << "Window surface creation successful\n";
+	}
+	//copy constructor that takes old surface for the new surface
+	m_Surface = oldStyleSurface;
 }
 
 void VulkanEngine::CreateDevice()
 {
 	m_PhysicalDevice = vkInit::ChoosePhysicalDevice(m_Instance, m_IsDebugging);
+
+	m_Device = vkInit::CreateLogicalDevice(m_PhysicalDevice, m_Surface, m_IsDebugging);
+
+	std::array<vk::Queue, 2> queues = vkInit::GetQueuesFromGPU(m_PhysicalDevice, m_Device, m_Surface, m_IsDebugging);
+	m_GraphicsQueue = queues[0];
+	m_PresentQueue = queues[1];
 }
