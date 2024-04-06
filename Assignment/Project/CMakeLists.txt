@@ -24,9 +24,9 @@ add_custom_target(
 )
 
 
-set(SOURCES "main.cpp"
-    "VulkanEngine.cpp"
-    "Instance.h" "Logging.h" "Device.h")
+set(SOURCES 
+    "main.cpp" "VulkanEngine.cpp"
+    "Instance.h" "Logging.h" "Device.h" "Swapchain.h" "QueueFamilies.h" "Frame.h" "Shader.h" "Pipeline.h")
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})

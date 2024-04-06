@@ -2,8 +2,10 @@
 #include "Instance.h"
 #include "Logging.h"
 #include "Device.h"
+#include "Swapchain.h"
+#include "Pipeline.h"
 
-VulkanEngine::VulkanEngine()
+ave::VulkanEngine::VulkanEngine()
 {
 	if (m_IsDebugging)
 	{
@@ -13,15 +15,16 @@ VulkanEngine::VulkanEngine()
 	CreateGLFWWindow();
 	CreateInstance();
 	CreateDevice();
+	CreatePipeline();
 }
 
-VulkanEngine::~VulkanEngine()
+ave::VulkanEngine::~VulkanEngine()
 {
-	if (m_IsDebugging)
+	for (auto& frame : m_SwapchainFrameVec)
 	{
-		std::cout << "The engine died out\n";
+		m_Device.destroyImageView(frame.ImageView);
 	}
-
+	m_Device.destroySwapchainKHR(m_Swapchain);
 	m_Device.destroy();
 
 	m_Instance.destroySurfaceKHR(m_Surface);
@@ -32,9 +35,14 @@ VulkanEngine::~VulkanEngine()
 	m_Instance.destroy();
 
 	glfwTerminate();
+
+	if (m_IsDebugging)
+	{
+		std::cout << "The engine died out\n";
+	}
 }
 
-void VulkanEngine::CreateGLFWWindow()
+void ave::VulkanEngine::CreateGLFWWindow()
 {
 	glfwInit();
 
@@ -57,7 +65,7 @@ void VulkanEngine::CreateGLFWWindow()
 	}
 }
 
-void VulkanEngine::CreateInstance()
+void ave::VulkanEngine::CreateInstance()
 {
 	m_Instance = vkInit::CreateInstance(m_IsDebugging, m_WindowName);
 
@@ -84,7 +92,7 @@ void VulkanEngine::CreateInstance()
 	m_Surface = oldStyleSurface;
 }
 
-void VulkanEngine::CreateDevice()
+void ave::VulkanEngine::CreateDevice()
 {
 	m_PhysicalDevice = vkInit::ChoosePhysicalDevice(m_Instance, m_IsDebugging);
 
@@ -93,4 +101,19 @@ void VulkanEngine::CreateDevice()
 	std::array<vk::Queue, 2> queues = vkInit::GetQueuesFromGPU(m_PhysicalDevice, m_Device, m_Surface, m_IsDebugging);
 	m_GraphicsQueue = queues[0];
 	m_PresentQueue = queues[1];
+
+	vkInit::SwapchainBundle tempBunlde = vkInit::CreateSwapchain(m_PhysicalDevice, m_Device, m_Surface, m_Width, m_Height, m_IsDebugging);
+	m_Swapchain = tempBunlde.Swapchain;
+	m_SwapchainFrameVec = tempBunlde.FrameVec;
+	m_SwapchainExtent = tempBunlde.Extent;
+	m_SwapchainFormat = tempBunlde.Format;
+}
+
+void ave::VulkanEngine::CreatePipeline()
+{
+	vkInit::GraphicsPipelineInBundle specification{};
+	specification.Device = m_Device;
+	specification.VertexFilePath = "shaders/shader.vert";
+
+	vkInit::GraphicsPipelineOutBundle out{ vkInit::CreateGraphicsPipeline(specification, m_IsDebugging) };
 }

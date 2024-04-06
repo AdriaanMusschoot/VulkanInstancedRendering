@@ -3,7 +3,7 @@
 
 int main() 
 {
-	std::unique_ptr vulkanEngineUPtr{ std::make_unique<VulkanEngine>() };
+	std::unique_ptr vulkanEngineUPtr{ std::make_unique<ave::VulkanEngine>() };
 
 	return 0;
 }

@@ -4,6 +4,7 @@
 
 namespace vkInit
 {
+
 	bool CheckSupportExtensionsAndLayers(const std::vector<const char*>& requiredLayerVec, const std::vector<const char*>& requiredExtensionVec, bool isDebugging)
 	{
 		std::vector<vk::LayerProperties> supportedLayerVec{ vk::enumerateInstanceLayerProperties() };
@@ -114,7 +115,7 @@ namespace vkInit
 
 		if (isDebugging)
 		{
-			layerVec.push_back("VK_LAYER_KHRONOS_validation");
+			layerVec.emplace_back("VK_LAYER_KHRONOS_validation");
 		}
 
 		uint32_t glfwExtensionCount = 0;
@@ -124,7 +125,7 @@ namespace vkInit
 
 		if (isDebugging)
 		{
-			requiredExtensionVec.push_back("VK_EXT_debug_utils");
+			requiredExtensionVec.emplace_back("VK_EXT_debug_utils");
 		}
 
 		if (!CheckSupportExtensionsAndLayers(layerVec, requiredExtensionVec, isDebugging))
@@ -134,9 +135,9 @@ namespace vkInit
 
 		vk::InstanceCreateInfo createInfo
 		{
-			vk::InstanceCreateFlags(),
+			vk::InstanceCreateFlags{},
 			&applicationInfo,
-			static_cast<uint32_t>(layerVec.size()),											 //layer count
+			static_cast<uint32_t>(layerVec.size()),				 //layer count
 			layerVec.data(),									 //layers
 			static_cast<uint32_t>(requiredExtensionVec.size()),	 //extension count
 			requiredExtensionVec.data()							 //extensions
@@ -155,6 +156,7 @@ namespace vkInit
 			return nullptr;
 		}
 	}
+
 }
 
 #endif
