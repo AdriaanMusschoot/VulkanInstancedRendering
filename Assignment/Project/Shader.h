@@ -18,7 +18,7 @@ namespace vkUtil
 		const size_t fileSize{ static_cast<size_t>(file.tellg()) };
 
 		std::vector<char> charVec;
-		charVec.reserve(fileSize);
+		charVec.resize(fileSize);
 
 		//reset the file pointer to the start of the file
 		file.seekg(0);

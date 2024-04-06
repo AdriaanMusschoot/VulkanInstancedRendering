@@ -22,8 +22,7 @@ namespace vkInit
 	{
 		vk::DebugUtilsMessengerCreateInfoEXT createInfo
 		{
-			vk::DebugUtilsMessengerCreateFlagsEXT
-			,
+			vk::DebugUtilsMessengerCreateFlagsEXT{},
 			vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
 			vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance,
 			DebugCallBack,

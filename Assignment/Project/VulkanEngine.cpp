@@ -4,7 +4,6 @@
 #include "Device.h"
 #include "Swapchain.h"
 #include "Pipeline.h"
-
 ave::VulkanEngine::VulkanEngine()
 {
 	if (m_IsDebugging)
@@ -113,7 +112,9 @@ void ave::VulkanEngine::CreatePipeline()
 {
 	vkInit::GraphicsPipelineInBundle specification{};
 	specification.Device = m_Device;
-	specification.VertexFilePath = "shaders/shader.vert";
+	specification.VertexFilePath = "shaders/shader.vert.spv";
+	specification.FragmentFilePath = "shaders/shader.frag.spv";
+	specification.SwapchainExtent = m_SwapchainExtent;
 
 	vkInit::GraphicsPipelineOutBundle out{ vkInit::CreateGraphicsPipeline(specification, m_IsDebugging) };
 }
