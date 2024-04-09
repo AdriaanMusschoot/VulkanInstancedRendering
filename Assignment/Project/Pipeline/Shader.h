@@ -1,6 +1,6 @@
 #ifndef VK_SHADER_H
 #define VK_SHADER_H
-#include "Configuration.h"
+#include "Engine/Configuration.h"
 
 namespace vkUtil
 {
@@ -48,6 +48,7 @@ namespace vkUtil
 				std::cout << "Shader module (" << fileName << ") creation failure\n";
 				std::cout << systemError.what() << "\n";
 			}
+			return nullptr;
 		}
 	}
 

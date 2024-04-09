@@ -1,6 +1,6 @@
 #ifndef VK_LOGGING_H
 #define VK_LOGGING_H
-#include "Configuration.h"
+#include "Engine/Configuration.h"
 
 namespace vkInit
 {

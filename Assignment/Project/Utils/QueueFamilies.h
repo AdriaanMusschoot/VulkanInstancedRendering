@@ -1,6 +1,6 @@
 #ifndef VK_QUEUEFAMILIES_H
 #define VK_QUEUEFAMILIES_H
-#include "Configuration.h"
+#include "Engine/Configuration.h"
 
 namespace vkUtil
 {

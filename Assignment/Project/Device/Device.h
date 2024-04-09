@@ -1,7 +1,7 @@
 #ifndef VK_DEVICE_H
 #define VK_DEVICE_H
-#include "Configuration.h"
-#include "QueueFamilies.h"
+#include "Engine/Configuration.h"
+#include "Utils/QueueFamilies.h"
 
 namespace vkInit
 {
@@ -18,15 +18,17 @@ namespace vkInit
 		if (isDebugging)
 		{
 			std::cout << "Physical device extension support:\n";
-			for (const auto& supportedExtension : physicalDevice.enumerateDeviceExtensionProperties())
-			{
-				if (isDebugging)
-				{
-					std::cout << "\t\"" << supportedExtension.extensionName << "\"\n";
-				}
-				requiredExtensionSet.erase(supportedExtension.extensionName);
-			}
 		}
+
+		for (const auto& supportedExtension : physicalDevice.enumerateDeviceExtensionProperties())
+		{
+			if (isDebugging)
+			{
+				std::cout << "\t\"" << supportedExtension.extensionName << "\"\n";
+			}
+			requiredExtensionSet.erase(supportedExtension.extensionName);
+		}
+
 		return requiredExtensionSet.empty();
 	}
 

@@ -1,9 +1,9 @@
 #ifndef VK_SWAPCHAIN_H
 #define VK_SWAPCHAIN_H
-#include "Configuration.h"
-#include "Logging.h"
-#include "QueueFamilies.h"
-#include "Frame.h"
+#include "Engine/Configuration.h"
+#include "Utils/Logging.h"
+#include "Utils/QueueFamilies.h"
+#include "Utils/Frame.h"
 namespace vkInit
 {
 
@@ -203,6 +203,10 @@ namespace vkInit
 		}
 		catch (const vk::SystemError& systemError)
 		{
+			if (isDebugging)
+			{
+				std::cout << systemError.what() << "\n";
+			}
 			throw std::runtime_error{ "Swapchain creation failed\n" };
 		}
 

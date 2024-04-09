@@ -49,6 +49,7 @@ namespace amu
 		{
 			m_VertexVec.emplace_back(std::move(vertex));
 		}
+
 		void AddIndex(int&& index)
 		{
 			m_IndexVec.emplace_back(std::move(index));

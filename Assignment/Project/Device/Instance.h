@@ -1,6 +1,6 @@
 #ifndef VK_INSTANCE_H
 #define VK_INSTANCE_H
-#include "Configuration.h"
+#include "Engine/Configuration.h"
 
 namespace vkInit
 {
