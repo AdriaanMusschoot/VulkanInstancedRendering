@@ -10,6 +10,7 @@ namespace vkUtil
 		vk::BufferUsageFlags UsageFlags;
 		vk::Device Device;
 		vk::PhysicalDevice PhysicalDevice;
+		vk::MemoryPropertyFlags MemoryPropertyFlags;
 	};
 
 	struct DataBuffer
@@ -23,6 +24,8 @@ namespace vkUtil
 	void AllocateBufferMemory(DataBuffer& buffer, const BufferInBundle& in);
 
 	DataBuffer CreateBuffer(const BufferInBundle& in);
+
+	void CopyBuffer(DataBuffer& srcBuffer, DataBuffer& dstBuffer, const vk::DeviceSize& size, const vk::Queue& queue, const vk::CommandBuffer& commandBuffer);
 
 }
 

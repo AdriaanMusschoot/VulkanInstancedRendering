@@ -29,7 +29,7 @@ void vkUtil::AllocateBufferMemory(DataBuffer& buffer, const BufferInBundle& in)
 	(
 		in.PhysicalDevice,
 		memoryRequirements.memoryTypeBits,
-		vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+		in.MemoryPropertyFlags
 	);
 
 	buffer.BufferMemory = in.Device.allocateMemory(allocateInfo);
@@ -50,4 +50,34 @@ vkUtil::DataBuffer vkUtil::CreateBuffer(const BufferInBundle& in)
 	AllocateBufferMemory(buffer, in);
 
 	return buffer;
+}
+
+void vkUtil::CopyBuffer(DataBuffer& srcBuffer, DataBuffer& dstBuffer, const vk::DeviceSize& size, const vk::Queue& queue, const vk::CommandBuffer& commandBuffer)
+{
+	commandBuffer.reset();
+
+	vk::CommandBufferBeginInfo bufferBeginInfo{};
+	bufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+	commandBuffer.begin(bufferBeginInfo);
+
+	vk::BufferCopy copyRegion{};
+	copyRegion.srcOffset = 0;
+	copyRegion.dstOffset = 0;
+	copyRegion.size = size;
+
+	commandBuffer.copyBuffer(srcBuffer.Buffer, dstBuffer.Buffer, 1, &copyRegion);
+
+	commandBuffer.end();
+
+	vk::SubmitInfo submitInfo;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vk::Result result{ queue.submit(1, &submitInfo, nullptr) };
+	if (result != vk::Result::eSuccess)
+	{
+		std::cout << "Copy submission failure\n";
+	}
+
+	queue.waitIdle();
 }

@@ -238,11 +238,25 @@ void ave::VulkanEngine::SetUpScene()
 {
 	m_SceneUPtr = std::make_unique<ave::Scene>();
 
+	ave::MeshInBundle meshInput
+	{
+		m_GraphicsQueue,
+		m_MainCommandBuffer
+	};
+
 	std::unique_ptr triangleMeshUPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
 	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, -0.05f }, { 0.0f, 1.0f, 0.0f } });
 	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.05f, 0.05f }, { 0.0f, 1.0f, 0.0f } });
 	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { -0.05f, 0.05f }, { 0.0f, 1.0f, 0.0f } });
 		
+	triangleMeshUPtr->InitializeVertexBuffer(meshInput);
+
+	triangleMeshUPtr->AddIndex(0);
+	triangleMeshUPtr->AddIndex(1);
+	triangleMeshUPtr->AddIndex(2);
+
+	triangleMeshUPtr->InitializeIndexBuffer(meshInput);
+
 	m_SceneUPtr->AddMesh(std::move(triangleMeshUPtr));
 }
 
