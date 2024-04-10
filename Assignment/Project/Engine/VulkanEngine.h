@@ -42,8 +42,11 @@ namespace ave
 		vk::Extent2D m_SwapchainExtent;
 		vk::Format m_SwapchainFormat;
 	
-		vk::PipelineLayout m_PipelineLayout;
+		vk::DescriptorSetLayout m_DescriptorSetLayout;
+		vk::DescriptorPool m_DescriptorPool;
+
 		vk::RenderPass m_RenderPass;
+		vk::PipelineLayout m_PipelineLayout;
 		vk::Pipeline m_Pipeline;
 
 		vk::CommandPool m_CommandPool;
@@ -52,16 +55,19 @@ namespace ave
 		int m_MaxNrFramesInFlight;
 		int m_CurrentFrameNr;
 
+
 		std::unique_ptr<ave::Scene> m_SceneUPtr;
 
 		void CreateInstance();
 		void CreateDevice();
 		void CreateSwapchain();
 		void CreateFrameBuffers();
-		void CreateSynchronizationObjects();
+		void CreateFrameResources();
+		void CreateDescriptorSetLayout();
 		void CreatePipeline();
 		void SetUpRendering();
 		void SetUpScene();
+		void PrepareFrame(uint32_t imgIdx);
 
 		void RecordDrawCommands(const vk::CommandBuffer& commandBuffer, uint32_t imageIndex);
 

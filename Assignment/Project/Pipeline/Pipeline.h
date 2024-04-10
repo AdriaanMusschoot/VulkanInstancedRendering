@@ -14,6 +14,7 @@ namespace vkInit
 		std::string FragmentFilePath;
 		vk::Extent2D SwapchainExtent;
 		vk::Format SwapchainImgFormat;
+		vk::DescriptorSetLayout DescriptorSetLayout;
 	};
 	
 	struct GraphicsPipelineOutBundle
@@ -23,18 +24,14 @@ namespace vkInit
 		vk::Pipeline Pipeline;
 	};
 
-	vk::PipelineLayout CreatePipelineLayout(const vk::Device& device, bool isDebugging)
+	vk::PipelineLayout CreatePipelineLayout(const vk::Device& device, const vk::DescriptorSetLayout& descriptorSetLayout, bool isDebugging)
 	{
-		vk::PushConstantRange pushConstantRange{};
-		pushConstantRange.offset = 0;
-		pushConstantRange.size = sizeof(vkUtil::ObjectData);
-		pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eVertex;
 
 		vk::PipelineLayoutCreateInfo layoutCreateInfo{};
 		layoutCreateInfo.flags = vk::PipelineLayoutCreateFlags{};
-		layoutCreateInfo.setLayoutCount = 0;
-		layoutCreateInfo.pushConstantRangeCount = 1;
-		layoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+		layoutCreateInfo.setLayoutCount = 1;
+		layoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+		layoutCreateInfo.pushConstantRangeCount = 0;
 			
 		try
 		{
@@ -94,6 +91,104 @@ namespace vkInit
 		}
 	}
 
+	vk::PipelineVertexInputStateCreateInfo PopulateVertexInput(const vk::VertexInputBindingDescription& bindingDescription, const std::array<vk::VertexInputAttributeDescription, 2>& attributeDescriptionArr)
+	{
+		vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{ };
+		vertexInputStateCreateInfo.flags = vk::PipelineVertexInputStateCreateFlags{};
+		vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
+		vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDescription;
+		vertexInputStateCreateInfo.vertexAttributeDescriptionCount = 2;
+		vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributeDescriptionArr.data();
+
+		return vertexInputStateCreateInfo;
+	}
+
+	vk::PipelineInputAssemblyStateCreateInfo PopulateInputAssembly()
+	{
+
+		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{};
+		inputAssemblyCreateInfo.flags = vk::PipelineInputAssemblyStateCreateFlags{};
+		inputAssemblyCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
+
+		return inputAssemblyCreateInfo;
+	}
+
+	vk::PipelineShaderStageCreateInfo PopulateShaderStage(const vk::ShaderModule& shaderModule, const vk::ShaderStageFlagBits& flagBits)
+	{
+		vk::PipelineShaderStageCreateInfo shaderStageCreateInfo{};
+		shaderStageCreateInfo.flags = vk::PipelineShaderStageCreateFlags{};
+		shaderStageCreateInfo.stage = flagBits;
+		shaderStageCreateInfo.module = shaderModule;
+		shaderStageCreateInfo.pName = "main";
+
+		return shaderStageCreateInfo;
+	}
+
+	vk::PipelineRasterizationStateCreateInfo PopulateRasterizationState()
+	{
+		vk::PipelineRasterizationStateCreateInfo rasterizerStateCreateInfo{};
+		rasterizerStateCreateInfo.flags = vk::PipelineRasterizationStateCreateFlags{};
+		rasterizerStateCreateInfo.depthClampEnable = VK_FALSE;
+		rasterizerStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
+		rasterizerStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
+		rasterizerStateCreateInfo.lineWidth = 1.0f;
+		rasterizerStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
+		rasterizerStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
+		rasterizerStateCreateInfo.depthBiasEnable = VK_FALSE;
+
+		return rasterizerStateCreateInfo;
+	}
+
+	vk::PipelineViewportStateCreateInfo PopulateViewportState(const vk::Viewport& viewport, const vk::Rect2D& scissor)
+	{
+		vk::PipelineViewportStateCreateInfo viewportStateCreateInfo{};
+		viewportStateCreateInfo.flags = vk::PipelineViewportStateCreateFlags{};
+		viewportStateCreateInfo.viewportCount = 1;
+		viewportStateCreateInfo.pViewports = &viewport;
+		viewportStateCreateInfo.scissorCount = 1;
+		viewportStateCreateInfo.pScissors = &scissor;
+
+		return viewportStateCreateInfo;
+	}
+
+	vk::PipelineMultisampleStateCreateInfo PopulateMultisampleState()
+	{
+		vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo{};
+		multisampleStateCreateInfo.flags = vk::PipelineMultisampleStateCreateFlags{};
+		multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
+		multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
+
+		return multisampleStateCreateInfo;
+	}
+
+	vk::PipelineColorBlendAttachmentState PopulateColorBlendAttachmentState()
+	{
+		vk::PipelineColorBlendAttachmentState colorBlendAttachmentState{};
+		colorBlendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR |
+			vk::ColorComponentFlagBits::eG |
+			vk::ColorComponentFlagBits::eB |
+			vk::ColorComponentFlagBits::eA;
+		colorBlendAttachmentState.blendEnable = VK_FALSE;
+
+		return colorBlendAttachmentState;
+	}
+
+	vk::PipelineColorBlendStateCreateInfo PopulateColorBlendState(const vk::PipelineColorBlendAttachmentState& colorBlendAttachment)
+	{
+		vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{};
+		colorBlendStateCreateInfo.flags = vk::PipelineColorBlendStateCreateFlags{};
+		colorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
+		colorBlendStateCreateInfo.logicOp = vk::LogicOp::eCopy;
+		colorBlendStateCreateInfo.attachmentCount = 1;
+		colorBlendStateCreateInfo.pAttachments = &colorBlendAttachment;
+		colorBlendStateCreateInfo.blendConstants[0] = 0.0f;
+		colorBlendStateCreateInfo.blendConstants[1] = 0.0f;
+		colorBlendStateCreateInfo.blendConstants[2] = 0.0f;
+		colorBlendStateCreateInfo.blendConstants[3] = 0.0f;
+
+		return colorBlendStateCreateInfo;
+	}
+
 	GraphicsPipelineOutBundle CreateGraphicsPipeline(const GraphicsPipelineInBundle& in, bool isDebugging)
 	{
 		if (isDebugging)
@@ -110,20 +205,11 @@ namespace vkInit
 		vk::VertexInputBindingDescription bindingDescription{ vkUtil::GetPosColBindingDescription() };
 		std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptionArr{ vkUtil::GetPosColAttributeDescription() };
 
-		vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
-		vertexInputStateCreateInfo.flags = vk::PipelineVertexInputStateCreateFlags{};
-		vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
-		vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDescription;
-		vertexInputStateCreateInfo.vertexAttributeDescriptionCount = 2;
-		vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributeDescriptionArr.data();
-
+		vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{ PopulateVertexInput(bindingDescription, attributeDescriptionArr) };
 		pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
 
 		//Input assembly/how should thy interpreteth it
-		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{};
-		inputAssemblyCreateInfo.flags = vk::PipelineInputAssemblyStateCreateFlags{};
-		inputAssemblyCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
-		
+		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{ PopulateInputAssembly() };
 		pipelineCreateInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
 
 		if (isDebugging)
@@ -132,20 +218,10 @@ namespace vkInit
 		}
 
 		vk::ShaderModule vertexShaderModule{ vkUtil::CreateModule(in.Device, in.VertexFilePath, isDebugging) };
-
-		vk::PipelineShaderStageCreateInfo vertexShaderStageCreateInfo{};
-		vertexShaderStageCreateInfo.flags = vk::PipelineShaderStageCreateFlags{};
-		vertexShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eVertex;
-		vertexShaderStageCreateInfo.module = vertexShaderModule;
-		vertexShaderStageCreateInfo.pName = "main";
+		vk::PipelineShaderStageCreateInfo vertexShaderStageCreateInfo{ PopulateShaderStage(vertexShaderModule, vk::ShaderStageFlagBits::eVertex) };
 
 		vk::ShaderModule fragmentShaderModule{ vkUtil::CreateModule(in.Device, in.FragmentFilePath, isDebugging) };
-
-		vk::PipelineShaderStageCreateInfo fragmentShaderStageCreateInfo{};
-		fragmentShaderStageCreateInfo.flags = vk::PipelineShaderStageCreateFlags{};
-		fragmentShaderStageCreateInfo.stage = vk::ShaderStageFlagBits::eFragment;
-		fragmentShaderStageCreateInfo.module = fragmentShaderModule;
-		fragmentShaderStageCreateInfo.pName = "main";
+		vk::PipelineShaderStageCreateInfo fragmentShaderStageCreateInfo{ PopulateShaderStage(fragmentShaderModule, vk::ShaderStageFlagBits::eFragment) };
 
 		shaderStageCreateInfoVec.emplace_back(vertexShaderStageCreateInfo);
 		shaderStageCreateInfoVec.emplace_back(fragmentShaderStageCreateInfo);
@@ -176,13 +252,7 @@ namespace vkInit
 		scissor.offset.y = 0;
 		scissor.extent = in.SwapchainExtent;
 
-		vk::PipelineViewportStateCreateInfo viewportStateCreateInfo{};
-		viewportStateCreateInfo.flags = vk::PipelineViewportStateCreateFlags{};
-		viewportStateCreateInfo.viewportCount = 1;
-		viewportStateCreateInfo.pViewports = &viewport;
-		viewportStateCreateInfo.scissorCount = 1;
-		viewportStateCreateInfo.pScissors = &scissor;
-		
+		vk::PipelineViewportStateCreateInfo viewportStateCreateInfo{ PopulateViewportState(viewport, scissor) };
 		pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
 
 		if (isDebugging)
@@ -190,16 +260,7 @@ namespace vkInit
 			std::cout << "\tRasterizer creation started\n";
 		}
 
-		vk::PipelineRasterizationStateCreateInfo rasterizerStateCreateInfo{};
-		rasterizerStateCreateInfo.flags = vk::PipelineRasterizationStateCreateFlags{};
-		rasterizerStateCreateInfo.depthClampEnable = VK_FALSE;
-		rasterizerStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-		rasterizerStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
-		rasterizerStateCreateInfo.lineWidth = 1.0f;
-		rasterizerStateCreateInfo.cullMode = vk::CullModeFlagBits::eNone;
-		rasterizerStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
-		rasterizerStateCreateInfo.depthBiasEnable = VK_FALSE;
-
+		vk::PipelineRasterizationStateCreateInfo rasterizerStateCreateInfo{ PopulateRasterizationState() };
 		pipelineCreateInfo.pRasterizationState = &rasterizerStateCreateInfo;
 
 		if (isDebugging)
@@ -207,11 +268,7 @@ namespace vkInit
 			std::cout << "\tMultisample creation started\n";
 		}
 
-		vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo{};
-		multisampleStateCreateInfo.flags = vk::PipelineMultisampleStateCreateFlags{};
-		multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
-		multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-
+		vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo{ PopulateMultisampleState() };
 		pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
 
 		if (isDebugging)
@@ -219,24 +276,8 @@ namespace vkInit
 			std::cout << "\tColor blend creation started\n";
 		}
 
-		vk::PipelineColorBlendAttachmentState colorBlendAttachmentState{};
-		colorBlendAttachmentState.colorWriteMask =	vk::ColorComponentFlagBits::eR | 
-													vk::ColorComponentFlagBits::eG | 
-													vk::ColorComponentFlagBits::eB | 
-													vk::ColorComponentFlagBits::eA;
-		colorBlendAttachmentState.blendEnable = VK_FALSE;
-
-		vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{};
-		colorBlendStateCreateInfo.flags = vk::PipelineColorBlendStateCreateFlags{};
-		colorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
-		colorBlendStateCreateInfo.logicOp = vk::LogicOp::eCopy;
-		colorBlendStateCreateInfo.attachmentCount = 1;
-		colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
-		colorBlendStateCreateInfo.blendConstants[0] = 0.0f;
-		colorBlendStateCreateInfo.blendConstants[1] = 0.0f;
-		colorBlendStateCreateInfo.blendConstants[2] = 0.0f;
-		colorBlendStateCreateInfo.blendConstants[3] = 0.0f;
-
+		vk::PipelineColorBlendAttachmentState colorBlendAttachmentState{ PopulateColorBlendAttachmentState() };
+		vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{ PopulateColorBlendState(colorBlendAttachmentState) };
 		pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
 
 		if (isDebugging)
@@ -244,8 +285,7 @@ namespace vkInit
 			std::cout << "\tPipeline layout creation started\n";
 		}
 
-		vk::PipelineLayout pipelineLayout{ CreatePipelineLayout(in.Device, isDebugging) };
-
+		vk::PipelineLayout pipelineLayout{ CreatePipelineLayout(in.Device, in.DescriptorSetLayout, isDebugging) };
 		pipelineCreateInfo.layout = pipelineLayout;
 
 		if (isDebugging)
@@ -254,7 +294,6 @@ namespace vkInit
 		}
 
 		vk::RenderPass renderPass{ CreateRenderPass(in.Device, in.SwapchainImgFormat, isDebugging) };
-
 		pipelineCreateInfo.renderPass = renderPass;
 
 		pipelineCreateInfo.basePipelineHandle = nullptr;

@@ -8,7 +8,7 @@
 #include "Rendering/Commands.h"
 #include "Rendering/Synchronization.h"
 #include "Utils/RenderStructs.h"
-
+#include "Pipeline/Descriptor.h"
 
 ave::VulkanEngine::VulkanEngine(const std::string& windowName, int width, int height, GLFWwindow* windowPtr, bool isDebugging)
 	: m_WindowName{ windowName }
@@ -24,6 +24,7 @@ ave::VulkanEngine::VulkanEngine(const std::string& windowName, int width, int he
 
 	CreateInstance();
 	CreateDevice();
+	CreateDescriptorSetLayout();
 	CreatePipeline();
 	SetUpRendering();	
 	SetUpScene();
@@ -40,6 +41,7 @@ ave::VulkanEngine::~VulkanEngine()
 	m_Device.destroyPipeline(m_Pipeline);
 	m_Device.destroyPipelineLayout(m_PipelineLayout);
 	m_Device.destroyRenderPass(m_RenderPass);
+	m_Device.destroyDescriptorSetLayout(m_DescriptorSetLayout);
 
 	DestroySwapchain();
 	m_Device.destroy();
@@ -85,6 +87,8 @@ void ave::VulkanEngine::Render()
 	vk::CommandBuffer commandBuffer{ m_SwapchainFrameVec[m_CurrentFrameNr].CommandBuffer };
 
 	commandBuffer.reset();
+
+	PrepareFrame(imageIndex);
 
 	RecordDrawCommands(commandBuffer, imageIndex);
 
@@ -207,6 +211,7 @@ void ave::VulkanEngine::CreatePipeline()
 	specification.FragmentFilePath = "shaders/shader.frag.spv";
 	specification.SwapchainExtent = m_SwapchainExtent;
 	specification.SwapchainImgFormat = m_SwapchainFormat;
+	specification.DescriptorSetLayout = m_DescriptorSetLayout;
 
 	vkInit::GraphicsPipelineOutBundle out{ vkInit::CreateGraphicsPipeline(specification, m_IsDebugging) };
 	m_PipelineLayout = out.Layout;
@@ -231,7 +236,7 @@ void ave::VulkanEngine::SetUpRendering()
 
 	vkInit::CreateFrameCommandBuffers(commandBufferIn, m_IsDebugging);
 
-	CreateSynchronizationObjects();
+	CreateFrameResources();
 }
 
 void ave::VulkanEngine::SetUpScene()
@@ -245,9 +250,9 @@ void ave::VulkanEngine::SetUpScene()
 	};
 
 	std::unique_ptr triangleMeshUPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
-	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, -0.05f }, { 0.0f, 1.0f, 0.0f } });
-	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.05f, 0.05f }, { 0.0f, 1.0f, 0.0f } });
-	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { -0.05f, 0.05f }, { 0.0f, 1.0f, 0.0f } });
+	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f } });
+	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f } });
+	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } });
 		
 	triangleMeshUPtr->InitializeVertexBuffer(meshInput);
 
@@ -260,6 +265,25 @@ void ave::VulkanEngine::SetUpScene()
 	m_SceneUPtr->AddMesh(std::move(triangleMeshUPtr));
 }
 
+void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
+{
+	glm::vec3 eye = { 0.0f, 0.0f, -1.0f };
+	glm::vec3 center = { 0.0f, 0.0f, 0.0f };
+	glm::vec3 up = { 0.0f, 0.0f, -1.0f };
+	glm::mat4 view = glm::lookAt(eye, center, up);
+
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), static_cast<float>(m_SwapchainExtent.width) / static_cast<float>(m_SwapchainExtent.height), 0.1f, 10.0f);
+	projection[1][1] *= -1;
+
+	
+	m_SwapchainFrameVec[imgIdx].WVPMatrix.ModelMatrix = glm::mat4(1.0f);
+	m_SwapchainFrameVec[imgIdx].WVPMatrix.ViewMatrix = glm::mat4(1.0f);
+	m_SwapchainFrameVec[imgIdx].WVPMatrix.ProjectionMatrix = projection;
+	memcpy(m_SwapchainFrameVec[imgIdx].WVPWriteLocationPtr, &(m_SwapchainFrameVec[imgIdx].WVPMatrix), sizeof(vkUtil::UBO));
+
+	m_SwapchainFrameVec[imgIdx].WriteDescriptorSet(m_Device);
+}
+
 void ave::VulkanEngine::CreateFrameBuffers()
 {
 	vkInit::FrameBufferInBundle frameBufferIn;
@@ -270,14 +294,34 @@ void ave::VulkanEngine::CreateFrameBuffers()
 	vkInit::CreateFrameBuffers(frameBufferIn, m_SwapchainFrameVec, m_IsDebugging);
 }
 
-void ave::VulkanEngine::CreateSynchronizationObjects()
+void ave::VulkanEngine::CreateFrameResources()
 {
+	vkInit::DescriptorSetLayoutData setLayoutData;
+	setLayoutData.Count = 1;
+	setLayoutData.TypeVec.emplace_back(vk::DescriptorType::eUniformBuffer);
+	m_DescriptorPool = vkInit::CreateDescriptorPool(m_Device, static_cast<uint32_t>(m_SwapchainFrameVec.size()), setLayoutData, m_IsDebugging);
+
 	for (auto& frame : m_SwapchainFrameVec)
 	{
 		frame.InFlightFence = vkInit::CreateFence(m_Device, m_IsDebugging);
 		frame.SemaphoreImageAvailable = vkInit::CreateSemaphore(m_Device, m_IsDebugging);
 		frame.SemaphoreRenderingFinished = vkInit::CreateSemaphore(m_Device, m_IsDebugging);
+
+		frame.CreateUBOResources(m_Device, m_PhysicalDevice);
+		frame.UBODescriptorSet = vkInit::CreateDescriptorSet(m_Device, m_DescriptorPool, m_DescriptorSetLayout, m_IsDebugging);
 	}
+}
+
+void ave::VulkanEngine::CreateDescriptorSetLayout()
+{
+	vkInit::DescriptorSetLayoutData setLayoutData;
+	setLayoutData.Count = 1;
+	setLayoutData.IndexVec.emplace_back(0);
+	setLayoutData.TypeVec.emplace_back(vk::DescriptorType::eUniformBuffer);
+	setLayoutData.CountVec.emplace_back(1);
+	setLayoutData.StageFlagVec.emplace_back(vk::ShaderStageFlagBits::eVertex);
+
+	m_DescriptorSetLayout = vkInit::CreateDescriptorSetLayout(m_Device, setLayoutData, m_IsDebugging);
 }
 
 void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffer, uint32_t imageIndex)
@@ -307,6 +351,8 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 	renderPassBeginInfo.pClearValues = &clearValue;
 
 	commandBuffer.beginRenderPass(&renderPassBeginInfo, vk::SubpassContents::eInline);
+
+	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_PipelineLayout, 0, m_SwapchainFrameVec[imageIndex].UBODescriptorSet, nullptr);
 
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline);
 
@@ -342,7 +388,7 @@ void ave::VulkanEngine::RecreateSwapchain()
 	DestroySwapchain();
 	CreateSwapchain();
 	CreateFrameBuffers();
-	CreateSynchronizationObjects();
+	CreateFrameResources();
 
 	vkInit::CommandBufferInBundle commandBufferIn
 	{
@@ -362,6 +408,11 @@ void ave::VulkanEngine::DestroySwapchain()
 		m_Device.destroyFence(frame.InFlightFence);
 		m_Device.destroyFramebuffer(frame.Framebuffer);
 		m_Device.destroyImageView(frame.ImageView);
+		m_Device.unmapMemory(frame.WVPBuffer.BufferMemory);
+		m_Device.freeMemory(frame.WVPBuffer.BufferMemory);
+		m_Device.destroyBuffer(frame.WVPBuffer.Buffer);
 	}
+	m_Device.destroyDescriptorPool(m_DescriptorPool);	
+
 	m_Device.destroySwapchainKHR(m_Swapchain);
 }

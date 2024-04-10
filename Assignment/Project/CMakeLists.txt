@@ -28,7 +28,7 @@ set(SOURCES
     "Engine/main.cpp" "Engine/VulkanEngine.cpp" "Engine/App.cpp" "Engine/Configuration.h"
     "Device/Instance.h" "Device/Device.h" 
     "Utils/QueueFamilies.h" "Utils/Frame.h"  "Utils/Logging.h" "Utils/RenderStructs.cpp"  "Utils/Buffer.cpp"
-    "Pipeline/Shader.h" "Pipeline/Pipeline.h"  
+    "Pipeline/Shader.h" "Pipeline/Pipeline.h"  "Pipeline/Descriptor.h"
     "Rendering/Swapchain.h" "Rendering/FrameBuffer.h" "Rendering/Commands.h" "Rendering/Synchronization.h" 
     "Rendering/Mesh.cpp" "Rendering/Scene.cpp")
 

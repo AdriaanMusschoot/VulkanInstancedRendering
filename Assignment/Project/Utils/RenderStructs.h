@@ -10,11 +10,6 @@ namespace vkUtil
 		glm::vec3 Color;
 	};
 
-	struct ObjectData
-	{
-		glm::mat4 Model;
-	};
-
 	vk::VertexInputBindingDescription GetPosColBindingDescription();
 
 	std::array<vk::VertexInputAttributeDescription, 2> GetPosColAttributeDescription();

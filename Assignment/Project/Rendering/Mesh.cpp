@@ -10,6 +10,8 @@ ave::Mesh::~Mesh()
 {
 	m_Device.destroyBuffer(m_VertexBuffer.Buffer);
 	m_Device.freeMemory(m_VertexBuffer.BufferMemory);
+	m_Device.destroyBuffer(m_IndexBuffer.Buffer);
+	m_Device.freeMemory(m_IndexBuffer.BufferMemory);
 }
 
 void ave::Mesh::AddVertex(const vkUtil::Vertex2D& vertex)
