@@ -12,17 +12,17 @@ namespace ave
 		Scene();
 		~Scene();
 
-		void AddMesh(const ave::Mesh& mesh);
+		void AddMesh(std::unique_ptr<ave::Mesh> meshUPtr);
+
+		void Draw(const vk::CommandBuffer& commandBuffer);
 
 		Scene(const Scene& other) = delete;
 		Scene(Scene&& other) = delete;
 		Scene& operator=(const Scene& other) = delete;
 		Scene& operator=(Scene&& other) = delete;
 
-		const std::vector<glm::vec3>& GetTrianglePositions() const;
 	private:
-		std::vector<glm::vec3> m_TrianglePositionVec;
-		std::vector<ave::Mesh> m_MeshVec;
+		std::vector<std::unique_ptr<ave::Mesh>> m_MeshVec;
 	};
 
 }

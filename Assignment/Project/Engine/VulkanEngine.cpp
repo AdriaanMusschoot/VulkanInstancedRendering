@@ -7,6 +7,8 @@
 #include "Rendering/FrameBuffer.h"
 #include "Rendering/Commands.h"
 #include "Rendering/Synchronization.h"
+#include "Utils/RenderStructs.h"
+
 
 ave::VulkanEngine::VulkanEngine(const std::string& windowName, int width, int height, GLFWwindow* windowPtr, bool isDebugging)
 	: m_WindowName{ windowName }
@@ -24,14 +26,14 @@ ave::VulkanEngine::VulkanEngine(const std::string& windowName, int width, int he
 	CreateDevice();
 	CreatePipeline();
 	SetUpRendering();	
-	CreateMeshes();
+	SetUpScene();
 }
 
 ave::VulkanEngine::~VulkanEngine()
 {
 	m_Device.waitIdle();	
 
-	m_MeshUPtr.reset();
+	m_SceneUPtr.reset();
 
 	m_Device.destroyCommandPool(m_CommandPool);
 
@@ -55,7 +57,7 @@ ave::VulkanEngine::~VulkanEngine()
 	}
 }
 
-void ave::VulkanEngine::Render(const Scene* scenePtr)
+void ave::VulkanEngine::Render() 
 {
 	vk::Result result;
 
@@ -84,7 +86,7 @@ void ave::VulkanEngine::Render(const Scene* scenePtr)
 
 	commandBuffer.reset();
 
-	RecordDrawCommand(commandBuffer, imageIndex, scenePtr);
+	RecordDrawCommands(commandBuffer, imageIndex);
 
 	std::vector<vk::Semaphore> waitSemaphoreVec;
 	waitSemaphoreVec.emplace_back(m_SwapchainFrameVec[m_CurrentFrameNr].SemaphoreImageAvailable);
@@ -232,16 +234,16 @@ void ave::VulkanEngine::SetUpRendering()
 	CreateSynchronizationObjects();
 }
 
-void ave::VulkanEngine::CreateMeshes()
+void ave::VulkanEngine::SetUpScene()
 {
-	m_MeshUPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
-}
+	m_SceneUPtr = std::make_unique<ave::Scene>();
 
-void ave::VulkanEngine::PrepareScene(const vk::CommandBuffer& commandBuffer)
-{
-	vk::Buffer vertexBufferArr[]{ m_MeshUPtr->GetBuffer().Buffer };
-	vk::DeviceSize offsetArr[]{ 0 };
-	commandBuffer.bindVertexBuffers(0, 1, vertexBufferArr, offsetArr);
+	std::unique_ptr triangleMeshUPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
+	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, -0.05f }, { 0.0f, 1.0f, 0.0f } });
+	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.05f, 0.05f }, { 0.0f, 1.0f, 0.0f } });
+	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { -0.05f, 0.05f }, { 0.0f, 1.0f, 0.0f } });
+		
+	m_SceneUPtr->AddMesh(std::move(triangleMeshUPtr));
 }
 
 void ave::VulkanEngine::CreateFrameBuffers()
@@ -264,7 +266,7 @@ void ave::VulkanEngine::CreateSynchronizationObjects()
 	}
 }
 
-void ave::VulkanEngine::RecordDrawCommand(const vk::CommandBuffer& commandBuffer, uint32_t imageIndex, const Scene* scenePtr)
+void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffer, uint32_t imageIndex)
 {
 	vk::CommandBufferBeginInfo bufferBeginInfo{};
 	try
@@ -294,18 +296,7 @@ void ave::VulkanEngine::RecordDrawCommand(const vk::CommandBuffer& commandBuffer
 
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline);
 
-	PrepareScene(commandBuffer);
-
-	for (const auto& position : scenePtr->GetTrianglePositions())
-	{
-		glm::mat4 model{ glm::translate(glm::mat4(1.0f), position) };
-		vkUtil::ObjectData objData
-		{
-			model
-		};
-		commandBuffer.pushConstants(m_PipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(objData), &objData);
-		commandBuffer.draw(3, 1, 0, 0);
-	}
+	m_SceneUPtr->Draw(commandBuffer);
 
 	commandBuffer.endRenderPass();
 

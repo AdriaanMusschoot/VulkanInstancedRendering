@@ -19,7 +19,7 @@ namespace ave
 		VulkanEngine& operator=(const VulkanEngine& other) = delete;
 		VulkanEngine& operator=(VulkanEngine&& other) = delete;
 	
-		void Render(const Scene* scenePtr);
+		void Render();
 	private:
 		bool m_IsDebugging{ true };
 	
@@ -52,7 +52,7 @@ namespace ave
 		int m_MaxNrFramesInFlight;
 		int m_CurrentFrameNr;
 
-		std::unique_ptr<ave::Mesh> m_MeshUPtr;
+		std::unique_ptr<ave::Scene> m_SceneUPtr;
 
 		void CreateInstance();
 		void CreateDevice();
@@ -61,13 +61,12 @@ namespace ave
 		void CreateSynchronizationObjects();
 		void CreatePipeline();
 		void SetUpRendering();
-		void CreateMeshes();
-		void PrepareScene(const vk::CommandBuffer& commandBuffer);
+		void SetUpScene();
 
-		void RecordDrawCommand(const vk::CommandBuffer& commandBuffer, uint32_t imageIndex, const Scene* scenePtr);
+		void RecordDrawCommands(const vk::CommandBuffer& commandBuffer, uint32_t imageIndex);
 
 		void RecreateSwapchain();
-		void DestroySwapchain();	
+		void DestroySwapchain();
 	};
 
 }

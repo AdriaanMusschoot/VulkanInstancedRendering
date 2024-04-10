@@ -4,7 +4,6 @@ ave::App::App(const std::string& windowName, uint32_t width, uint32_t height, bo
 	: m_WindowName{ windowName }
 	, m_Width{ width }
 	, m_Height{ height }
-	, m_TriangleSceneUPtr{ std::make_unique<Scene>() }
 {
 	CreateGLFWWindw(isDebugging);
 
@@ -21,7 +20,7 @@ void ave::App::Run()
 	while (!glfwWindowShouldClose(m_WindowPtr))
 	{
 		glfwPollEvents();
-		m_VKEngineUPtr->Render(m_TriangleSceneUPtr.get());
+		m_VKEngineUPtr->Render();
 		CalculateFPS();
 	}
 }

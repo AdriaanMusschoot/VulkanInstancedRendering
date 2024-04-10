@@ -34,7 +34,6 @@ namespace ave
 		int m_NumberOfFrames;
 		double m_FrameTime;
 
-		std::unique_ptr<Scene> m_TriangleSceneUPtr;
 		void CreateGLFWWindw(bool isDebugging);
 
 		void CalculateFPS();

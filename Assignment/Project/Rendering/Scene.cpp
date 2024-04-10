@@ -2,25 +2,23 @@
 
 ave::Scene::Scene()
 {
-	for (float idxX{ -1.f }; idxX < 1.0f; idxX += 0.2f)
-	{
-		for (float idxY{ -1.f }; idxY < 1.0f; idxY += 0.2f)
-		{
-			m_TrianglePositionVec.emplace_back(glm::vec3{ idxX, idxY, 0 });
-		}
-	}
 }
 
 ave::Scene::~Scene()
 {
 }
 
-void ave::Scene::AddMesh(const ave::Mesh& mesh)
+void ave::Scene::AddMesh(std::unique_ptr<ave::Mesh> meshUPtr)
 {
-	//m_MeshVec.emplace_back(mesh);
+	meshUPtr->InitializeBuffer();
+	m_MeshVec.emplace_back(std::move(meshUPtr));
 }
 
-const std::vector<glm::vec3>& ave::Scene::GetTrianglePositions() const
+void ave::Scene::Draw(const vk::CommandBuffer& commandBuffer)
 {
-	return m_TrianglePositionVec;
+	for (const auto& mesh : m_MeshVec)
+	{
+		mesh->BindBuffer(commandBuffer);
+		mesh->Draw(commandBuffer);
+	}
 }
