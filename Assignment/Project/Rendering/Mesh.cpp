@@ -74,6 +74,11 @@ void ave::Mesh::InitializeIndexBuffer(const MeshInBundle& in)
 	m_Device.freeMemory(stagingBuffer.BufferMemory);
 }
 
+void ave::Mesh::PushWorldMatrix(const vk::CommandBuffer& commandBuffer, const vk::PipelineLayout& pipelineLayout)
+{
+	commandBuffer.pushConstants(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(glm::mat4), &m_WorldMatrix);
+}
+
 void ave::Mesh::BindBuffers(const vk::CommandBuffer& commandBuffer)
 {
 	vk::Buffer vertexBufferArr[]{ m_VertexBuffer.Buffer };

@@ -27,20 +27,17 @@ ave::VulkanEngine::VulkanEngine(const std::string& windowName, int width, int he
 	CreateDescriptorSetLayout();
 	CreatePipeline();
 	SetUpRendering();	
-	SetUpScene();
+	CreateScene();
 }
 
 ave::VulkanEngine::~VulkanEngine()
 {
 	m_Device.waitIdle();	
 
-	m_SceneUPtr.reset();
+	m_PipelineUPtr.reset();
 
 	m_Device.destroyCommandPool(m_CommandPool);
 
-	m_Device.destroyPipeline(m_Pipeline);
-	m_Device.destroyPipelineLayout(m_PipelineLayout);
-	m_Device.destroyRenderPass(m_RenderPass);
 	m_Device.destroyDescriptorSetLayout(m_DescriptorSetLayout);
 
 	DestroySwapchain();
@@ -205,7 +202,7 @@ void ave::VulkanEngine::CreateSwapchain()
 
 void ave::VulkanEngine::CreatePipeline()
 {
-	vkInit::GraphicsPipelineInBundle specification{};
+	vkInit::Pipeline::GraphicsPipelineInBundle specification{};
 	specification.Device = m_Device;
 	specification.VertexFilePath = "shaders/shader.vert.spv";
 	specification.FragmentFilePath = "shaders/shader.frag.spv";
@@ -213,10 +210,7 @@ void ave::VulkanEngine::CreatePipeline()
 	specification.SwapchainImgFormat = m_SwapchainFormat;
 	specification.DescriptorSetLayout = m_DescriptorSetLayout;
 
-	vkInit::GraphicsPipelineOutBundle out{ vkInit::CreateGraphicsPipeline(specification, m_IsDebugging) };
-	m_PipelineLayout = out.Layout;
-	m_RenderPass = out.RenderPass;
-	m_Pipeline = out.Pipeline;
+	m_PipelineUPtr = std::make_unique<vkInit::Pipeline>(specification, m_IsDebugging);
 }
 
 void ave::VulkanEngine::SetUpRendering()
@@ -237,11 +231,15 @@ void ave::VulkanEngine::SetUpRendering()
 	vkInit::CreateFrameCommandBuffers(commandBufferIn, m_IsDebugging);
 
 	CreateFrameResources();
+
+	m_PipelineUPtr->SetScene(std::move(CreateScene()));
+
+	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -10 }, 45, static_cast<float>(m_SwapchainExtent.width) / static_cast<float>(m_SwapchainExtent.height));
 }
 
-void ave::VulkanEngine::SetUpScene()
+std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene()
 {
-	m_SceneUPtr = std::make_unique<ave::Scene>();
+	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene>() };
 
 	ave::MeshInBundle meshInput
 	{
@@ -251,35 +249,81 @@ void ave::VulkanEngine::SetUpScene()
 
 	std::unique_ptr triangleMeshUPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
 	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f } });
+	triangleMeshUPtr->AddIndex(0);
 	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f } });
+	triangleMeshUPtr->AddIndex(1);
 	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } });
+	triangleMeshUPtr->AddIndex(2);
 		
+	triangleMeshUPtr->InitializeIndexBuffer(meshInput);
 	triangleMeshUPtr->InitializeVertexBuffer(meshInput);
 
-	triangleMeshUPtr->AddIndex(0);
-	triangleMeshUPtr->AddIndex(1);
-	triangleMeshUPtr->AddIndex(2);
+	sceneUPtr->AddMesh(std::move(triangleMeshUPtr));
 
-	triangleMeshUPtr->InitializeIndexBuffer(meshInput);
+	std::unique_ptr circleMeshPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
 
-	m_SceneUPtr->AddMesh(std::move(triangleMeshUPtr));
+	constexpr double radius{ 0.7 };
+	constexpr int nrOfPoints{ 2000 };
+	constexpr int centerX{ 1};
+	constexpr int centerY{ -1 };
+
+	std::vector<vkUtil::Vertex2D> temp;
+	temp.reserve(nrOfPoints);
+	for (int idx{ 0 }; idx < nrOfPoints; ++idx)
+	{
+		double theta = 2.0 * 3.14 * idx / nrOfPoints;
+		vkUtil::Vertex2D vert{};
+		vert.Position.x = static_cast<float>(centerX + radius * std::cos(theta));
+		vert.Position.y = static_cast<float>(centerY + radius * std::sin(theta));
+
+		const float hue = static_cast<float>(idx) / static_cast<float>(nrOfPoints);
+		vert.Color = glm::vec3(glm::abs(glm::cos(hue * 3.14 * 2.0f)), glm::abs(glm::sin(hue * 3.14 * 2.0f)), 0.5f);
+		temp.emplace_back(std::move(vert));
+	}
+
+	uint32_t vIdx{};
+	for (int idx{ 0 }; idx < temp.size(); ++idx)
+	{
+		if (idx < temp.size() - 1)
+		{
+			circleMeshPtr->AddVertex(temp[idx + 1]);
+			circleMeshPtr->AddIndex(vIdx);
+			++vIdx;
+			circleMeshPtr->AddVertex(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec3{ 1, 1, 1 } });
+			circleMeshPtr->AddIndex(vIdx);
+			++vIdx;
+			circleMeshPtr->AddVertex(temp[idx]);
+			circleMeshPtr->AddIndex(vIdx);
+			++vIdx;
+		}
+		else
+		{
+			circleMeshPtr->AddVertex(temp[0]);
+			circleMeshPtr->AddIndex(vIdx);
+			++vIdx;
+			circleMeshPtr->AddVertex(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec3{ 1, 1, 1 } });
+			circleMeshPtr->AddIndex(vIdx);
+			++vIdx;
+			circleMeshPtr->AddVertex(temp[idx]);
+			circleMeshPtr->AddIndex(vIdx);
+			++vIdx;
+		}
+	}
+
+	circleMeshPtr->InitializeIndexBuffer(meshInput);
+	circleMeshPtr->InitializeVertexBuffer(meshInput);
+
+	sceneUPtr->AddMesh(std::move(circleMeshPtr));
+
+	return sceneUPtr;
 }
 
 void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
 {
-	glm::vec3 eye = { 0.0f, 0.0f, -1.0f };
-	glm::vec3 center = { 0.0f, 0.0f, 0.0f };
-	glm::vec3 up = { 0.0f, 0.0f, -1.0f };
-	glm::mat4 view = glm::lookAt(eye, center, up);
-
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), static_cast<float>(m_SwapchainExtent.width) / static_cast<float>(m_SwapchainExtent.height), 0.1f, 10.0f);
-	projection[1][1] *= -1;
-
-	
-	m_SwapchainFrameVec[imgIdx].WVPMatrix.ModelMatrix = glm::mat4(1.0f);
-	m_SwapchainFrameVec[imgIdx].WVPMatrix.ViewMatrix = glm::mat4(1.0f);
-	m_SwapchainFrameVec[imgIdx].WVPMatrix.ProjectionMatrix = projection;
-	memcpy(m_SwapchainFrameVec[imgIdx].WVPWriteLocationPtr, &(m_SwapchainFrameVec[imgIdx].WVPMatrix), sizeof(vkUtil::UBO));
+	m_CameraUPtr->Update();
+	m_SwapchainFrameVec[imgIdx].VPMatrix.ViewMatrix = m_CameraUPtr->GetViewMatrix();
+	m_SwapchainFrameVec[imgIdx].VPMatrix.ProjectionMatrix = m_CameraUPtr->GetProjectionMatrix();
+	memcpy(m_SwapchainFrameVec[imgIdx].VPWriteLocationPtr, &m_SwapchainFrameVec[imgIdx].VPMatrix, sizeof(vkUtil::UBO));
 
 	m_SwapchainFrameVec[imgIdx].WriteDescriptorSet(m_Device);
 }
@@ -288,7 +332,7 @@ void ave::VulkanEngine::CreateFrameBuffers()
 {
 	vkInit::FrameBufferInBundle frameBufferIn;
 	frameBufferIn.Device = m_Device;
-	frameBufferIn.RenderPass = m_RenderPass;
+	frameBufferIn.RenderPass = m_PipelineUPtr->GetRenderPass();
 	frameBufferIn.SwapchainExtent = m_SwapchainExtent;
 
 	vkInit::CreateFrameBuffers(frameBufferIn, m_SwapchainFrameVec, m_IsDebugging);
@@ -339,24 +383,7 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 		}
 	}
 
-	vk::RenderPassBeginInfo renderPassBeginInfo{};
-	renderPassBeginInfo.renderPass = m_RenderPass;
-	renderPassBeginInfo.framebuffer = m_SwapchainFrameVec[imageIndex].Framebuffer;
-	renderPassBeginInfo.renderArea.offset.x = 0;
-	renderPassBeginInfo.renderArea.offset.y = 0;
-	renderPassBeginInfo.renderArea.extent = m_SwapchainExtent;
-
-	vk::ClearValue clearValue{ std::array<float, 4>{1.0f, 0.5f, 0.25f, 1.0f } };
-	renderPassBeginInfo.clearValueCount = 1;
-	renderPassBeginInfo.pClearValues = &clearValue;
-
-	commandBuffer.beginRenderPass(&renderPassBeginInfo, vk::SubpassContents::eInline);
-
-	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_PipelineLayout, 0, m_SwapchainFrameVec[imageIndex].UBODescriptorSet, nullptr);
-
-	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline);
-
-	m_SceneUPtr->Draw(commandBuffer);
+	m_PipelineUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
 
 	commandBuffer.endRenderPass();
 
@@ -408,9 +435,9 @@ void ave::VulkanEngine::DestroySwapchain()
 		m_Device.destroyFence(frame.InFlightFence);
 		m_Device.destroyFramebuffer(frame.Framebuffer);
 		m_Device.destroyImageView(frame.ImageView);
-		m_Device.unmapMemory(frame.WVPBuffer.BufferMemory);
-		m_Device.freeMemory(frame.WVPBuffer.BufferMemory);
-		m_Device.destroyBuffer(frame.WVPBuffer.Buffer);
+		m_Device.unmapMemory(frame.VPBuffer.BufferMemory);
+		m_Device.freeMemory(frame.VPBuffer.BufferMemory);
+		m_Device.destroyBuffer(frame.VPBuffer.Buffer);
 	}
 	m_Device.destroyDescriptorPool(m_DescriptorPool);	
 

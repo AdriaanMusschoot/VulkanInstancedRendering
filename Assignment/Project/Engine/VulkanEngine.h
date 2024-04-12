@@ -4,6 +4,8 @@
 #include <GLFW/glfw3.h>
 #include "Utils/Frame.h"
 #include "Rendering/Scene.h"
+#include "Utils/Camera.h"
+#include "Pipeline/Pipeline.h"
 
 namespace ave
 {
@@ -45,9 +47,7 @@ namespace ave
 		vk::DescriptorSetLayout m_DescriptorSetLayout;
 		vk::DescriptorPool m_DescriptorPool;
 
-		vk::RenderPass m_RenderPass;
-		vk::PipelineLayout m_PipelineLayout;
-		vk::Pipeline m_Pipeline;
+		std::unique_ptr<vkInit::Pipeline> m_PipelineUPtr;
 
 		vk::CommandPool m_CommandPool;
 		vk::CommandBuffer m_MainCommandBuffer;
@@ -55,8 +55,7 @@ namespace ave
 		int m_MaxNrFramesInFlight;
 		int m_CurrentFrameNr;
 
-
-		std::unique_ptr<ave::Scene> m_SceneUPtr;
+		std::unique_ptr<ave::Camera> m_CameraUPtr;
 
 		void CreateInstance();
 		void CreateDevice();
@@ -66,7 +65,7 @@ namespace ave
 		void CreateDescriptorSetLayout();
 		void CreatePipeline();
 		void SetUpRendering();
-		void SetUpScene();
+		std::unique_ptr<ave::Scene> CreateScene();
 		void PrepareFrame(uint32_t imgIdx);
 
 		void RecordDrawCommands(const vk::CommandBuffer& commandBuffer, uint32_t imageIndex);

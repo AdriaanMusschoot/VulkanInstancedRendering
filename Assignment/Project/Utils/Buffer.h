@@ -6,7 +6,7 @@ namespace vkUtil
 {
 	struct BufferInBundle
 	{
-		size_t Size;
+		size_t Size{ static_cast<size_t>(-1) };
 		vk::BufferUsageFlags UsageFlags;
 		vk::Device Device;
 		vk::PhysicalDevice PhysicalDevice;

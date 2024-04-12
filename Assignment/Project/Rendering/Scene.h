@@ -14,7 +14,7 @@ namespace ave
 
 		void AddMesh(std::unique_ptr<ave::Mesh> meshUPtr);
 
-		void Draw(const vk::CommandBuffer& commandBuffer);
+		void Draw(const vk::CommandBuffer& commandBuffer, const vk::PipelineLayout& pipelineLayout);
 
 		Scene(const Scene& other) = delete;
 		Scene(Scene&& other) = delete;

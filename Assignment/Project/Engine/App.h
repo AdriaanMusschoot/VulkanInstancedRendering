@@ -29,12 +29,10 @@ namespace ave
 		//cannot have unique ptr because incomplete typedefined struct
 		GLFWwindow* m_WindowPtr{ nullptr };	
 
-		double m_LastTime;
-		double m_CurrentTime;
-		int m_NumberOfFrames;
-		double m_FrameTime;
+		double m_TimeElapsed{ 0 };
+		int m_NumberOfFrames{ 0 };
 
-		void CreateGLFWWindw(bool isDebugging);
+		void CreateGLFWWindow(bool isDebugging);
 
 		void CalculateFPS();
 	};

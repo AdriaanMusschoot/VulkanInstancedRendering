@@ -24,6 +24,7 @@ namespace ave
 		void AddIndex(uint32_t idx);
 		void InitializeIndexBuffer(const MeshInBundle& in);
 
+		void PushWorldMatrix(const vk::CommandBuffer& commandBuffer, const vk::PipelineLayout& pipelineLayout);
 		void BindBuffers(const vk::CommandBuffer& commandBuffer);
 		void Draw(const vk::CommandBuffer& commandBuffer) const;
 
@@ -40,6 +41,8 @@ namespace ave
 
 		vk::Device m_Device;
 		vk::PhysicalDevice m_PhysicalDevice;
+
+		glm::mat4 m_WorldMatrix{ 1.0f };	
 	};
 }
 

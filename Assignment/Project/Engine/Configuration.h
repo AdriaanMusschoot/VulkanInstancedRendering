@@ -11,4 +11,12 @@
 #include <sstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+namespace ave
+{
+
+	constexpr float Pi{ 3.14159265359f };
+	constexpr float ToRadians{ Pi / 180.f };
+	constexpr float ToDegrees{ 180.f / Pi };
+
+}
 #endif

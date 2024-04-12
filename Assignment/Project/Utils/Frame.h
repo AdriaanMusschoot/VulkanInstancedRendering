@@ -8,7 +8,6 @@ namespace vkUtil
 
 	struct UBO
 	{
-		glm::mat4 ModelMatrix;
 		glm::mat4 ViewMatrix;
 		glm::mat4 ProjectionMatrix;
 	};
@@ -25,9 +24,9 @@ namespace vkUtil
 		vk::Semaphore SemaphoreRenderingFinished;
 		vk::Fence InFlightFence;
 
-		UBO WVPMatrix;
-		vkUtil::DataBuffer WVPBuffer;
-		void* WVPWriteLocationPtr;
+		UBO VPMatrix{};
+		vkUtil::DataBuffer VPBuffer;
+		void* VPWriteLocationPtr{ nullptr };
 
 		vk::DescriptorBufferInfo UBODescriptorInfo;
 		vk::DescriptorSet UBODescriptorSet;
@@ -41,10 +40,10 @@ namespace vkUtil
 			input.Size = sizeof(UBO);
 			input.UsageFlags = vk::BufferUsageFlagBits::eUniformBuffer;
 
-			WVPBuffer = vkUtil::CreateBuffer(input);
-			WVPWriteLocationPtr = device.mapMemory(WVPBuffer.BufferMemory, 0, sizeof(UBO));
+			VPBuffer = vkUtil::CreateBuffer(input);
+			VPWriteLocationPtr = device.mapMemory(VPBuffer.BufferMemory, 0, sizeof(UBO));
 
-			UBODescriptorInfo.buffer = WVPBuffer.Buffer;
+			UBODescriptorInfo.buffer = VPBuffer.Buffer;
 			UBODescriptorInfo.offset = 0;
 			UBODescriptorInfo.range = sizeof(UBO);
 		}

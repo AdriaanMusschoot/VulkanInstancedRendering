@@ -6,7 +6,7 @@ namespace vkInit
 {
 	struct DescriptorSetLayoutData
 	{
-		int Count;
+		int Count{ -1 };
 		std::vector<int> IndexVec;
 		std::vector<vk::DescriptorType> TypeVec;
 		std::vector<int> CountVec;
