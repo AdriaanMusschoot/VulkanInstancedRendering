@@ -4,7 +4,7 @@
 #include "Shader.h"
 #include "Utils/RenderStructs.h"
 #include "Rendering/Scene.h"
-
+#include "functional"
 namespace vkInit
 {
 
@@ -13,21 +13,23 @@ namespace vkInit
 	public:
 
 		struct GraphicsPipelineInBundle
-	{
-		vk::Device Device;
-		std::string	VertexFilePath;
-		std::string FragmentFilePath;
-		vk::Extent2D SwapchainExtent;
-		vk::Format SwapchainImgFormat;
-		vk::DescriptorSetLayout DescriptorSetLayout;
-	};
+		{
+			vk::Device Device;
+			std::string	VertexFilePath;
+			std::string FragmentFilePath;
+			vk::Extent2D SwapchainExtent;
+			vk::Format SwapchainImgFormat;
+			vk::DescriptorSetLayout DescriptorSetLayout;
+			std::function<vk::VertexInputBindingDescription()> GetBindingDescription;
+			std::function<std::vector<vk::VertexInputAttributeDescription>()> GetAttributeDescription;
+		};
 	
 		struct GraphicsPipelineOutBundle
-	{
-		vk::PipelineLayout Layout;
-		vk::RenderPass RenderPass;
-		vk::Pipeline Pipeline;
-	};
+		{
+			vk::PipelineLayout Layout;
+			vk::RenderPass RenderPass;
+			vk::Pipeline Pipeline;
+		};
 
 		Pipeline(const GraphicsPipelineInBundle& in, bool isDebugging);
 		~Pipeline();
@@ -50,7 +52,7 @@ namespace vkInit
 
 		vk::PipelineLayout CreatePipelineLayout(const vk::Device& device, const vk::DescriptorSetLayout& descriptorSetLayout, bool isDebugging);
 		vk::RenderPass CreateRenderPass(const vk::Device& device, const vk::Format& swapchainImgFormat, bool isDebugging);
-		vk::PipelineVertexInputStateCreateInfo PopulateVertexInput(const vk::VertexInputBindingDescription& bindingDescription, const std::array<vk::VertexInputAttributeDescription, 2>& attributeDescriptionArr);
+		vk::PipelineVertexInputStateCreateInfo PopulateVertexInput(const vk::VertexInputBindingDescription& bindingDescription, const std::vector<vk::VertexInputAttributeDescription>& attributeDescriptionVec);
 		vk::PipelineInputAssemblyStateCreateInfo PopulateInputAssembly();
 		vk::PipelineShaderStageCreateInfo PopulateShaderStage(const vk::ShaderModule& shaderModule, const vk::ShaderStageFlagBits& flagBits);
 		vk::PipelineRasterizationStateCreateInfo PopulateRasterizationState();

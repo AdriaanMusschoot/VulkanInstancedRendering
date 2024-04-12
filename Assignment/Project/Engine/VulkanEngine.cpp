@@ -204,11 +204,13 @@ void ave::VulkanEngine::CreatePipeline()
 {
 	vkInit::Pipeline::GraphicsPipelineInBundle specification{};
 	specification.Device = m_Device;
-	specification.VertexFilePath = "shaders/shader.vert.spv";
-	specification.FragmentFilePath = "shaders/shader.frag.spv";
+	specification.VertexFilePath = "shaders/Shader2D.vert.spv";
+	specification.FragmentFilePath = "shaders/Shader2D.frag.spv";
 	specification.SwapchainExtent = m_SwapchainExtent;
 	specification.SwapchainImgFormat = m_SwapchainFormat;
 	specification.DescriptorSetLayout = m_DescriptorSetLayout;
+	specification.GetBindingDescription = vkUtil::GetPosColBindingDescription2D;
+	specification.GetAttributeDescription = vkUtil::GetPosColAttributeDescription2D;
 
 	m_PipelineUPtr = std::make_unique<vkInit::Pipeline>(specification, m_IsDebugging);
 }
@@ -247,18 +249,22 @@ std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene()
 		m_MainCommandBuffer
 	};
 
-	std::unique_ptr triangleMeshUPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
-	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f } });
-	triangleMeshUPtr->AddIndex(0);
-	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f } });
-	triangleMeshUPtr->AddIndex(1);
-	triangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } });
-	triangleMeshUPtr->AddIndex(2);
+	std::unique_ptr RectangleMeshUPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
+	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.1f, 0.0f }, { 0.0f, 1.0f, 0.0f } });
+	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } });
+	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.1f, 0.1f }, { 0.0f, 1.0f, 0.0f } });
+	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.1f }, { 0.0f, 0.0f, 1.0f } });
+	RectangleMeshUPtr->AddIndex(0);
+	RectangleMeshUPtr->AddIndex(1);
+	RectangleMeshUPtr->AddIndex(2);
+	RectangleMeshUPtr->AddIndex(1);
+	RectangleMeshUPtr->AddIndex(2);
+	RectangleMeshUPtr->AddIndex(3);
 		
-	triangleMeshUPtr->InitializeIndexBuffer(meshInput);
-	triangleMeshUPtr->InitializeVertexBuffer(meshInput);
+	RectangleMeshUPtr->InitializeIndexBuffer(meshInput);
+	RectangleMeshUPtr->InitializeVertexBuffer(meshInput);
 
-	sceneUPtr->AddMesh(std::move(triangleMeshUPtr));
+	sceneUPtr->AddMesh(std::move(RectangleMeshUPtr));
 
 	std::unique_ptr circleMeshPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
 

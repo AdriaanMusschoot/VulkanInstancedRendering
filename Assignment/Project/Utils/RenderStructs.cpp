@@ -1,6 +1,6 @@
 #include "RenderStructs.h"
 
-vk::VertexInputBindingDescription vkUtil::GetPosColBindingDescription()
+vk::VertexInputBindingDescription vkUtil::GetPosColBindingDescription2D()
 {
 	vk::VertexInputBindingDescription bindingDescription;
 	bindingDescription.binding = 0;
@@ -10,18 +10,12 @@ vk::VertexInputBindingDescription vkUtil::GetPosColBindingDescription()
 	return bindingDescription;
 }
 
-std::array<vk::VertexInputAttributeDescription, 2> vkUtil::GetPosColAttributeDescription()
+std::vector<vk::VertexInputAttributeDescription> vkUtil::GetPosColAttributeDescription2D()
 {
-	std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptionArr{};
-	attributeDescriptionArr[0].binding = 0;
-	attributeDescriptionArr[0].location = 0;
-	attributeDescriptionArr[0].format = vk::Format::eR32G32Sfloat;
-	attributeDescriptionArr[0].offset = 0;
+	std::vector<vk::VertexInputAttributeDescription> attributeDescriptionVec{};
 
-	attributeDescriptionArr[1].binding = 0;
-	attributeDescriptionArr[1].location = 1;
-	attributeDescriptionArr[1].format = vk::Format::eR32G32B32Sfloat;
-	attributeDescriptionArr[1].offset = sizeof(Vertex2D::Position);
+	attributeDescriptionVec.emplace_back(vk::VertexInputAttributeDescription{ 0, 0, vk::Format::eR32G32Sfloat, 0 });
+	attributeDescriptionVec.emplace_back(vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32B32Sfloat, sizeof(Vertex2D::Position) });
 
-	return attributeDescriptionArr;
+	return attributeDescriptionVec;
 }

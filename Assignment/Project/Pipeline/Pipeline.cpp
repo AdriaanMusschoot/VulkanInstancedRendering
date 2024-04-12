@@ -120,7 +120,7 @@ vk::RenderPass vkInit::Pipeline::CreateRenderPass(const vk::Device& device, cons
 	}
 }
 
-vk::PipelineVertexInputStateCreateInfo vkInit::Pipeline::PopulateVertexInput(const vk::VertexInputBindingDescription& bindingDescription, const std::array<vk::VertexInputAttributeDescription, 2>& attributeDescriptionArr)
+vk::PipelineVertexInputStateCreateInfo vkInit::Pipeline::PopulateVertexInput(const vk::VertexInputBindingDescription& bindingDescription, const std::vector<vk::VertexInputAttributeDescription>& attributeDescriptionArr)
 {
 	vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
 	vertexInputStateCreateInfo.flags = vk::PipelineVertexInputStateCreateFlags{};
@@ -231,8 +231,8 @@ vkInit::Pipeline::GraphicsPipelineOutBundle vkInit::Pipeline::CreateGraphicsPipe
 	std::vector<vk::PipelineShaderStageCreateInfo> shaderStageCreateInfoVec{};
 
 	//Vertex input/what we will be sending
-	vk::VertexInputBindingDescription bindingDescription{ vkUtil::GetPosColBindingDescription() };
-	std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptionArr{ vkUtil::GetPosColAttributeDescription() };
+	vk::VertexInputBindingDescription bindingDescription{ vkUtil::GetPosColBindingDescription2D() };
+	std::vector attributeDescriptionArr{ vkUtil::GetPosColAttributeDescription2D() };
 
 	vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{ PopulateVertexInput(bindingDescription, attributeDescriptionArr) };
 	pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;

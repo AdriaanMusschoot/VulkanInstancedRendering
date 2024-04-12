@@ -10,9 +10,9 @@ namespace vkUtil
 		glm::vec3 Color;
 	};
 
-	vk::VertexInputBindingDescription GetPosColBindingDescription();
+	vk::VertexInputBindingDescription GetPosColBindingDescription2D();
 
-	std::array<vk::VertexInputAttributeDescription, 2> GetPosColAttributeDescription();
+	std::vector<vk::VertexInputAttributeDescription> GetPosColAttributeDescription2D();
 }
 
 #endif
