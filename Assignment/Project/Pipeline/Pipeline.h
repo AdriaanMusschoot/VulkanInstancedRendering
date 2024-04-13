@@ -20,7 +20,7 @@ namespace vkInit
 			vk::Extent2D SwapchainExtent;
 			vk::Format SwapchainImgFormat;
 			vk::DescriptorSetLayout DescriptorSetLayout;
-			std::function<vk::VertexInputBindingDescription()> GetBindingDescription;
+			std::function<std::vector<vk::VertexInputBindingDescription>()> GetBindingDescription;
 			std::function<std::vector<vk::VertexInputAttributeDescription>()> GetAttributeDescription;
 		};
 	
@@ -52,7 +52,7 @@ namespace vkInit
 
 		vk::PipelineLayout CreatePipelineLayout(const vk::Device& device, const vk::DescriptorSetLayout& descriptorSetLayout, bool isDebugging);
 		vk::RenderPass CreateRenderPass(const vk::Device& device, const vk::Format& swapchainImgFormat, bool isDebugging);
-		vk::PipelineVertexInputStateCreateInfo PopulateVertexInput(const vk::VertexInputBindingDescription& bindingDescription, const std::vector<vk::VertexInputAttributeDescription>& attributeDescriptionVec);
+		vk::PipelineVertexInputStateCreateInfo PopulateVertexInput(const std::vector<vk::VertexInputBindingDescription>& bindingDescriptionVec, const std::vector<vk::VertexInputAttributeDescription>& attributeDescriptionVec);
 		vk::PipelineInputAssemblyStateCreateInfo PopulateInputAssembly();
 		vk::PipelineShaderStageCreateInfo PopulateShaderStage(const vk::ShaderModule& shaderModule, const vk::ShaderStageFlagBits& flagBits);
 		vk::PipelineRasterizationStateCreateInfo PopulateRasterizationState();

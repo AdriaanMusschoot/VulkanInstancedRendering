@@ -120,14 +120,14 @@ vk::RenderPass vkInit::Pipeline::CreateRenderPass(const vk::Device& device, cons
 	}
 }
 
-vk::PipelineVertexInputStateCreateInfo vkInit::Pipeline::PopulateVertexInput(const vk::VertexInputBindingDescription& bindingDescription, const std::vector<vk::VertexInputAttributeDescription>& attributeDescriptionArr)
+vk::PipelineVertexInputStateCreateInfo vkInit::Pipeline::PopulateVertexInput(const std::vector<vk::VertexInputBindingDescription>& bindingDescriptionVec, const std::vector<vk::VertexInputAttributeDescription>& attributeDescriptionVec)
 {
 	vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
 	vertexInputStateCreateInfo.flags = vk::PipelineVertexInputStateCreateFlags{};
-	vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
-	vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDescription;
-	vertexInputStateCreateInfo.vertexAttributeDescriptionCount = 2;
-	vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributeDescriptionArr.data();
+	vertexInputStateCreateInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptionVec.size());
+	vertexInputStateCreateInfo.pVertexBindingDescriptions = bindingDescriptionVec.data();
+	vertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptionVec.size());
+	vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributeDescriptionVec.data();
 
 	return vertexInputStateCreateInfo;
 }
@@ -231,8 +231,8 @@ vkInit::Pipeline::GraphicsPipelineOutBundle vkInit::Pipeline::CreateGraphicsPipe
 	std::vector<vk::PipelineShaderStageCreateInfo> shaderStageCreateInfoVec{};
 
 	//Vertex input/what we will be sending
-	vk::VertexInputBindingDescription bindingDescription{ vkUtil::GetPosColBindingDescription2D() };
-	std::vector attributeDescriptionArr{ vkUtil::GetPosColAttributeDescription2D() };
+	std::vector<vk::VertexInputBindingDescription> bindingDescription{ in.GetBindingDescription() };
+	std::vector attributeDescriptionArr{ in.GetAttributeDescription() };
 
 	vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{ PopulateVertexInput(bindingDescription, attributeDescriptionArr) };
 	pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;

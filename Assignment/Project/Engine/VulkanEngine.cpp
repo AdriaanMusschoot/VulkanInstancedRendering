@@ -27,14 +27,15 @@ ave::VulkanEngine::VulkanEngine(const std::string& windowName, int width, int he
 	CreateDescriptorSetLayout();
 	CreatePipeline();
 	SetUpRendering();	
-	CreateScene();
+	CreateScene2D();
 }
 
 ave::VulkanEngine::~VulkanEngine()
 {
 	m_Device.waitIdle();	
 
-	m_PipelineUPtr.reset();
+	m_Pipeline2DUPtr.reset();
+	m_Pipeline3DUPtr.reset();
 
 	m_Device.destroyCommandPool(m_CommandPool);
 
@@ -204,15 +205,23 @@ void ave::VulkanEngine::CreatePipeline()
 {
 	vkInit::Pipeline::GraphicsPipelineInBundle specification{};
 	specification.Device = m_Device;
-	specification.VertexFilePath = "shaders/Shader2D.vert.spv";
-	specification.FragmentFilePath = "shaders/Shader2D.frag.spv";
 	specification.SwapchainExtent = m_SwapchainExtent;
 	specification.SwapchainImgFormat = m_SwapchainFormat;
 	specification.DescriptorSetLayout = m_DescriptorSetLayout;
-	specification.GetBindingDescription = vkUtil::GetPosColBindingDescription2D;
-	specification.GetAttributeDescription = vkUtil::GetPosColAttributeDescription2D;
 
-	m_PipelineUPtr = std::make_unique<vkInit::Pipeline>(specification, m_IsDebugging);
+	specification.VertexFilePath = "shaders/Shader2D.vert.spv";
+	specification.FragmentFilePath = "shaders/Shader2D.frag.spv";
+	specification.GetBindingDescription = vkUtil::GetBindingDescription2D;
+	specification.GetAttributeDescription = vkUtil::GetAttributeDescription2D;
+
+	m_Pipeline2DUPtr = std::make_unique<vkInit::Pipeline>(specification, m_IsDebugging);
+
+	specification.VertexFilePath = "shaders/Shader3D.vert.spv";
+	specification.FragmentFilePath = "shaders/Shader3D.frag.spv";
+	specification.GetBindingDescription = vkUtil::GetBindingDescription3D;
+	specification.GetAttributeDescription = vkUtil::GetAttributeDescription3D;
+
+	m_Pipeline3DUPtr = std::make_unique<vkInit::Pipeline>(specification, m_IsDebugging);
 }
 
 void ave::VulkanEngine::SetUpRendering()
@@ -234,12 +243,12 @@ void ave::VulkanEngine::SetUpRendering()
 
 	CreateFrameResources();
 
-	m_PipelineUPtr->SetScene(std::move(CreateScene()));
+	m_Pipeline2DUPtr->SetScene(std::move(CreateScene2D()));
 
 	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -10 }, 45, static_cast<float>(m_SwapchainExtent.width) / static_cast<float>(m_SwapchainExtent.height));
 }
 
-std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene()
+std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene2D()
 {
 	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene>() };
 
@@ -268,10 +277,10 @@ std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene()
 
 	std::unique_ptr circleMeshPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
 
-	constexpr double radius{ 0.7 };
+	constexpr double radius{ 0.2 };
 	constexpr int nrOfPoints{ 2000 };
-	constexpr int centerX{ 1};
-	constexpr int centerY{ -1 };
+	constexpr float centerX{ 0.5 };
+	constexpr float centerY{ -0.5 };
 
 	std::vector<vkUtil::Vertex2D> temp;
 	temp.reserve(nrOfPoints);
@@ -324,6 +333,12 @@ std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene()
 	return sceneUPtr;
 }
 
+std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene3D()
+{
+	std::unique_ptr<ave::Scene> scenePtr{};
+	return scenePtr;
+}
+
 void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
 {
 	m_CameraUPtr->Update();
@@ -338,7 +353,7 @@ void ave::VulkanEngine::CreateFrameBuffers()
 {
 	vkInit::FrameBufferInBundle frameBufferIn;
 	frameBufferIn.Device = m_Device;
-	frameBufferIn.RenderPass = m_PipelineUPtr->GetRenderPass();
+	frameBufferIn.RenderPass = m_Pipeline2DUPtr->GetRenderPass();
 	frameBufferIn.SwapchainExtent = m_SwapchainExtent;
 
 	vkInit::CreateFrameBuffers(frameBufferIn, m_SwapchainFrameVec, m_IsDebugging);
@@ -389,7 +404,7 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 		}
 	}
 
-	m_PipelineUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
+	m_Pipeline2DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
 
 	commandBuffer.endRenderPass();
 
