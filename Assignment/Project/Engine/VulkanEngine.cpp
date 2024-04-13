@@ -34,6 +34,7 @@ ave::VulkanEngine::~VulkanEngine()
 {
 	m_Device.waitIdle();	
 
+	m_RenderPassUPtr.reset();
 	m_Pipeline2DUPtr.reset();
 	m_Pipeline3DUPtr.reset();
 
@@ -203,11 +204,14 @@ void ave::VulkanEngine::CreateSwapchain()
 
 void ave::VulkanEngine::CreatePipeline()
 {
+	m_RenderPassUPtr = std::make_unique<vkInit::RenderPass>(m_Device, m_SwapchainFormat, m_IsDebugging);
+
 	vkInit::Pipeline::GraphicsPipelineInBundle specification{};
 	specification.Device = m_Device;
 	specification.SwapchainExtent = m_SwapchainExtent;
 	specification.SwapchainImgFormat = m_SwapchainFormat;
 	specification.DescriptorSetLayout = m_DescriptorSetLayout;
+	specification.RenderPass = m_RenderPassUPtr->GetRenderPass();
 
 	specification.VertexFilePath = "shaders/Shader2D.vert.spv";
 	specification.FragmentFilePath = "shaders/Shader2D.frag.spv";
@@ -245,6 +249,8 @@ void ave::VulkanEngine::SetUpRendering()
 
 	m_Pipeline2DUPtr->SetScene(std::move(CreateScene2D()));
 
+	m_Pipeline3DUPtr->SetScene(std::move(CreateScene3D()));
+
 	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -10 }, 45, static_cast<float>(m_SwapchainExtent.width) / static_cast<float>(m_SwapchainExtent.height));
 }
 
@@ -259,10 +265,10 @@ std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene2D()
 	};
 
 	std::unique_ptr RectangleMeshUPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
-	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.1f, 0.0f }, { 0.0f, 1.0f, 0.0f } });
+	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.2f, 0.0f }, { 0.0f, 1.0f, 0.0f } });
 	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } });
-	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.1f, 0.1f }, { 0.0f, 1.0f, 0.0f } });
-	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.1f }, { 0.0f, 0.0f, 1.0f } });
+	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.2f, 0.2f }, { 0.0f, 1.0f, 0.0f } });
+	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.2f }, { 0.0f, 0.0f, 1.0f } });
 	RectangleMeshUPtr->AddIndex(0);
 	RectangleMeshUPtr->AddIndex(1);
 	RectangleMeshUPtr->AddIndex(2);
@@ -277,10 +283,10 @@ std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene2D()
 
 	std::unique_ptr circleMeshPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
 
-	constexpr double radius{ 0.2 };
-	constexpr int nrOfPoints{ 2000 };
-	constexpr float centerX{ 0.5 };
-	constexpr float centerY{ -0.5 };
+	constexpr double radius{ 0.1 };
+	constexpr int nrOfPoints{ 100 };
+	constexpr float centerX{ 0.1 };
+	constexpr float centerY{ -0.1 };
 
 	std::vector<vkUtil::Vertex2D> temp;
 	temp.reserve(nrOfPoints);
@@ -336,6 +342,9 @@ std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene2D()
 std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene3D()
 {
 	std::unique_ptr<ave::Scene> scenePtr{};
+
+
+
 	return scenePtr;
 }
 
@@ -353,7 +362,7 @@ void ave::VulkanEngine::CreateFrameBuffers()
 {
 	vkInit::FrameBufferInBundle frameBufferIn;
 	frameBufferIn.Device = m_Device;
-	frameBufferIn.RenderPass = m_Pipeline2DUPtr->GetRenderPass();
+	frameBufferIn.RenderPass = m_RenderPassUPtr->GetRenderPass();
 	frameBufferIn.SwapchainExtent = m_SwapchainExtent;
 
 	vkInit::CreateFrameBuffers(frameBufferIn, m_SwapchainFrameVec, m_IsDebugging);
@@ -404,9 +413,13 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 		}
 	}
 
+	m_RenderPassUPtr->BeginRenderPass(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent);
+
 	m_Pipeline2DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
 
-	commandBuffer.endRenderPass();
+	m_Pipeline3DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
+
+	m_RenderPassUPtr->EndRenderPass(commandBuffer);
 
 	try
 	{

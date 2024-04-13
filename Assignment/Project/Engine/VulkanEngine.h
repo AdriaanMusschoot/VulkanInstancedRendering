@@ -6,6 +6,7 @@
 #include "Rendering/Scene.h"
 #include "Utils/Camera.h"
 #include "Pipeline/Pipeline.h"
+#include "Pipeline/RenderPass.h"
 
 namespace ave
 {
@@ -47,6 +48,7 @@ namespace ave
 		vk::DescriptorSetLayout m_DescriptorSetLayout;
 		vk::DescriptorPool m_DescriptorPool;
 
+		std::unique_ptr<vkInit::RenderPass> m_RenderPassUPtr;
 		std::unique_ptr<vkInit::Pipeline> m_Pipeline2DUPtr;
 		std::unique_ptr<vkInit::Pipeline> m_Pipeline3DUPtr;
 
