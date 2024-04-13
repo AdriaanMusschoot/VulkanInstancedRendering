@@ -3,6 +3,8 @@
 #include "Engine/Configuration.h"
 #include "Utils/Buffer.h"
 #include "Utils/RenderStructs.h"
+#include "Utils/FileReader.h"
+#define TINYOBJLOADER_IMPLEMENTATION
 
 namespace ave
 {
@@ -22,7 +24,17 @@ namespace ave
 		{
 
 		}
-
+		Mesh(const vk::Device& device, const vk::PhysicalDevice& physicalDevice, const MeshInBundle& in, const std::string& filePath)
+			: m_Device{ device }
+			, m_PhysicalDevice{ physicalDevice }
+		{
+			if (not vkUtil::ParseOBJ<VertexStruct>(filePath, m_VertexVec, m_IndexVec, true))
+			{
+				std::cout << "Failed to load file\n";
+			}
+			InitializeIndexBuffer(in);
+			InitializeVertexBuffer(in);
+		}
 		~Mesh()
 		{
 			m_Device.destroyBuffer(m_VertexBuffer.Buffer);

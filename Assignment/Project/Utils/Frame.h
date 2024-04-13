@@ -11,12 +11,18 @@ namespace vkUtil
 		glm::mat4 ViewMatrix;
 		glm::mat4 ProjectionMatrix;
 	};
-
+	
 	struct SwapchainFrame
 	{
 		vk::Image Image;
 		vk::ImageView ImageView;
 		vk::Framebuffer Framebuffer;
+
+		vk::Image DepthBuffer;
+		vk::ImageView DepthBufferView;
+		vk::DeviceMemory DepthBufferMemory;
+		vk::Format DepthFormat;
+		vk::Extent2D DepthExtensions;
 
 		vk::CommandBuffer CommandBuffer;
 
@@ -59,6 +65,16 @@ namespace vkUtil
 			writeInfo.pBufferInfo = &UBODescriptorInfo;
 
 			device.updateDescriptorSets(writeInfo, nullptr);
+		}
+
+		void CreateDepthResources()
+		{
+
+		}
+
+		void DestroyFrame()
+		{
+
 		}
 	};
 

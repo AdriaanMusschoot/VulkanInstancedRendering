@@ -269,7 +269,7 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
 
 	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene<vkUtil::Vertex2D>>() };
 	
-	std::unique_ptr RectangleMeshUPtr = std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice);
+	std::unique_ptr RectangleMeshUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice) };
 	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.2f, 0.0f }, { 0.0f, 1.0f, 0.0f } });
 	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } });
 	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.2f, 0.2f }, { 0.0f, 1.0f, 0.0f } });
@@ -286,7 +286,7 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
 	
 	sceneUPtr->AddMesh(std::move(RectangleMeshUPtr));
 	
-	std::unique_ptr circleMeshPtr = std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice);
+	std::unique_ptr circleMeshPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice) };
 	
 	constexpr double radius{ 0.1 };
 	constexpr int nrOfPoints{ 100 };
@@ -346,8 +346,21 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
 
 std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> ave::VulkanEngine::CreateScene3D()
 {
-	std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> scenePtr{};
-	return scenePtr;
+	ave::MeshInBundle meshInput
+	{
+		m_GraphicsQueue,
+		m_MainCommandBuffer
+	};
+
+	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene<vkUtil::Vertex3D>>() };
+
+	const std::string fileName{ "Resources/vehicle.obj" };
+
+	std::unique_ptr cubeMeshUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, fileName)};
+
+	sceneUPtr->AddMesh(std::move(cubeMeshUPtr));
+
+	return sceneUPtr;
 }
 
 void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
@@ -417,9 +430,9 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 
 	m_RenderPassUPtr->BeginRenderPass(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent);
 
-	m_Pipeline2DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
-
 	m_Pipeline3DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
+
+	m_Pipeline2DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
 
 	m_RenderPassUPtr->EndRenderPass(commandBuffer);
 

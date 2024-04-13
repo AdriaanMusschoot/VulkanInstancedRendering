@@ -15,8 +15,8 @@ namespace vkUtil
 	struct Vertex3D
 	{
 		glm::vec3 Position;
-		glm::vec3 Color;
 		glm::vec3 Normal;
+		glm::vec3 Color;
 	};
 	std::vector<vk::VertexInputBindingDescription> GetBindingDescription3D();
 	std::vector<vk::VertexInputAttributeDescription> GetAttributeDescription3D();

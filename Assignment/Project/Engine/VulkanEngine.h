@@ -3,11 +3,11 @@
 #include "Engine/Configuration.h"
 #include <GLFW/glfw3.h>
 #include "Utils/Frame.h"
-#include "Rendering/Scene.h"
 #include "Utils/Camera.h"
 #include "Pipeline/Pipeline.h"
 #include "Pipeline/RenderPass.h"
-#include "Rendering/Mesh.h"
+#include "Rendering/Scene.h"
+
 namespace ave
 {
 
@@ -28,7 +28,7 @@ namespace ave
 	
 		const std::string m_WindowName{ "GP2 Assignment" };
 		int m_Width{ 690 };
-		int m_Height{ 480 };
+		int m_Height{ 420 };
 		GLFWwindow * m_WindowPtr{ nullptr };
 	
 		vk::Instance m_Instance{ nullptr };

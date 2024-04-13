@@ -31,8 +31,8 @@ std::vector<vk::VertexInputAttributeDescription> vkUtil::GetAttributeDescription
 	std::vector<vk::VertexInputAttributeDescription> attributeDescriptionVec{};
 
 	attributeDescriptionVec.emplace_back(vk::VertexInputAttributeDescription{ 0, 0, vk::Format::eR32G32B32Sfloat, 0 });
-	attributeDescriptionVec.emplace_back(vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex3D, Position) });
-	attributeDescriptionVec.emplace_back(vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex3D, Color) });
+	attributeDescriptionVec.emplace_back(vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32B32Sfloat, sizeof(Vertex3D::Position) });
+	attributeDescriptionVec.emplace_back(vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32B32Sfloat, sizeof(Vertex3D::Position) + sizeof(Vertex3D::Normal) });
 
 	return attributeDescriptionVec;
 }

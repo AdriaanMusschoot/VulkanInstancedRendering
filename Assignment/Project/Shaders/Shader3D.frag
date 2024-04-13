@@ -20,7 +20,7 @@ void main()
 	mainLight.direction = vec3(0.577f, -0.577f, 0.577f);
 	mainLight.color = vec3(1.0f, 1.0f, 1.0);
 	mainLight.intensity = 1.0f;
-
+	
 	float cosAngle = max(dot(fragWorldNormal, normalize(-mainLight.direction)), 0);
-	outColor = vec4(cosAngle * fragColor, 0);
+	outColor = vec4(cosAngle * fragColor, 1.0f);
 }

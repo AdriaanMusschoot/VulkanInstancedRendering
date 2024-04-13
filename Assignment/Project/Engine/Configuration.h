@@ -19,4 +19,5 @@ namespace ave
 	constexpr float ToDegrees{ 180.f / Pi };
 
 }
+
 #endif

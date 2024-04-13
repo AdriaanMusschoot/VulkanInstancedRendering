@@ -32,11 +32,13 @@ set(SOURCES
 
     "Utils/QueueFamilies.h" "Utils/Frame.h"  "Utils/Logging.h" 
     "Utils/RenderStructs.cpp" "Utils/Buffer.cpp" "Utils/Camera.cpp"
+    "Utils/FileReader.cpp"
 
     "Pipeline/Shader.cpp"   "Pipeline/Descriptor.h" "Pipeline/RenderPass.cpp"
+    "Pipeline/Pipeline.cpp"
 
     "Rendering/Swapchain.h" "Rendering/FrameBuffer.h" "Rendering/Commands.h" 
-    "Rendering/Synchronization.h"  )
+    "Rendering/Synchronization.h"  "Rendering/Scene.cpp" "Rendering/Mesh.cpp" "Rendering/Image.cpp" "Rendering/stb_image.h")
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})
@@ -44,3 +46,11 @@ add_dependencies(${PROJECT_NAME} Shaders)
 # Link libraries
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${Vulkan_LIBRARIES} glfw)
+
+set(RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Resources")
+set(RESOURCES_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/Resources")
+
+add_custom_command(
+    TARGET Assignment PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${RESOURCES_DIR} ${RESOURCES_BINARY_DIR}
+)

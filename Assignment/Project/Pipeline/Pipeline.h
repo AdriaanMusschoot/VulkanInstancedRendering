@@ -327,11 +327,6 @@ namespace vkInit
 		}
 	};
 
-
-
-
-
-
 }
 
 #endif
