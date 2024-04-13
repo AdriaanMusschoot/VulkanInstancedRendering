@@ -206,26 +206,31 @@ void ave::VulkanEngine::CreatePipeline()
 {
 	m_RenderPassUPtr = std::make_unique<vkInit::RenderPass>(m_Device, m_SwapchainFormat, m_IsDebugging);
 
-	vkInit::Pipeline::GraphicsPipelineInBundle specification{};
-	specification.Device = m_Device;
-	specification.SwapchainExtent = m_SwapchainExtent;
-	specification.SwapchainImgFormat = m_SwapchainFormat;
-	specification.DescriptorSetLayout = m_DescriptorSetLayout;
-	specification.RenderPass = m_RenderPassUPtr->GetRenderPass();
+	vkInit::Pipeline<vkUtil::Vertex2D>::GraphicsPipelineInBundle specification2D{};
+	specification2D.Device = m_Device;
+	specification2D.SwapchainExtent = m_SwapchainExtent;
+	specification2D.SwapchainImgFormat = m_SwapchainFormat;
+	specification2D.DescriptorSetLayout = m_DescriptorSetLayout;
+	specification2D.RenderPass = m_RenderPassUPtr->GetRenderPass();
+	specification2D.VertexFilePath = "shaders/Shader2D.vert.spv";
+	specification2D.FragmentFilePath = "shaders/Shader2D.frag.spv";
+	specification2D.GetBindingDescription = vkUtil::GetBindingDescription2D;
+	specification2D.GetAttributeDescription = vkUtil::GetAttributeDescription2D;
 
-	specification.VertexFilePath = "shaders/Shader2D.vert.spv";
-	specification.FragmentFilePath = "shaders/Shader2D.frag.spv";
-	specification.GetBindingDescription = vkUtil::GetBindingDescription2D;
-	specification.GetAttributeDescription = vkUtil::GetAttributeDescription2D;
+	m_Pipeline2DUPtr = std::make_unique<vkInit::Pipeline<vkUtil::Vertex2D>>(specification2D, m_IsDebugging);
 
-	m_Pipeline2DUPtr = std::make_unique<vkInit::Pipeline>(specification, m_IsDebugging);
+	vkInit::Pipeline<vkUtil::Vertex3D>::GraphicsPipelineInBundle specification3D{};
+	specification3D.Device = m_Device;
+	specification3D.SwapchainExtent = m_SwapchainExtent;
+	specification3D.SwapchainImgFormat = m_SwapchainFormat;
+	specification3D.DescriptorSetLayout = m_DescriptorSetLayout;
+	specification3D.RenderPass = m_RenderPassUPtr->GetRenderPass();
+	specification3D.VertexFilePath = "shaders/Shader3D.vert.spv";
+	specification3D.FragmentFilePath = "shaders/Shader3D.frag.spv";
+	specification3D.GetBindingDescription = vkUtil::GetBindingDescription3D;
+	specification3D.GetAttributeDescription = vkUtil::GetAttributeDescription3D;
 
-	specification.VertexFilePath = "shaders/Shader3D.vert.spv";
-	specification.FragmentFilePath = "shaders/Shader3D.frag.spv";
-	specification.GetBindingDescription = vkUtil::GetBindingDescription3D;
-	specification.GetAttributeDescription = vkUtil::GetAttributeDescription3D;
-
-	m_Pipeline3DUPtr = std::make_unique<vkInit::Pipeline>(specification, m_IsDebugging);
+	m_Pipeline3DUPtr = std::make_unique<vkInit::Pipeline<vkUtil::Vertex3D>>(specification3D, m_IsDebugging);
 }
 
 void ave::VulkanEngine::SetUpRendering()
@@ -254,17 +259,17 @@ void ave::VulkanEngine::SetUpRendering()
 	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -10 }, 45, static_cast<float>(m_SwapchainExtent.width) / static_cast<float>(m_SwapchainExtent.height));
 }
 
-std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene2D()
+std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
 {
-	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene>() };
-
 	ave::MeshInBundle meshInput
 	{
 		m_GraphicsQueue,
 		m_MainCommandBuffer
 	};
 
-	std::unique_ptr RectangleMeshUPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
+	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene<vkUtil::Vertex2D>>() };
+	
+	std::unique_ptr RectangleMeshUPtr = std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice);
 	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.2f, 0.0f }, { 0.0f, 1.0f, 0.0f } });
 	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } });
 	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.2f, 0.2f }, { 0.0f, 1.0f, 0.0f } });
@@ -278,73 +283,70 @@ std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene2D()
 		
 	RectangleMeshUPtr->InitializeIndexBuffer(meshInput);
 	RectangleMeshUPtr->InitializeVertexBuffer(meshInput);
-
+	
 	sceneUPtr->AddMesh(std::move(RectangleMeshUPtr));
-
-	std::unique_ptr circleMeshPtr = std::make_unique<ave::Mesh>(m_Device, m_PhysicalDevice);
-
+	
+	std::unique_ptr circleMeshPtr = std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice);
+	
 	constexpr double radius{ 0.1 };
 	constexpr int nrOfPoints{ 100 };
 	constexpr float centerX{ 0.1 };
 	constexpr float centerY{ -0.1 };
-
-	std::vector<vkUtil::Vertex2D> temp;
-	temp.reserve(nrOfPoints);
+	
+	std::vector<vkUtil::Vertex2D> tempVertexVec;
+	tempVertexVec.reserve(nrOfPoints);
 	for (int idx{ 0 }; idx < nrOfPoints; ++idx)
 	{
 		double theta = 2.0 * 3.14 * idx / nrOfPoints;
 		vkUtil::Vertex2D vert{};
 		vert.Position.x = static_cast<float>(centerX + radius * std::cos(theta));
 		vert.Position.y = static_cast<float>(centerY + radius * std::sin(theta));
-
+	
 		const float hue = static_cast<float>(idx) / static_cast<float>(nrOfPoints);
 		vert.Color = glm::vec3(glm::abs(glm::cos(hue * 3.14 * 2.0f)), glm::abs(glm::sin(hue * 3.14 * 2.0f)), 0.5f);
-		temp.emplace_back(std::move(vert));
+		tempVertexVec.emplace_back(vert);
 	}
-
+	
 	uint32_t vIdx{};
-	for (int idx{ 0 }; idx < temp.size(); ++idx)
+	for (int idx{ 0 }; idx < tempVertexVec.size(); ++idx)
 	{
-		if (idx < temp.size() - 1)
+		if (idx < tempVertexVec.size() - 1)
 		{
-			circleMeshPtr->AddVertex(temp[idx + 1]);
+			circleMeshPtr->AddVertex(tempVertexVec[idx + 1]);
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
 			circleMeshPtr->AddVertex(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec3{ 1, 1, 1 } });
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
-			circleMeshPtr->AddVertex(temp[idx]);
+			circleMeshPtr->AddVertex(tempVertexVec[idx]);
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
 		}
 		else
 		{
-			circleMeshPtr->AddVertex(temp[0]);
+			circleMeshPtr->AddVertex(tempVertexVec[0]);
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
 			circleMeshPtr->AddVertex(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec3{ 1, 1, 1 } });
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
-			circleMeshPtr->AddVertex(temp[idx]);
+			circleMeshPtr->AddVertex(tempVertexVec[idx]);
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
 		}
 	}
-
+	
 	circleMeshPtr->InitializeIndexBuffer(meshInput);
 	circleMeshPtr->InitializeVertexBuffer(meshInput);
-
+	
 	sceneUPtr->AddMesh(std::move(circleMeshPtr));
-
+	
 	return sceneUPtr;
 }
 
-std::unique_ptr<ave::Scene> ave::VulkanEngine::CreateScene3D()
+std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> ave::VulkanEngine::CreateScene3D()
 {
-	std::unique_ptr<ave::Scene> scenePtr{};
-
-
-
+	std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> scenePtr{};
 	return scenePtr;
 }
 

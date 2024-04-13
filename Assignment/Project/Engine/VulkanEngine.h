@@ -7,7 +7,7 @@
 #include "Utils/Camera.h"
 #include "Pipeline/Pipeline.h"
 #include "Pipeline/RenderPass.h"
-
+#include "Rendering/Mesh.h"
 namespace ave
 {
 
@@ -49,8 +49,8 @@ namespace ave
 		vk::DescriptorPool m_DescriptorPool;
 
 		std::unique_ptr<vkInit::RenderPass> m_RenderPassUPtr;
-		std::unique_ptr<vkInit::Pipeline> m_Pipeline2DUPtr;
-		std::unique_ptr<vkInit::Pipeline> m_Pipeline3DUPtr;
+		std::unique_ptr<vkInit::Pipeline<vkUtil::Vertex2D>> m_Pipeline2DUPtr;
+		std::unique_ptr<vkInit::Pipeline<vkUtil::Vertex3D>> m_Pipeline3DUPtr;
 
 		vk::CommandPool m_CommandPool;
 		vk::CommandBuffer m_MainCommandBuffer;
@@ -68,8 +68,8 @@ namespace ave
 		void CreateDescriptorSetLayout();
 		void CreatePipeline();
 		void SetUpRendering();
-		std::unique_ptr<ave::Scene> CreateScene2D();
-		std::unique_ptr<ave::Scene> CreateScene3D();
+		std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> CreateScene2D();
+		std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> CreateScene3D();
 		void PrepareFrame(uint32_t imgIdx);
 
 		void RecordDrawCommands(const vk::CommandBuffer& commandBuffer, uint32_t imageIndex);

@@ -33,10 +33,10 @@ set(SOURCES
     "Utils/QueueFamilies.h" "Utils/Frame.h"  "Utils/Logging.h" 
     "Utils/RenderStructs.cpp" "Utils/Buffer.cpp" "Utils/Camera.cpp"
 
-    "Pipeline/Shader.cpp" "Pipeline/Pipeline.cpp"  "Pipeline/Descriptor.h" "Pipeline/RenderPass.cpp"
+    "Pipeline/Shader.cpp"   "Pipeline/Descriptor.h" "Pipeline/RenderPass.cpp"
 
     "Rendering/Swapchain.h" "Rendering/FrameBuffer.h" "Rendering/Commands.h" 
-    "Rendering/Synchronization.h" "Rendering/Mesh.cpp" "Rendering/Scene.cpp")
+    "Rendering/Synchronization.h"  )
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})
