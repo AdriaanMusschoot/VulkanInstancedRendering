@@ -2,7 +2,7 @@
 vkInit::RenderPass::RenderPass(const RenderPassInBundle& in, bool isDebugging)
 	: m_Device{ in.Device }
 {
-	m_RenderPass = CreateRenderPass(in.SwapchainImageFormat, in.DepthFormat, isDebugging);
+	m_RenderPass = CreateRenderPass(in, isDebugging);
 }
 
 vkInit::RenderPass::~RenderPass()
@@ -44,7 +44,7 @@ vk::RenderPass const& vkInit::RenderPass::GetRenderPass() const
 	return m_RenderPass;
 }
 
-vk::RenderPass vkInit::RenderPass::CreateRenderPass(const vk::Format& swapchainImgFormat, const vk::Format& depthFormat,  bool isDebugging)
+vk::RenderPass vkInit::RenderPass::CreateRenderPass(const RenderPassInBundle& in, bool isDebugging)
 {
 	if (isDebugging)
 	{
@@ -54,45 +54,50 @@ vk::RenderPass vkInit::RenderPass::CreateRenderPass(const vk::Format& swapchainI
 	std::vector<vk::AttachmentDescription> attachmentDescriptionVec;
 	std::vector<vk::AttachmentReference> attachmentReferenceVec;
 
-	//color
-	vk::AttachmentDescription colorAttachmentDescription{};
-	colorAttachmentDescription.flags = vk::AttachmentDescriptionFlags{};
-	colorAttachmentDescription.format = swapchainImgFormat;
-	colorAttachmentDescription.samples = vk::SampleCountFlagBits::e1;
-	colorAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
-	colorAttachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
-	colorAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-	colorAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-	colorAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
-	colorAttachmentDescription.finalLayout = vk::ImageLayout::ePresentSrcKHR;
+	if ((in.AttachmentFlags | vkUtil::AttachmentFlags::Color) == in.AttachmentFlags)
+	{
+		vk::AttachmentDescription colorAttachmentDescription{};
+		colorAttachmentDescription.flags = vk::AttachmentDescriptionFlags{};
+		colorAttachmentDescription.format = in.SwapchainImageFormat;
+		colorAttachmentDescription.samples = vk::SampleCountFlagBits::e1;
+		colorAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
+		colorAttachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
+		colorAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+		colorAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+		colorAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
+		colorAttachmentDescription.finalLayout = vk::ImageLayout::ePresentSrcKHR;
 
-	attachmentDescriptionVec.emplace_back(colorAttachmentDescription);
+		attachmentDescriptionVec.emplace_back(colorAttachmentDescription);
 
-	vk::AttachmentReference colorAttachmentReference{};
-	colorAttachmentReference.attachment = 0;
-	colorAttachmentReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
+		vk::AttachmentReference colorAttachmentReference{};
+		colorAttachmentReference.attachment = 0;
+		colorAttachmentReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
 
-	attachmentReferenceVec.emplace_back(colorAttachmentReference);
+		attachmentReferenceVec.emplace_back(colorAttachmentReference);
 
-	//depth
-	vk::AttachmentDescription depthAttachmentDescription{};
-	depthAttachmentDescription.flags = vk::AttachmentDescriptionFlags{};
-	depthAttachmentDescription.format = depthFormat;
-	depthAttachmentDescription.samples = vk::SampleCountFlagBits::e1;
-	depthAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
-	depthAttachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
-	depthAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-	depthAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-	depthAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
-	depthAttachmentDescription.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+	}
 
-	attachmentDescriptionVec.emplace_back(depthAttachmentDescription);
+	if ((in.AttachmentFlags | vkUtil::AttachmentFlags::Depth) == in.AttachmentFlags)
+	{
+		vk::AttachmentDescription depthAttachmentDescription{};
+		depthAttachmentDescription.flags = vk::AttachmentDescriptionFlags{};
+		depthAttachmentDescription.format = in.DepthFormat;
+		depthAttachmentDescription.samples = vk::SampleCountFlagBits::e1;
+		depthAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
+		depthAttachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
+		depthAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+		depthAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+		depthAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
+		depthAttachmentDescription.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
-	vk::AttachmentReference depthAttachmentReference{};
-	depthAttachmentReference.attachment = 1;
-	depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+		attachmentDescriptionVec.emplace_back(depthAttachmentDescription);
+		vk::AttachmentReference depthAttachmentReference{};
+		depthAttachmentReference.attachment = 1;
+		depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
-	attachmentReferenceVec.emplace_back(depthAttachmentReference);
+		attachmentReferenceVec.emplace_back(depthAttachmentReference);
+
+	}
 
 	vk::SubpassDescription subpass{};
 	subpass.flags = vk::SubpassDescriptionFlags{};
@@ -102,7 +107,7 @@ vk::RenderPass vkInit::RenderPass::CreateRenderPass(const vk::Format& swapchainI
 		[&](const vk::AttachmentReference& attachRef)
 		{
 			return attachRef.layout == vk::ImageLayout::eColorAttachmentOptimal;
-		});
+		});	subpass.pDepthStencilAttachment = &attachmentReferenceVec[1];
 	
 	subpass.pDepthStencilAttachment = &*std::find_if(attachmentReferenceVec.begin(), attachmentReferenceVec.end(),
 		[&](const vk::AttachmentReference& attachRef)

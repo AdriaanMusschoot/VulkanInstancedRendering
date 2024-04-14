@@ -4,6 +4,7 @@
 #include "Shader.h"
 #include "Utils/RenderStructs.h"
 #include "Rendering/Scene.h"
+#include "RenderPass.h"
 #include "functional"
 namespace vkInit
 {
@@ -23,7 +24,7 @@ namespace vkInit
 			std::function<std::vector<vk::VertexInputBindingDescription>()> GetBindingDescription;
 			std::function<std::vector<vk::VertexInputAttributeDescription>()> GetAttributeDescription;
 		};
-	
+
 		struct GraphicsPipelineOutBundle
 		{
 			vk::PipelineLayout Layout;

@@ -1,6 +1,8 @@
 #ifndef VK_RENDERPASS_H
 #define VK_RENDERPASS_H
 #include "Engine/Configuration.h"
+#include "Utils/RenderStructs.h"
+
 namespace vkInit
 {
 	struct RenderPassInBundle
@@ -8,6 +10,7 @@ namespace vkInit
 		vk::Device Device;
 		vk::Format SwapchainImageFormat;
 		vk::Format DepthFormat;
+		vkUtil::AttachmentFlags AttachmentFlags;
 	};
 
 	class RenderPass final
@@ -30,7 +33,7 @@ namespace vkInit
 
 		vk::Device m_Device;
 
-		vk::RenderPass CreateRenderPass(const vk::Format& swapchainImgFormat, const vk::Format& depthFormat, bool isDebugging);
+		vk::RenderPass CreateRenderPass(const RenderPassInBundle& in, bool isDebugging);
 
 	};
 }

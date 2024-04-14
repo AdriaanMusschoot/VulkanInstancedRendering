@@ -214,19 +214,20 @@ void ave::VulkanEngine::CreateSwapchain()
 
 void ave::VulkanEngine::CreatePipeline()
 {
-	vkInit::RenderPassInBundle input{};
-	input.Device = m_Device;
-	input.SwapchainImageFormat = m_SwapchainFormat;
-	input.DepthFormat = m_SwapchainFrameVec[0].DepthFormat;
-	m_RenderPassUPtr = std::make_unique<vkInit::RenderPass>(input, m_IsDebugging);
+	vkInit::RenderPassInBundle inRenderPass{};
+	inRenderPass.Device = m_Device;
+	inRenderPass.DepthFormat = m_SwapchainFrameVec[0].DepthFormat;
+	inRenderPass.SwapchainImageFormat = m_SwapchainFormat;
+	inRenderPass.AttachmentFlags = static_cast<vkUtil::AttachmentFlags>(vkUtil::AttachmentFlags::Depth | vkUtil::AttachmentFlags::Color);
+	m_RenderPassUPtr = std::make_unique<vkInit::RenderPass>(inRenderPass, m_IsDebugging);
 
 	vkInit::Pipeline<vkUtil::Vertex2D>::GraphicsPipelineInBundle specification2D{};
 	specification2D.Device = m_Device;
 	specification2D.SwapchainExtent = m_SwapchainExtent;
 	specification2D.DescriptorSetLayout = m_DescriptorSetLayout;
-	specification2D.RenderPass = m_RenderPassUPtr->GetRenderPass();
 	specification2D.VertexFilePath = "shaders/Shader2D.vert.spv";
 	specification2D.FragmentFilePath = "shaders/Shader2D.frag.spv";
+	specification2D.RenderPass = m_RenderPassUPtr->GetRenderPass();
 	specification2D.GetBindingDescription = vkUtil::GetBindingDescription2D;
 	specification2D.GetAttributeDescription = vkUtil::GetAttributeDescription2D;
 
@@ -236,9 +237,9 @@ void ave::VulkanEngine::CreatePipeline()
 	specification3D.Device = m_Device;
 	specification3D.SwapchainExtent = m_SwapchainExtent;
 	specification3D.DescriptorSetLayout = m_DescriptorSetLayout;
-	specification3D.RenderPass = m_RenderPassUPtr->GetRenderPass();
 	specification3D.VertexFilePath = "shaders/Shader3D.vert.spv";
 	specification3D.FragmentFilePath = "shaders/Shader3D.frag.spv";
+	specification3D.RenderPass = m_RenderPassUPtr->GetRenderPass();
 	specification3D.GetBindingDescription = vkUtil::GetBindingDescription3D;
 	specification3D.GetAttributeDescription = vkUtil::GetAttributeDescription3D;
 
@@ -441,7 +442,7 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 	}
 
 	m_RenderPassUPtr->BeginRenderPass(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent);
-
+	
 	m_Pipeline3DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
 
 	m_Pipeline2DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);

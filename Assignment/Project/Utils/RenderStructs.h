@@ -4,6 +4,13 @@
 
 namespace vkUtil
 {
+
+	enum AttachmentFlags
+	{
+		Color = 0b0001,
+		Depth = 0b0010
+	};
+
 	struct Vertex2D
 	{
 		glm::vec2 Position;
