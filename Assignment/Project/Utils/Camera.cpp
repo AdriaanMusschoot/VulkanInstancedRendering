@@ -26,7 +26,6 @@ void ave::Camera::CalculateViewMatrix()
 void ave::Camera::CalculateProjectionMatrix()
 {
 	m_ProjectionMatrix = glm::perspective(m_FovAngle * ave::ToRadians, m_AspectRatio, m_NearPlane, m_FarPlane);
-	m_ProjectionMatrix[1][1] *= -1;
 }
 
 void ave::Camera::Update()
@@ -69,7 +68,7 @@ void ave::Camera::Update()
 	if (glfwGetMouseButton(m_WindowPtr, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 	{
 		m_TotalPitch -= deltaMouseY * m_SpeedRotation * deltaTime;
-		m_TotalYaw += deltaMouseX * m_SpeedRotation * deltaTime;
+		m_TotalYaw -= deltaMouseX * m_SpeedRotation * deltaTime;
 
 		//takes in current matrix and assigns the new value to it
 		glm::mat4 rotationMatrix{ 1.0f };

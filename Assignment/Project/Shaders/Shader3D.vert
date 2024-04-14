@@ -22,7 +22,7 @@ layout(location = 2) out vec3 fragColor;
 void main()
 {
 	fragWorldPosition = vec3(MMatrix.Model * vec4(vertexPosition, 1.0));
-	gl_Position = VPMatrix.Projection * VPMatrix.View * vec4(vertexPosition, 1.0);
+	gl_Position = VPMatrix.Projection * VPMatrix.View * vec4(fragWorldPosition, 1.0);
 	fragWorldNormal = normalize(vec3(MMatrix.Model * vec4(vertexNormal, 1.0)));
 	fragColor = vertexColor;
 }

@@ -18,7 +18,6 @@ namespace vkInit
 			std::string	VertexFilePath;
 			std::string FragmentFilePath;
 			vk::Extent2D SwapchainExtent;
-			vk::Format SwapchainImgFormat;
 			vk::RenderPass RenderPass;
 			vk::DescriptorSetLayout DescriptorSetLayout;
 			std::function<std::vector<vk::VertexInputBindingDescription>()> GetBindingDescription;
@@ -130,6 +129,29 @@ namespace vkInit
 
 			return shaderStageCreateInfo;
 		}
+		vk::PipelineDepthStencilStateCreateInfo PopulateDepthState()
+		{
+			vk::PipelineDepthStencilStateCreateInfo depthStateCreateInfo{};
+			depthStateCreateInfo.flags = vk::PipelineDepthStencilStateCreateFlags{};
+			depthStateCreateInfo.depthTestEnable = VK_TRUE;
+			depthStateCreateInfo.depthWriteEnable = VK_TRUE;
+			depthStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+			depthStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+			depthStateCreateInfo.stencilTestEnable = VK_FALSE;
+
+			return depthStateCreateInfo;
+		}
+		vk::PipelineViewportStateCreateInfo PopulateViewportState(const vk::Viewport& viewport, const vk::Rect2D& scissor)
+		{
+			vk::PipelineViewportStateCreateInfo viewportStateCreateInfo{};
+			viewportStateCreateInfo.flags = vk::PipelineViewportStateCreateFlags{};
+			viewportStateCreateInfo.viewportCount = 1;
+			viewportStateCreateInfo.pViewports = &viewport;
+			viewportStateCreateInfo.scissorCount = 1;
+			viewportStateCreateInfo.pScissors = &scissor;
+
+			return viewportStateCreateInfo;
+		}
 		vk::PipelineRasterizationStateCreateInfo PopulateRasterizationState()
 		{
 			vk::PipelineRasterizationStateCreateInfo rasterizerStateCreateInfo{};
@@ -143,17 +165,6 @@ namespace vkInit
 			rasterizerStateCreateInfo.depthBiasEnable = VK_FALSE;
 
 			return rasterizerStateCreateInfo;
-		}
-		vk::PipelineViewportStateCreateInfo PopulateViewportState(const vk::Viewport& viewport, const vk::Rect2D& scissor)
-		{
-			vk::PipelineViewportStateCreateInfo viewportStateCreateInfo{};
-			viewportStateCreateInfo.flags = vk::PipelineViewportStateCreateFlags{};
-			viewportStateCreateInfo.viewportCount = 1;
-			viewportStateCreateInfo.pViewports = &viewport;
-			viewportStateCreateInfo.scissorCount = 1;
-			viewportStateCreateInfo.pScissors = &scissor;
-
-			return viewportStateCreateInfo;
 		}
 		vk::PipelineMultisampleStateCreateInfo PopulateMultisampleState()
 		{
@@ -229,6 +240,14 @@ namespace vkInit
 
 			pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStageCreateInfoVec.size());
 			pipelineCreateInfo.pStages = shaderStageCreateInfoVec.data();
+
+			if (isDebugging)
+			{
+				std::cout << "\tDepth creation started\n";
+			}
+
+			vk::PipelineDepthStencilStateCreateInfo depthStateCreateInfo{ PopulateDepthState() };
+			pipelineCreateInfo.pDepthStencilState = &depthStateCreateInfo;
 
 			if (isDebugging)
 			{

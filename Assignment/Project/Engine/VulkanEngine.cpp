@@ -9,6 +9,7 @@
 #include "Rendering/Synchronization.h"
 #include "Utils/RenderStructs.h"
 #include "Pipeline/Descriptor.h"
+#include "Utils/Frame.h"
 
 ave::VulkanEngine::VulkanEngine(const std::string& windowName, int width, int height, GLFWwindow* windowPtr, bool isDebugging)
 	: m_WindowName{ windowName }
@@ -200,16 +201,28 @@ void ave::VulkanEngine::CreateSwapchain()
 	m_SwapchainFormat = tempBunlde.Format;
 
 	m_MaxNrFramesInFlight = static_cast<int>(m_SwapchainFrameVec.size());
+
+	for (auto& frame : m_SwapchainFrameVec)
+	{
+		frame.Device = m_Device;
+		frame.PhysicalDevice = m_PhysicalDevice;
+		frame.DepthExtent = m_SwapchainExtent;
+
+		frame.CreateDepthResources(m_IsDebugging);
+	}
 }
 
 void ave::VulkanEngine::CreatePipeline()
 {
-	m_RenderPassUPtr = std::make_unique<vkInit::RenderPass>(m_Device, m_SwapchainFormat, m_IsDebugging);
+	vkInit::RenderPassInBundle input{};
+	input.Device = m_Device;
+	input.SwapchainImageFormat = m_SwapchainFormat;
+	input.DepthFormat = m_SwapchainFrameVec[0].DepthFormat;
+	m_RenderPassUPtr = std::make_unique<vkInit::RenderPass>(input, m_IsDebugging);
 
 	vkInit::Pipeline<vkUtil::Vertex2D>::GraphicsPipelineInBundle specification2D{};
 	specification2D.Device = m_Device;
 	specification2D.SwapchainExtent = m_SwapchainExtent;
-	specification2D.SwapchainImgFormat = m_SwapchainFormat;
 	specification2D.DescriptorSetLayout = m_DescriptorSetLayout;
 	specification2D.RenderPass = m_RenderPassUPtr->GetRenderPass();
 	specification2D.VertexFilePath = "shaders/Shader2D.vert.spv";
@@ -222,7 +235,6 @@ void ave::VulkanEngine::CreatePipeline()
 	vkInit::Pipeline<vkUtil::Vertex3D>::GraphicsPipelineInBundle specification3D{};
 	specification3D.Device = m_Device;
 	specification3D.SwapchainExtent = m_SwapchainExtent;
-	specification3D.SwapchainImgFormat = m_SwapchainFormat;
 	specification3D.DescriptorSetLayout = m_DescriptorSetLayout;
 	specification3D.RenderPass = m_RenderPassUPtr->GetRenderPass();
 	specification3D.VertexFilePath = "shaders/Shader3D.vert.spv";
@@ -256,7 +268,7 @@ void ave::VulkanEngine::SetUpRendering()
 
 	m_Pipeline3DUPtr->SetScene(std::move(CreateScene3D()));
 
-	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -10 }, 45, static_cast<float>(m_SwapchainExtent.width) / static_cast<float>(m_SwapchainExtent.height));
+	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -50 }, 90, static_cast<float>(m_SwapchainExtent.width) / static_cast<float>(m_SwapchainExtent.height));
 }
 
 std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
@@ -370,7 +382,7 @@ void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
 	m_SwapchainFrameVec[imgIdx].VPMatrix.ProjectionMatrix = m_CameraUPtr->GetProjectionMatrix();
 	memcpy(m_SwapchainFrameVec[imgIdx].VPWriteLocationPtr, &m_SwapchainFrameVec[imgIdx].VPMatrix, sizeof(vkUtil::UBO));
 
-	m_SwapchainFrameVec[imgIdx].WriteDescriptorSet(m_Device);
+	m_SwapchainFrameVec[imgIdx].WriteDescriptorSet();
 }
 
 void ave::VulkanEngine::CreateFrameBuffers()
@@ -396,7 +408,7 @@ void ave::VulkanEngine::CreateFrameResources()
 		frame.SemaphoreImageAvailable = vkInit::CreateSemaphore(m_Device, m_IsDebugging);
 		frame.SemaphoreRenderingFinished = vkInit::CreateSemaphore(m_Device, m_IsDebugging);
 
-		frame.CreateUBOResources(m_Device, m_PhysicalDevice);
+		frame.CreateUBOResources();
 		frame.UBODescriptorSet = vkInit::CreateDescriptorSet(m_Device, m_DescriptorPool, m_DescriptorSetLayout, m_IsDebugging);
 	}
 }
@@ -479,14 +491,7 @@ void ave::VulkanEngine::DestroySwapchain()
 {
 	for (auto& frame : m_SwapchainFrameVec)
 	{
-		m_Device.destroySemaphore(frame.SemaphoreRenderingFinished);
-		m_Device.destroySemaphore(frame.SemaphoreImageAvailable);
-		m_Device.destroyFence(frame.InFlightFence);
-		m_Device.destroyFramebuffer(frame.Framebuffer);
-		m_Device.destroyImageView(frame.ImageView);
-		m_Device.unmapMemory(frame.VPBuffer.BufferMemory);
-		m_Device.freeMemory(frame.VPBuffer.BufferMemory);
-		m_Device.destroyBuffer(frame.VPBuffer.Buffer);
+		frame.Destroy();
 	}
 	m_Device.destroyDescriptorPool(m_DescriptorPool);	
 

@@ -12,8 +12,12 @@ namespace vkUtil
 		glm::mat4 ProjectionMatrix;
 	};
 	
-	struct SwapchainFrame
+	class SwapchainFrame final
 	{
+	public:
+		vk::Device Device;
+		vk::PhysicalDevice PhysicalDevice;
+		 
 		vk::Image Image;
 		vk::ImageView ImageView;
 		vk::Framebuffer Framebuffer;
@@ -22,7 +26,7 @@ namespace vkUtil
 		vk::ImageView DepthBufferView;
 		vk::DeviceMemory DepthBufferMemory;
 		vk::Format DepthFormat;
-		vk::Extent2D DepthExtensions;
+		vk::Extent2D DepthExtent;
 
 		vk::CommandBuffer CommandBuffer;
 
@@ -37,45 +41,13 @@ namespace vkUtil
 		vk::DescriptorBufferInfo UBODescriptorInfo;
 		vk::DescriptorSet UBODescriptorSet;
 
-		void CreateUBOResources(const vk::Device& device, const vk::PhysicalDevice& physicalDevice)
-		{
-			BufferInBundle input;
-			input.Device = device;
-			input.PhysicalDevice = physicalDevice;
-			input.MemoryPropertyFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
-			input.Size = sizeof(UBO);
-			input.UsageFlags = vk::BufferUsageFlagBits::eUniformBuffer;
+		void CreateUBOResources();
 
-			VPBuffer = vkUtil::CreateBuffer(input);
-			VPWriteLocationPtr = device.mapMemory(VPBuffer.BufferMemory, 0, sizeof(UBO));
+		void WriteDescriptorSet();
 
-			UBODescriptorInfo.buffer = VPBuffer.Buffer;
-			UBODescriptorInfo.offset = 0;
-			UBODescriptorInfo.range = sizeof(UBO);
-		}
+		void CreateDepthResources(bool isDebugging);
 
-		void WriteDescriptorSet(const vk::Device& device)
-		{
-			vk::WriteDescriptorSet writeInfo{};
-			writeInfo.dstSet = UBODescriptorSet;
-			writeInfo.dstBinding = 0;
-			writeInfo.dstArrayElement = 0;
-			writeInfo.descriptorCount = 1;
-			writeInfo.descriptorType = vk::DescriptorType::eUniformBuffer;
-			writeInfo.pBufferInfo = &UBODescriptorInfo;
-
-			device.updateDescriptorSets(writeInfo, nullptr);
-		}
-
-		void CreateDepthResources()
-		{
-
-		}
-
-		void DestroyFrame()
-		{
-
-		}
+		void Destroy();
 	};
 
 }

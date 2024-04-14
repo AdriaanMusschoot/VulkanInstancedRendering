@@ -1,4 +1,5 @@
 #include "Buffer.h"
+#include "Rendering/Commands.h"
 
 uint32_t vkUtil::FindMemoryTypeIndex(const vk::PhysicalDevice& physicalDevice, uint32_t supportedMemoryIndices, vk::MemoryPropertyFlags requestedProperties)
 {
@@ -54,11 +55,7 @@ vkUtil::DataBuffer vkUtil::CreateBuffer(const BufferInBundle& in)
 
 void vkUtil::CopyBuffer(DataBuffer& srcBuffer, DataBuffer& dstBuffer, const vk::DeviceSize& size, const vk::Queue& queue, const vk::CommandBuffer& commandBuffer)
 {
-	commandBuffer.reset();
-
-	vk::CommandBufferBeginInfo bufferBeginInfo{};
-	bufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
-	commandBuffer.begin(bufferBeginInfo);
+	vkInit::BeginSingleCommand(commandBuffer);
 
 	vk::BufferCopy copyRegion{};
 	copyRegion.srcOffset = 0;
@@ -67,17 +64,5 @@ void vkUtil::CopyBuffer(DataBuffer& srcBuffer, DataBuffer& dstBuffer, const vk::
 
 	commandBuffer.copyBuffer(srcBuffer.Buffer, dstBuffer.Buffer, 1, &copyRegion);
 
-	commandBuffer.end();
-
-	vk::SubmitInfo submitInfo;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffer;
-
-	vk::Result result{ queue.submit(1, &submitInfo, nullptr) };
-	if (result != vk::Result::eSuccess)
-	{
-		std::cout << "Copy submission failure\n";
-	}
-
-	queue.waitIdle();
+	vkInit::EndSingleCommand(commandBuffer, queue);
 }

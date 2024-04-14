@@ -4,6 +4,7 @@
 #include "Utils/Logging.h"
 #include "Utils/QueueFamilies.h"
 #include "Utils/Frame.h"
+#include "Image.h"
 namespace vkInit
 {
 
@@ -215,22 +216,7 @@ namespace vkInit
 		for (int idx{}; idx < tempImageVec.size(); ++idx)
 		{
 			bundle.FrameVec[idx].Image = tempImageVec[idx];
-
-			vk::ImageViewCreateInfo imgViewCreateInfo{};
-			imgViewCreateInfo.image = tempImageVec[idx];
-			imgViewCreateInfo.viewType = vk::ImageViewType::e2D;
-			imgViewCreateInfo.components.r = vk::ComponentSwizzle::eIdentity;
-			imgViewCreateInfo.components.g = vk::ComponentSwizzle::eIdentity;
-			imgViewCreateInfo.components.b = vk::ComponentSwizzle::eIdentity;
-			imgViewCreateInfo.components.a = vk::ComponentSwizzle::eIdentity;
-			imgViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-			imgViewCreateInfo.subresourceRange.baseMipLevel = 0;
-			imgViewCreateInfo.subresourceRange.levelCount = 1;
-			imgViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-			imgViewCreateInfo.subresourceRange.layerCount = 1;
-			imgViewCreateInfo.format = format.format;
-
-			bundle.FrameVec[idx].ImageView = device.createImageView(imgViewCreateInfo);
+			bundle.FrameVec[idx].ImageView = vkInit::CreateImageView(device, bundle.FrameVec[idx].Image, format.format, vk::ImageAspectFlagBits::eColor);
 		}
 
 		bundle.Format = format.format;

@@ -16,7 +16,7 @@ namespace vkInit
 	{
 		for (int idx{}; idx < frameVec.size(); ++idx)
 		{
-			std::vector<vk::ImageView> attachementVec{ frameVec[idx].ImageView};
+			std::vector<vk::ImageView> attachementVec{ frameVec[idx].ImageView, frameVec[idx].DepthBufferView };
 
 			vk::FramebufferCreateInfo framebufferCreateInfo{};
 			framebufferCreateInfo.flags = vk::FramebufferCreateFlags{};

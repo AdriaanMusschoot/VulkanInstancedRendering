@@ -41,12 +41,12 @@ namespace vkUtil
 				positionVec.emplace_back(glm::vec3{ x, y, z });
 			}
 			//else if (sCommand == "vt")
-			//
+			//{
 			//	// Vertex TexCoord
 			//	float u, v;
 			//	file >> u >> v;
 			//	uvVec.emplace_back(u, 1 - v);
-			//
+			//}
 			else if (sCommand == "vn")
 			{
 				// Vertex Normal

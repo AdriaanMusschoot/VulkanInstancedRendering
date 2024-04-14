@@ -3,10 +3,17 @@
 #include "Engine/Configuration.h"
 namespace vkInit
 {
+	struct RenderPassInBundle
+	{
+		vk::Device Device;
+		vk::Format SwapchainImageFormat;
+		vk::Format DepthFormat;
+	};
+
 	class RenderPass final
 	{
 	public:
-		RenderPass(const vk::Device& device, const vk::Format& swapchainImgFormat, bool isDebugging);
+		RenderPass(const RenderPassInBundle& in, bool isDebugging);
 		~RenderPass();
 
 		RenderPass(const RenderPass& other) = delete;
@@ -23,7 +30,7 @@ namespace vkInit
 
 		vk::Device m_Device;
 
-		vk::RenderPass CreateRenderPass(const vk::Format& swapchainImgFormat, bool isDebugging);
+		vk::RenderPass CreateRenderPass(const vk::Format& swapchainImgFormat, const vk::Format& depthFormat, bool isDebugging);
 
 	};
 }

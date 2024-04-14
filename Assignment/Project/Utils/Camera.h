@@ -20,8 +20,8 @@ namespace ave
 		glm::vec3 m_Origin{};
 		float m_FovAngle{ 90.f };
 		float m_Fov{ tanf((m_FovAngle * ave::ToRadians) / 2.f) };
-		float m_SpeedRotation{ 5.0f };
-		float m_SpeedTranslation{ 5.0f };
+		float m_SpeedRotation{ 1.0f };
+		float m_SpeedTranslation{ 10.f };
 
 		glm::vec3 m_Forward{ glm::vec3{ 0, 0, 1 } };
 		glm::vec3 m_Up{ glm::vec3{ 0, -1, 0 } };
