@@ -12,9 +12,8 @@ namespace vkUtil
 		glm::mat4 ProjectionMatrix;
 	};
 	
-	class SwapchainFrame final
+	struct SwapchainFrame
 	{
-	public:
 		vk::Device Device;
 		vk::PhysicalDevice PhysicalDevice;
 		 

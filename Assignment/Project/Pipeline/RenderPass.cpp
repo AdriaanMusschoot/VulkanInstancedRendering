@@ -84,7 +84,7 @@ vk::RenderPass vkInit::RenderPass::CreateRenderPass(const RenderPassInBundle& in
 		depthAttachmentDescription.format = in.DepthFormat;
 		depthAttachmentDescription.samples = vk::SampleCountFlagBits::e1;
 		depthAttachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
-		depthAttachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
+		depthAttachmentDescription.storeOp = vk::AttachmentStoreOp::eDontCare;
 		depthAttachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
 		depthAttachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
 		depthAttachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
@@ -96,7 +96,6 @@ vk::RenderPass vkInit::RenderPass::CreateRenderPass(const RenderPassInBundle& in
 		depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
 		attachmentReferenceVec.emplace_back(depthAttachmentReference);
-
 	}
 
 	vk::SubpassDescription subpass{};
@@ -107,7 +106,7 @@ vk::RenderPass vkInit::RenderPass::CreateRenderPass(const RenderPassInBundle& in
 		[&](const vk::AttachmentReference& attachRef)
 		{
 			return attachRef.layout == vk::ImageLayout::eColorAttachmentOptimal;
-		});	subpass.pDepthStencilAttachment = &attachmentReferenceVec[1];
+		});
 	
 	subpass.pDepthStencilAttachment = &*std::find_if(attachmentReferenceVec.begin(), attachmentReferenceVec.end(),
 		[&](const vk::AttachmentReference& attachRef)
@@ -115,12 +114,22 @@ vk::RenderPass vkInit::RenderPass::CreateRenderPass(const RenderPassInBundle& in
 			return attachRef.layout == vk::ImageLayout::eDepthStencilAttachmentOptimal;
 		});;
 
+	vk::SubpassDependency dependencyInfo{};
+	dependencyInfo.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependencyInfo.srcAccessMask = vk::AccessFlags{};
+	dependencyInfo.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
+	dependencyInfo.dstSubpass = 0;
+	dependencyInfo.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
+	dependencyInfo.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+
 	vk::RenderPassCreateInfo renderPassCreateInfo{};
 	renderPassCreateInfo.flags = vk::RenderPassCreateFlags{};
 	renderPassCreateInfo.attachmentCount = static_cast<uint32_t>(attachmentDescriptionVec.size());
 	renderPassCreateInfo.pAttachments = attachmentDescriptionVec.data();
 	renderPassCreateInfo.subpassCount = 1;
 	renderPassCreateInfo.pSubpasses = &subpass;
+	renderPassCreateInfo.dependencyCount = 1;
+	renderPassCreateInfo.pDependencies = &dependencyInfo;
 
 	try
 	{

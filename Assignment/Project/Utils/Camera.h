@@ -9,7 +9,7 @@ namespace ave
 	class Camera
 	{
 	public:
-		Camera(GLFWwindow* windowPtr, const glm::vec3& origin, float fovAngle, float aspectRatio);
+		Camera(GLFWwindow* windowPtr, const glm::vec3& origin, float fovAngle, int width, int height);
 		~Camera() = default;
 
 		void Update();
@@ -18,16 +18,16 @@ namespace ave
 		const glm::vec3& GetCameraPosition() const;
 	private:
 		glm::vec3 m_Origin{};
-		float m_FovAngle{ 90.f };
+		float m_FovAngle{ 45.f };
 		float m_Fov{ tanf((m_FovAngle * ave::ToRadians) / 2.f) };
 		float m_SpeedRotation{ 1.0f };
-		float m_SpeedTranslation{ 10.f };
+		float m_SpeedTranslation{ 100.f };
 
 		glm::vec3 m_Forward{ glm::vec3{ 0, 0, 1 } };
 		glm::vec3 m_Up{ glm::vec3{ 0, -1, 0 } };
 		glm::vec3 m_Right{ glm::vec3{ 1, 0, 0 } };
 
-		float m_FarPlane{ 100.0f };
+		float m_FarPlane{ 1000.0f };
 		float m_NearPlane{ 0.1f };
 		float m_AspectRatio{};
 		
@@ -44,7 +44,7 @@ namespace ave
 		GLFWwindow* m_WindowPtr{};
 
 		void CalculateViewMatrix();
-		void CalculateProjectionMatrix();
+		void CalculateProjectionMatrix(int width, int height);
 	};
 
 }

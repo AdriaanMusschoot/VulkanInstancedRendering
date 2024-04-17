@@ -174,4 +174,5 @@ vk::Format vkInit::GetSupportedFormat(const vk::PhysicalDevice& physicalDevice, 
 			return format; 
 		}
 	}
+	return formatVec[0];
 }

@@ -269,7 +269,7 @@ void ave::VulkanEngine::SetUpRendering()
 
 	m_Pipeline3DUPtr->SetScene(std::move(CreateScene3D()));
 
-	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -50 }, 90, static_cast<float>(m_SwapchainExtent.width) / static_cast<float>(m_SwapchainExtent.height));
+	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -20 }, 45, m_SwapchainExtent.width, m_SwapchainExtent.height);
 }
 
 std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
@@ -290,9 +290,9 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
 	RectangleMeshUPtr->AddIndex(0);
 	RectangleMeshUPtr->AddIndex(1);
 	RectangleMeshUPtr->AddIndex(2);
-	RectangleMeshUPtr->AddIndex(1);
-	RectangleMeshUPtr->AddIndex(2);
 	RectangleMeshUPtr->AddIndex(3);
+	RectangleMeshUPtr->AddIndex(2);
+	RectangleMeshUPtr->AddIndex(1);
 		
 	RectangleMeshUPtr->InitializeIndexBuffer(meshInput);
 	RectangleMeshUPtr->InitializeVertexBuffer(meshInput);
@@ -301,10 +301,10 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
 	
 	std::unique_ptr circleMeshPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice) };
 	
-	constexpr double radius{ 0.1 };
+	constexpr double radius{ 0.1f };
 	constexpr int nrOfPoints{ 100 };
-	constexpr float centerX{ 0.1 };
-	constexpr float centerY{ -0.1 };
+	constexpr float centerX{ 0.1f };
+	constexpr float centerY{ -0.1f };
 	
 	std::vector<vkUtil::Vertex2D> tempVertexVec;
 	tempVertexVec.reserve(nrOfPoints);
@@ -325,25 +325,25 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
 	{
 		if (idx < tempVertexVec.size() - 1)
 		{
-			circleMeshPtr->AddVertex(tempVertexVec[idx + 1]);
+			circleMeshPtr->AddVertex(tempVertexVec[idx]);
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
 			circleMeshPtr->AddVertex(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec3{ 1, 1, 1 } });
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
-			circleMeshPtr->AddVertex(tempVertexVec[idx]);
+			circleMeshPtr->AddVertex(tempVertexVec[idx + 1]);
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
 		}
 		else
 		{
-			circleMeshPtr->AddVertex(tempVertexVec[0]);
+			circleMeshPtr->AddVertex(tempVertexVec[idx]);
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
 			circleMeshPtr->AddVertex(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec3{ 1, 1, 1 } });
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
-			circleMeshPtr->AddVertex(tempVertexVec[idx]);
+			circleMeshPtr->AddVertex(tempVertexVec[0]);
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
 		}
@@ -379,6 +379,7 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> ave::VulkanEngine::CreateScene3D()
 void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
 {
 	m_CameraUPtr->Update();
+
 	m_SwapchainFrameVec[imgIdx].VPMatrix.ViewMatrix = m_CameraUPtr->GetViewMatrix();
 	m_SwapchainFrameVec[imgIdx].VPMatrix.ProjectionMatrix = m_CameraUPtr->GetProjectionMatrix();
 	memcpy(m_SwapchainFrameVec[imgIdx].VPWriteLocationPtr, &m_SwapchainFrameVec[imgIdx].VPMatrix, sizeof(vkUtil::UBO));

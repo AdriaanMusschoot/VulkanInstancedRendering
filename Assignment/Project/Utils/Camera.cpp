@@ -1,14 +1,14 @@
 #include "Camera.h"
 #include "Engine/Clock.h"
 
-ave::Camera::Camera(GLFWwindow* windowPtr, const glm::vec3& origin, float fovAngle, float aspectRatio)
+ave::Camera::Camera(GLFWwindow* windowPtr, const glm::vec3& origin, float fovAngle, int width, int height)
 	: m_Origin{ origin }
 	, m_FovAngle{ fovAngle }
-	, m_AspectRatio{ aspectRatio }
+	, m_AspectRatio{ static_cast<float>(width) / static_cast<float>(height) }
 	, m_WindowPtr{ windowPtr }
 {
-	m_Fov = tanf(m_FovAngle * ave::ToRadians / 2.f);
-	CalculateProjectionMatrix();
+	m_Fov = tanf(glm::radians(m_FovAngle)/ 2.f);
+	CalculateProjectionMatrix(width, height);
 	CalculateViewMatrix();
 }
 
@@ -17,15 +17,15 @@ void ave::Camera::CalculateViewMatrix()
 	m_Right = glm::cross(glm::vec3{ 0, 1, 0 }, m_Forward);
 	m_Right = glm::normalize(m_Right);
 
-	m_Up = glm::cross(m_Right, m_Forward);
+	m_Up = glm::cross(m_Forward, m_Right);
 	m_Up = glm::normalize(m_Up);
 
-	m_ViewMatrix = glm::lookAt(m_Origin, m_Origin + m_Forward, m_Up);
+	m_ViewMatrix = glm::lookAtRH(m_Origin, m_Origin + m_Forward, -m_Up);
 }
 
-void ave::Camera::CalculateProjectionMatrix()
+void ave::Camera::CalculateProjectionMatrix(int width, int height)
 {
-	m_ProjectionMatrix = glm::perspective(m_FovAngle * ave::ToRadians, m_AspectRatio, m_NearPlane, m_FarPlane);
+	m_ProjectionMatrix = glm::perspectiveFovRH(m_Fov, static_cast<float>(width), static_cast<float>(height), m_NearPlane, m_FarPlane);
 }
 
 void ave::Camera::Update()
@@ -67,13 +67,13 @@ void ave::Camera::Update()
 
 	if (glfwGetMouseButton(m_WindowPtr, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 	{
-		m_TotalPitch -= deltaMouseY * m_SpeedRotation * deltaTime;
 		m_TotalYaw -= deltaMouseX * m_SpeedRotation * deltaTime;
+		m_TotalPitch -= deltaMouseY * m_SpeedRotation * deltaTime;
 
 		//takes in current matrix and assigns the new value to it
 		glm::mat4 rotationMatrix{ 1.0f };
-		rotationMatrix = glm::rotate(rotationMatrix, static_cast<float>(m_TotalPitch), glm::vec3{ 1, 0, 0 });
 		rotationMatrix = glm::rotate(rotationMatrix, static_cast<float>(m_TotalYaw), glm::vec3{ 0, 1, 0 });
+		rotationMatrix = glm::rotate(rotationMatrix, static_cast<float>(m_TotalPitch), glm::vec3{ 1, 0, 0 });
 
 		m_Forward = rotationMatrix * glm::vec4{ 0, 0, 1, 0 };
 		m_Forward = glm::normalize(m_Forward);

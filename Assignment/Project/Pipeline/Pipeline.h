@@ -8,6 +8,7 @@
 #include "functional"
 namespace vkInit
 {
+
 	template <typename VertexStruct>
 	class Pipeline final
 	{
@@ -60,7 +61,7 @@ namespace vkInit
 				m_SceneUPtr->Draw(commandBuffer, m_PipelineLayout);
 			}
 		}
-
+		
 		void SetScene(std::unique_ptr<ave::Scene<VertexStruct>> sceneUPtr)
 		{
 			m_SceneUPtr = std::move(sceneUPtr);
@@ -137,8 +138,12 @@ namespace vkInit
 			depthStateCreateInfo.depthTestEnable = VK_TRUE;
 			depthStateCreateInfo.depthWriteEnable = VK_TRUE;
 			depthStateCreateInfo.depthCompareOp = vk::CompareOp::eLess;
+			depthStateCreateInfo.minDepthBounds = 0.0f;
+			depthStateCreateInfo.maxDepthBounds = 1.f;
 			depthStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
 			depthStateCreateInfo.stencilTestEnable = VK_FALSE;
+			depthStateCreateInfo.front = vk::StencilOpState{};
+			depthStateCreateInfo.back = vk::StencilOpState{};
 
 			return depthStateCreateInfo;
 		}
@@ -157,13 +162,13 @@ namespace vkInit
 		{
 			vk::PipelineRasterizationStateCreateInfo rasterizerStateCreateInfo{};
 			rasterizerStateCreateInfo.flags = vk::PipelineRasterizationStateCreateFlags{};
-			rasterizerStateCreateInfo.depthClampEnable = VK_FALSE;
-			rasterizerStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
+			rasterizerStateCreateInfo.depthClampEnable = vk::False;
+			rasterizerStateCreateInfo.rasterizerDiscardEnable = vk::False;
 			rasterizerStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
 			rasterizerStateCreateInfo.lineWidth = 1.0f;
 			rasterizerStateCreateInfo.cullMode = vk::CullModeFlagBits::eNone;
 			rasterizerStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
-			rasterizerStateCreateInfo.depthBiasEnable = VK_FALSE;
+			rasterizerStateCreateInfo.depthBiasEnable = vk::False;
 
 			return rasterizerStateCreateInfo;
 		}
@@ -173,7 +178,10 @@ namespace vkInit
 			multisampleStateCreateInfo.flags = vk::PipelineMultisampleStateCreateFlags{};
 			multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
 			multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-
+			multisampleStateCreateInfo.minSampleShading = 1.0f;
+			multisampleStateCreateInfo.pSampleMask = nullptr;
+			multisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
+			multisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
 			return multisampleStateCreateInfo;
 		}
 		vk::PipelineColorBlendAttachmentState PopulateColorBlendAttachmentState()
@@ -184,6 +192,12 @@ namespace vkInit
 				vk::ColorComponentFlagBits::eB |
 				vk::ColorComponentFlagBits::eA;
 			colorBlendAttachmentState.blendEnable = VK_FALSE;
+			colorBlendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eOne;
+			colorBlendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eZero;
+			colorBlendAttachmentState.colorBlendOp = vk::BlendOp::eAdd;
+			colorBlendAttachmentState.srcAlphaBlendFactor = vk::BlendFactor::eOne;
+			colorBlendAttachmentState.dstAlphaBlendFactor = vk::BlendFactor::eZero;
+			colorBlendAttachmentState.alphaBlendOp = vk::BlendOp::eAdd;
 
 			return colorBlendAttachmentState;
 		}

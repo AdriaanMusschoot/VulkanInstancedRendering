@@ -4,7 +4,7 @@
 #include "Utils/Buffer.h"
 #include "Utils/RenderStructs.h"
 #include "Utils/FileReader.h"
-#define TINYOBJLOADER_IMPLEMENTATION
+#include <unordered_map>
 
 namespace ave
 {
@@ -28,7 +28,7 @@ namespace ave
 			: m_Device{ device }
 			, m_PhysicalDevice{ physicalDevice }
 		{
-			if (not vkUtil::ParseOBJ<VertexStruct>(filePath, m_VertexVec, m_IndexVec, true))
+			if (not vkUtil::ParseOBJ(filePath, m_VertexVec, m_IndexVec, true))
 			{
 				std::cout << "Failed to load file\n";
 			}
@@ -57,7 +57,7 @@ namespace ave
 			vkUtil::BufferInBundle inBundle{};
 			inBundle.Device = m_Device;
 			inBundle.PhysicalDevice = m_PhysicalDevice;
-			inBundle.Size = sizeof(vkUtil::Vertex2D) * m_VertexVec.size();
+			inBundle.Size = sizeof(VertexStruct) * m_VertexVec.size();
 			inBundle.UsageFlags = vk::BufferUsageFlagBits::eTransferSrc;
 			inBundle.MemoryPropertyFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
 
@@ -86,7 +86,7 @@ namespace ave
 			vkUtil::BufferInBundle inBundle{};
 			inBundle.Device = m_Device;
 			inBundle.PhysicalDevice = m_PhysicalDevice;
-			inBundle.Size = sizeof(int) * m_IndexVec.size();
+			inBundle.Size = sizeof(uint32_t) * m_IndexVec.size();
 			inBundle.UsageFlags = vk::BufferUsageFlagBits::eTransferSrc;
 			inBundle.MemoryPropertyFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
 
@@ -132,6 +132,7 @@ namespace ave
 		vk::PhysicalDevice m_PhysicalDevice;
 
 		glm::mat4 m_WorldMatrix{ 1.0f };	
+
 	};
 }
 
