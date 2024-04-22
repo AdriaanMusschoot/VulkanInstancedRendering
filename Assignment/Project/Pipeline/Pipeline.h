@@ -6,6 +6,7 @@
 #include "Rendering/Scene.h"
 #include "RenderPass.h"
 #include "functional"
+
 namespace vkInit
 {
 
@@ -178,7 +179,7 @@ namespace vkInit
 			multisampleStateCreateInfo.flags = vk::PipelineMultisampleStateCreateFlags{};
 			multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
 			multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-			multisampleStateCreateInfo.minSampleShading = 1.0f;
+			multisampleStateCreateInfo.minSampleShading = 0.0f;
 			multisampleStateCreateInfo.pSampleMask = nullptr;
 			multisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
 			multisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
@@ -275,7 +276,7 @@ namespace vkInit
 			viewport.width = static_cast<float>(in.SwapchainExtent.width);
 			viewport.height = static_cast<float>(in.SwapchainExtent.height);
 			viewport.minDepth = 0.0f;
-			viewport.minDepth = 1.0f;
+			viewport.maxDepth = 1.0f;
 
 			if (isDebugging)
 			{

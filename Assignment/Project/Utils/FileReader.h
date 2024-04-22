@@ -13,9 +13,9 @@ namespace vkUtil
 			return false;
 		}
 
-		std::vector<glm::vec3> positionvec{};
-		std::vector<glm::vec3> normalvec{};
-		std::vector<glm::vec2> uvvec{};
+		std::vector<glm::vec3> positionVec{};
+		std::vector<glm::vec3> normalVec{};
+		std::vector<glm::vec2> uvVec{};
 
 		vertexVec.clear();
 		indexVec.clear();
@@ -37,14 +37,14 @@ namespace vkUtil
 				float x, y, z;
 				file >> x >> y >> z;
 
-				positionvec.emplace_back(glm::vec3{ x, y, z });
+				positionVec.emplace_back(glm::vec3{ x, y, z });
 			}
 			else if (scommand == "vt")
 			{
 				// vertex texcoord
 				float u, v;
 				file >> u >> v;
-				uvvec.emplace_back(u, 1 - v);
+				uvVec.emplace_back(u, 1 - v);
 			}
 			else if (scommand == "vn")
 			{
@@ -52,7 +52,7 @@ namespace vkUtil
 				float x, y, z;
 				file >> x >> y >> z;
 
-				normalvec.emplace_back(glm::vec3{ x, y, z });
+				normalVec.emplace_back(glm::vec3{ x, y, z });
 			}
 			else if (scommand == "f")
 			{
@@ -70,7 +70,7 @@ namespace vkUtil
 				{
 					// obj format uses 1-based arrays
 					file >> idxposition;
-					vertex.Position = positionvec[idxposition - 1];
+					vertex.Position = positionVec[idxposition - 1];
 
 					if ('/' == file.peek())//is next in buffer ==  '/' ?
 					{
@@ -89,7 +89,7 @@ namespace vkUtil
 
 							// optional vertex normal
 							file >> idxnormal;
-							vertex.Normal = normalvec[idxnormal - 1];
+							vertex.Normal = normalVec[idxnormal - 1];
 						}
 					}
 
@@ -146,12 +146,11 @@ namespace vkUtil
 
 			if (flipAxisAndWinding)
 			{
-				v.Position.z *= 1.f;
-				v.Normal.z *= -1.f;
+				v.Position.z *= -1.f;
+				v.Normal.z *= 1.f;
 				v.Color = glm::vec3{ 1.f, 1.f, 1.f };
 				//v.tangent.z *= -1.f;
 			}
-
 		}
 		return true;
 	}

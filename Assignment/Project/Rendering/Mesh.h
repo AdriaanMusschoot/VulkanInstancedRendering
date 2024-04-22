@@ -106,6 +106,11 @@ namespace ave
 			m_Device.freeMemory(stagingBuffer.BufferMemory);
 		}
 
+		void SetWorldMatrix(const glm::mat4& worldMatrix)
+		{
+			m_WorldMatrix = worldMatrix;
+		}
+
 		void PushWorldMatrix(const vk::CommandBuffer& commandBuffer, const vk::PipelineLayout& pipelineLayout)
 		{
 			commandBuffer.pushConstants(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(glm::mat4), &m_WorldMatrix);

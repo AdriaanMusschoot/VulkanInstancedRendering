@@ -21,11 +21,11 @@ void vkInit::RenderPass::BeginRenderPass(const vk::CommandBuffer& commandBuffer,
 
 	std::vector<vk::ClearValue> clearValueVec;
 
-	vk::ClearValue clearColor{ std::array<float, 4>{0.f, 0.f, 0.f, 1.0f } };
+	vk::ClearValue clearColor{ vk::ClearColorValue{ 0.f, 0.f, 0.5f, 1.0f } };
 	clearValueVec.emplace_back(clearColor);
 
 	vk::ClearValue clearDepth{};
-	clearDepth.depthStencil = vk::ClearDepthStencilValue{ 1.0f, 1 };
+	clearDepth.depthStencil = vk::ClearDepthStencilValue{ 1.0f, 0 };
 	clearValueVec.emplace_back(clearDepth);
 
 	renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValueVec.size());
@@ -53,6 +53,10 @@ vk::RenderPass vkInit::RenderPass::CreateRenderPass(const RenderPassInBundle& in
 
 	std::vector<vk::AttachmentDescription> attachmentDescriptionVec;
 	std::vector<vk::AttachmentReference> attachmentReferenceVec;
+
+	vk::SubpassDescription subpass{};
+	subpass.flags = vk::SubpassDescriptionFlags{};
+	subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
 
 	if ((in.AttachmentFlags | vkUtil::AttachmentFlags::Color) == in.AttachmentFlags)
 	{
@@ -96,11 +100,9 @@ vk::RenderPass vkInit::RenderPass::CreateRenderPass(const RenderPassInBundle& in
 		depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
 		attachmentReferenceVec.emplace_back(depthAttachmentReference);
+		
 	}
-
-	vk::SubpassDescription subpass{};
-	subpass.flags = vk::SubpassDescriptionFlags{};
-	subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
+;
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &*std::find_if(attachmentReferenceVec.begin(), attachmentReferenceVec.end(),
 		[&](const vk::AttachmentReference& attachRef)
@@ -116,7 +118,7 @@ vk::RenderPass vkInit::RenderPass::CreateRenderPass(const RenderPassInBundle& in
 
 	vk::SubpassDependency dependencyInfo{};
 	dependencyInfo.srcSubpass = VK_SUBPASS_EXTERNAL;
-	dependencyInfo.srcAccessMask = vk::AccessFlags{};
+	//dependencyInfo.srcAccessMask = vk::AccessFlags{};
 	dependencyInfo.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
 	dependencyInfo.dstSubpass = 0;
 	dependencyInfo.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;

@@ -218,7 +218,7 @@ void ave::VulkanEngine::CreatePipeline()
 	inRenderPass.Device = m_Device;
 	inRenderPass.DepthFormat = m_SwapchainFrameVec[0].DepthFormat;
 	inRenderPass.SwapchainImageFormat = m_SwapchainFormat;
-	inRenderPass.AttachmentFlags = static_cast<vkUtil::AttachmentFlags>(vkUtil::AttachmentFlags::Depth | vkUtil::AttachmentFlags::Color);
+	inRenderPass.AttachmentFlags = static_cast<vkUtil::AttachmentFlags>(vkUtil::AttachmentFlags::Color | vkUtil::AttachmentFlags::Depth);
 	m_RenderPassUPtr = std::make_unique<vkInit::RenderPass>(inRenderPass, m_IsDebugging);
 
 	vkInit::Pipeline<vkUtil::Vertex2D>::GraphicsPipelineInBundle specification2D{};
@@ -269,7 +269,7 @@ void ave::VulkanEngine::SetUpRendering()
 
 	m_Pipeline3DUPtr->SetScene(std::move(CreateScene3D()));
 
-	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -20 }, 45, m_SwapchainExtent.width, m_SwapchainExtent.height);
+	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -150 }, 20, m_SwapchainExtent.width, m_SwapchainExtent.height);
 }
 
 std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
@@ -367,11 +367,21 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> ave::VulkanEngine::CreateScene3D()
 
 	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene<vkUtil::Vertex3D>>() };
 
-	const std::string fileName{ "Resources/vehicle.obj" };
-
-	std::unique_ptr cubeMeshUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, fileName)};
-
-	sceneUPtr->AddMesh(std::move(cubeMeshUPtr));
+	const std::string fileNameVehicle{ "Resources/vehicle.obj" };
+	
+	std::unique_ptr vehicleMeshUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, fileNameVehicle)};
+	
+	vehicleMeshUPtr->SetWorldMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 0.0f, 0.0f)));
+	
+	sceneUPtr->AddMesh(std::move(vehicleMeshUPtr));
+	
+	const std::string fileNameRaceCar{ "Resources/ferrari.obj" };
+	
+	std::unique_ptr raceCarUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, fileNameRaceCar)};
+	
+	raceCarUPtr->SetWorldMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 0.0f, 0.0f)));
+	
+	sceneUPtr->AddMesh(std::move(raceCarUPtr));
 
 	return sceneUPtr;
 }

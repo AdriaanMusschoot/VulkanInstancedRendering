@@ -35,10 +35,10 @@ set(SOURCES
     "Utils/FileReader.cpp"
 
     "Pipeline/Shader.cpp"   "Pipeline/Descriptor.h" "Pipeline/RenderPass.cpp"
-    "Pipeline/Pipeline.cpp"
+    
 
     "Rendering/Swapchain.h" "Rendering/FrameBuffer.h" "Rendering/Commands.cpp" 
-    "Rendering/Synchronization.h"  "Rendering/Scene.cpp" "Rendering/Mesh.cpp" 
+    "Rendering/Synchronization.h"  "Rendering/Scene.cpp"  
     "Rendering/Image.cpp")
 
 # Create the executable

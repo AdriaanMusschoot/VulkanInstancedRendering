@@ -144,10 +144,10 @@ vk::ImageView vkInit::CreateImageView(const vk::Device& device, const vk::Image&
 	imgViewCreateInfo.image = image;
 	imgViewCreateInfo.format = format;
 	imgViewCreateInfo.viewType = vk::ImageViewType::e2D;
-	imgViewCreateInfo.components.r = vk::ComponentSwizzle::eIdentity;
+	/*imgViewCreateInfo.components.r = vk::ComponentSwizzle::eIdentity;
 	imgViewCreateInfo.components.g = vk::ComponentSwizzle::eIdentity;
 	imgViewCreateInfo.components.b = vk::ComponentSwizzle::eIdentity;
-	imgViewCreateInfo.components.a = vk::ComponentSwizzle::eIdentity;
+	imgViewCreateInfo.components.a = vk::ComponentSwizzle::eIdentity;*/
 	imgViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
 	imgViewCreateInfo.subresourceRange.baseMipLevel = 0;
 	imgViewCreateInfo.subresourceRange.levelCount = 1;
