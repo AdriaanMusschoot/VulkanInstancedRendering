@@ -366,10 +366,10 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> ave::VulkanEngine::CreateScene3D()
 	};
 
 	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene<vkUtil::Vertex3D>>() };
-
+	
 	const std::string fileNameVehicle{ "Resources/vehicle.obj" };
 	
-	std::unique_ptr vehicleMeshUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, fileNameVehicle)};
+	std::unique_ptr vehicleMeshUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, fileNameVehicle, true)};
 	
 	vehicleMeshUPtr->SetWorldMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 0.0f, 0.0f)));
 	
@@ -377,7 +377,7 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> ave::VulkanEngine::CreateScene3D()
 	
 	const std::string fileNameRaceCar{ "Resources/ferrari.obj" };
 	
-	std::unique_ptr raceCarUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, fileNameRaceCar)};
+	std::unique_ptr raceCarUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, fileNameRaceCar, false)};
 	
 	raceCarUPtr->SetWorldMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 0.0f, 0.0f)));
 	

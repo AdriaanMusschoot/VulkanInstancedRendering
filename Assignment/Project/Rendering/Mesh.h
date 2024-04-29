@@ -24,11 +24,11 @@ namespace ave
 		{
 
 		}
-		Mesh(const vk::Device& device, const vk::PhysicalDevice& physicalDevice, const MeshInBundle& in, const std::string& filePath)
+		Mesh(const vk::Device& device, const vk::PhysicalDevice& physicalDevice, const MeshInBundle& in, const std::string& filePath, bool flipWinding)
 			: m_Device{ device }
 			, m_PhysicalDevice{ physicalDevice }
 		{
-			if (not vkUtil::ParseOBJ(filePath, m_VertexVec, m_IndexVec, true))
+			if (not vkUtil::ParseOBJ(filePath, m_VertexVec, m_IndexVec, flipWinding))
 			{
 				std::cout << "Failed to load file\n";
 			}

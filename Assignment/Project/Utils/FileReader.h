@@ -5,7 +5,7 @@
 namespace vkUtil
 {
 	template<typename VertexStruct>
-	bool ParseOBJ(const std::string& filename, std::vector<VertexStruct>& vertexVec, std::vector<uint32_t>& indexVec, bool flipAxisAndWinding = true)
+	bool ParseOBJ(const std::string& filename, std::vector<VertexStruct>& vertexVec, std::vector<uint32_t>& indexVec, bool flipAxisAndWinding)
 	{
 		std::ifstream file{ filename };
 		if (!file)
@@ -143,14 +143,8 @@ namespace vkUtil
 		for (auto& v : vertexVec)
 		{
 			//	v.tangent = vector3::reject(v.tangent, v.normal).normalized();
-
-			if (flipAxisAndWinding)
-			{
-				v.Position.z *= -1.f;
-				v.Normal.z *= 1.f;
-				v.Color = glm::vec3{ 1.f, 1.f, 1.f };
-				//v.tangent.z *= -1.f;
-			}
+			v.Position.z *= -1.f;
+			v.Color = glm::vec3{ 1.f, 1.f, 1.f };
 		}
 		return true;
 	}

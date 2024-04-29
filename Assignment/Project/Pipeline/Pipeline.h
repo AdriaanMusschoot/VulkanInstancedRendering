@@ -167,7 +167,7 @@ namespace vkInit
 			rasterizerStateCreateInfo.rasterizerDiscardEnable = vk::False;
 			rasterizerStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
 			rasterizerStateCreateInfo.lineWidth = 1.0f;
-			rasterizerStateCreateInfo.cullMode = vk::CullModeFlagBits::eNone;
+			rasterizerStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
 			rasterizerStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
 			rasterizerStateCreateInfo.depthBiasEnable = vk::False;
 
@@ -276,7 +276,7 @@ namespace vkInit
 			viewport.width = static_cast<float>(in.SwapchainExtent.width);
 			viewport.height = static_cast<float>(in.SwapchainExtent.height);
 			viewport.minDepth = 0.0f;
-			viewport.maxDepth = 1.0f;
+			viewport.maxDepth = 1.f;
 
 			if (isDebugging)
 			{
