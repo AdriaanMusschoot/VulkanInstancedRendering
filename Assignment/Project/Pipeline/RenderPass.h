@@ -16,7 +16,7 @@ namespace vkInit
 	class RenderPass final
 	{
 	public:
-		RenderPass(const RenderPassInBundle& in, bool isDebugging);
+		RenderPass(const RenderPassInBundle& in);
 		~RenderPass();
 
 		RenderPass(const RenderPass& other) = delete;
@@ -33,7 +33,7 @@ namespace vkInit
 
 		vk::Device m_Device;
 
-		vk::RenderPass CreateRenderPass(const RenderPassInBundle& in, bool isDebugging);
+		vk::RenderPass CreateRenderPass(const RenderPassInBundle& in);
 
 	};
 }

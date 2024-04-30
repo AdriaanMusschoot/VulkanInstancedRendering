@@ -5,17 +5,14 @@
 namespace vkInit
 {
 
-	bool CheckSupportExtensionsAndLayers(const std::vector<const char*>& requiredLayerVec, const std::vector<const char*>& requiredExtensionVec, bool isDebugging)
+	bool CheckSupportExtensionsAndLayers(const std::vector<const char*>& requiredLayerVec, const std::vector<const char*>& requiredExtensionVec)
 	{
 		std::vector<vk::LayerProperties> supportedLayerVec{ vk::enumerateInstanceLayerProperties() };
 
-		if (isDebugging)
+		std::cout << "\nLayers supported:\n";
+		for (const auto& supportedLayer : supportedLayerVec)
 		{
-			std::cout << "\nLayers supported:\n";
-			for (const auto& supportedLayer : supportedLayerVec)
-			{
-				std::cout << "\t\"" << supportedLayer.layerName << "\"\n";
-			}
+			std::cout << "\t\"" << supportedLayer.layerName << "\"\n";
 		}
 
 		for (const auto& requiredLayers : requiredLayerVec)
@@ -27,30 +24,22 @@ namespace vkInit
 				});
 			if (wasFound)
 			{
-				if (isDebugging)
-				{
-					std::cout << "Layer: " << requiredLayers << " is supported\n";
-				}
+				std::cout << "Layer: " << requiredLayers << " is supported\n";
 			}
 			else
 			{
-				if (isDebugging)
-				{
-					std::cout << "Layer: " << requiredLayers << "is not supported\n";
-				}
+				std::cout << "Layer: " << requiredLayers << "is not supported\n";
+
 				return false;
 			}
 		}
 
 		std::vector<vk::ExtensionProperties> supportedExtensionVec{ vk::enumerateInstanceExtensionProperties() };
 
-		if (isDebugging)
+		std::cout << "\nExtensions supported:\n";
+		for (const auto& supportedExtension : supportedExtensionVec)
 		{
-			std::cout << "\nExtensions supported:\n";
-			for (const auto& supportedExtension : supportedExtensionVec)
-			{
-				std::cout << "\t\"" << supportedExtension.extensionName << "\"\n";
-			}
+			std::cout << "\t\"" << supportedExtension.extensionName << "\"\n";
 		}
 
 		for (const auto& requiredExtension : requiredExtensionVec)
@@ -62,17 +51,11 @@ namespace vkInit
 				});
 			if (wasFound)
 			{
-				if (isDebugging)
-				{
-					std::cout << "Extension: " << requiredExtension << " is supported\n";
-				}
+				std::cout << "Extension: " << requiredExtension << " is supported\n";
 			}
 			else
 			{
-				if (isDebugging)
-				{
-					std::cout << "Extension: " << requiredExtension << " is not supported\n";
-				}
+				std::cout << "Extension: " << requiredExtension << " is not supported\n";
 				return false;
 			}
 		}
@@ -80,23 +63,17 @@ namespace vkInit
 		return true;
 	}
 
-	vk::Instance CreateInstance(bool isDebugging, const std::string& name)
+	vk::Instance CreateInstance(const std::string& name)
 	{
-		if (isDebugging)
-		{
-			std::cout << "Creating instance\n";
-		}
+		std::cout << "Creating instance\n";
 
 		uint32_t versionNumber{ 0 };
 		vkEnumerateInstanceVersion(&versionNumber);
 
-		if (isDebugging)
-		{
-			std::cout << "Supports vulkan variant: " << VK_API_VERSION_VARIANT(versionNumber) << ", version number: "
+		std::cout << "Supports vulkan variant: " << VK_API_VERSION_VARIANT(versionNumber) << ", version number: "
 					  << VK_API_VERSION_MAJOR(versionNumber) << "."
 					  << VK_API_VERSION_MINOR(versionNumber) << "."
 					  << VK_API_VERSION_PATCH(versionNumber) << "\n";
-		}
 
 		versionNumber &= ~(0xFFFU);
 
@@ -113,22 +90,17 @@ namespace vkInit
 
 		std::vector<const char*> layerVec;
 
-		if (isDebugging)
-		{
-			layerVec.emplace_back("VK_LAYER_KHRONOS_validation");
-		}
+		layerVec.emplace_back("VK_LAYER_KHRONOS_validation");
 
 		uint32_t glfwExtensionCount = 0;
 		const char** glfwExtensions{ glfwGetRequiredInstanceExtensions(&glfwExtensionCount) };
 		
 		std::vector<const char*> requiredExtensionVec(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-		if (isDebugging)
-		{
-			requiredExtensionVec.emplace_back("VK_EXT_debug_utils");
-		}
+		requiredExtensionVec.emplace_back("VK_EXT_debug_utils");
+		
 
-		if (!CheckSupportExtensionsAndLayers(layerVec, requiredExtensionVec, isDebugging))
+		if (not CheckSupportExtensionsAndLayers(layerVec, requiredExtensionVec))
 		{
 			return nullptr;
 		}
@@ -149,10 +121,8 @@ namespace vkInit
 		}
 		catch (const vk::SystemError & systemError)
 		{
-			if (isDebugging)
-			{
-				std::cout << systemError.what() << "\n";
-			}
+			std::cout << systemError.what() << "\n";
+
 			return nullptr;
 		}
 	}

@@ -22,7 +22,7 @@ namespace vkInit
 			std::string FragmentFilePath;
 			vk::Extent2D SwapchainExtent;
 			vk::RenderPass RenderPass;
-			vk::DescriptorSetLayout DescriptorSetLayout;
+			std::vector<vk::DescriptorSetLayout> DescriptorSetLayoutVec;
 			std::function<std::vector<vk::VertexInputBindingDescription>()> GetBindingDescription;
 			std::function<std::vector<vk::VertexInputAttributeDescription>()> GetAttributeDescription;
 		};
@@ -33,10 +33,10 @@ namespace vkInit
 			vk::Pipeline Pipeline;
 		};
 
-		Pipeline(const GraphicsPipelineInBundle& in, bool isDebugging)
+		Pipeline(const GraphicsPipelineInBundle& in)
 			: m_Device{ in.Device }
 		{
-			GraphicsPipelineOutBundle out = CreateGraphicsPipeline(in, isDebugging);
+			GraphicsPipelineOutBundle out = CreateGraphicsPipeline(in);
 			m_PipelineLayout = out.Layout;
 			m_Pipeline = out.Pipeline;
 		}
@@ -75,7 +75,7 @@ namespace vkInit
 
 		std::unique_ptr<ave::Scene<VertexStruct>> m_SceneUPtr;
 
-		vk::PipelineLayout CreatePipelineLayout(const vk::Device& device, const vk::DescriptorSetLayout& descriptorSetLayout, bool isDebugging)
+		vk::PipelineLayout CreatePipelineLayout(const vk::Device& device, const std::vector<vk::DescriptorSetLayout>& descriptorSetLayout)
 		{
 			vk::PushConstantRange pushConstantRange{};
 			pushConstantRange.offset = 0;
@@ -84,8 +84,8 @@ namespace vkInit
 
 			vk::PipelineLayoutCreateInfo layoutCreateInfo{};
 			layoutCreateInfo.flags = vk::PipelineLayoutCreateFlags{};
-			layoutCreateInfo.setLayoutCount = 1;
-			layoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+			layoutCreateInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayout.size());
+			layoutCreateInfo.pSetLayouts = descriptorSetLayout.data();
 			layoutCreateInfo.pushConstantRangeCount = 1;
 			layoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -95,10 +95,8 @@ namespace vkInit
 			}
 			catch (const vk::SystemError& systemError)
 			{
-				if (isDebugging)
-				{
-					std::cout << systemError.what() << "\n";
-				}
+				std::cout << systemError.what() << "\n";
+
 				return nullptr;
 			}
 		}
@@ -217,12 +215,9 @@ namespace vkInit
 
 			return colorBlendStateCreateInfo;
 		}
-		GraphicsPipelineOutBundle CreateGraphicsPipeline(const GraphicsPipelineInBundle& in, bool isDebugging)
+		GraphicsPipelineOutBundle CreateGraphicsPipeline(const GraphicsPipelineInBundle& in)
 		{
-			if (isDebugging)
-			{
-				std::cout << "\nPipeline creation started\n";
-			}
+			std::cout << "\nPipeline creation started\n";
 
 			vk::GraphicsPipelineCreateInfo pipelineCreateInfo{};
 			pipelineCreateInfo.flags = vk::PipelineCreateFlags{};
@@ -240,15 +235,12 @@ namespace vkInit
 			vk::PipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo{ PopulateInputAssembly() };
 			pipelineCreateInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
 
-			if (isDebugging)
-			{
-				std::cout << "\tShader module creation started\n";
-			}
+			std::cout << "\tShader module creation started\n";
 
-			vk::ShaderModule vertexShaderModule{ vkUtil::CreateModule(in.Device, in.VertexFilePath, isDebugging) };
+			vk::ShaderModule vertexShaderModule{ vkUtil::CreateModule(in.Device, in.VertexFilePath) };
 			vk::PipelineShaderStageCreateInfo vertexShaderStageCreateInfo{ PopulateShaderStage(vertexShaderModule, vk::ShaderStageFlagBits::eVertex) };
 
-			vk::ShaderModule fragmentShaderModule{ vkUtil::CreateModule(in.Device, in.FragmentFilePath, isDebugging) };
+			vk::ShaderModule fragmentShaderModule{ vkUtil::CreateModule(in.Device, in.FragmentFilePath) };
 			vk::PipelineShaderStageCreateInfo fragmentShaderStageCreateInfo{ PopulateShaderStage(fragmentShaderModule, vk::ShaderStageFlagBits::eFragment) };
 
 			shaderStageCreateInfoVec.emplace_back(vertexShaderStageCreateInfo);
@@ -257,18 +249,12 @@ namespace vkInit
 			pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStageCreateInfoVec.size());
 			pipelineCreateInfo.pStages = shaderStageCreateInfoVec.data();
 
-			if (isDebugging)
-			{
-				std::cout << "\tDepth creation started\n";
-			}
+			std::cout << "\tDepth creation started\n";
 
 			vk::PipelineDepthStencilStateCreateInfo depthStateCreateInfo{ PopulateDepthState() };
 			pipelineCreateInfo.pDepthStencilState = &depthStateCreateInfo;
 
-			if (isDebugging)
-			{
-				std::cout << "\tViewport creation started\n";
-			}
+			std::cout << "\tViewport creation started\n";
 
 			vk::Viewport viewport{};
 			viewport.x = 0;
@@ -278,10 +264,7 @@ namespace vkInit
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.f;
 
-			if (isDebugging)
-			{
-				std::cout << "\tScissor creation started\n";
-			}
+			std::cout << "\tScissor creation started\n";
 
 			vk::Rect2D scissor{};
 			scissor.offset.x = 0;
@@ -291,52 +274,34 @@ namespace vkInit
 			vk::PipelineViewportStateCreateInfo viewportStateCreateInfo{ PopulateViewportState(viewport, scissor) };
 			pipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
 
-			if (isDebugging)
-			{
-				std::cout << "\tRasterizer creation started\n";
-			}
+			std::cout << "\tRasterizer creation started\n";
 
 			vk::PipelineRasterizationStateCreateInfo rasterizerStateCreateInfo{ PopulateRasterizationState() };
 			pipelineCreateInfo.pRasterizationState = &rasterizerStateCreateInfo;
 
-			if (isDebugging)
-			{
-				std::cout << "\tMultisample creation started\n";
-			}
+			std::cout << "\tMultisample creation started\n";
 
 			vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo{ PopulateMultisampleState() };
 			pipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
 
-			if (isDebugging)
-			{
-				std::cout << "\tColor blend creation started\n";
-			}
+			std::cout << "\tColor blend creation started\n";
 
 			vk::PipelineColorBlendAttachmentState colorBlendAttachmentState{ PopulateColorBlendAttachmentState() };
 			vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{ PopulateColorBlendState(colorBlendAttachmentState) };
 			pipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
 
-			if (isDebugging)
-			{
-				std::cout << "\tPipeline layout creation started\n";
-			}
+			std::cout << "\tPipeline layout creation started\n";
 
-			vk::PipelineLayout pipelineLayout{ CreatePipelineLayout(in.Device, in.DescriptorSetLayout, isDebugging) };
+			vk::PipelineLayout pipelineLayout{ CreatePipelineLayout(in.Device, in.DescriptorSetLayoutVec) };
 			pipelineCreateInfo.layout = pipelineLayout;
 
-			if (isDebugging)
-			{
-				std::cout << "\tRenderpass creation started\n";
-			}
+			std::cout << "\tRenderpass creation started\n";
 
 			pipelineCreateInfo.renderPass = in.RenderPass;
 
 			pipelineCreateInfo.basePipelineHandle = nullptr;
 
-			if (isDebugging)
-			{
-				std::cout << "Pipeline creation ended\n";
-			}
+			std::cout << "Pipeline creation ended\n";
 
 			vk::Pipeline pipeline{};
 
@@ -346,10 +311,7 @@ namespace vkInit
 			}
 			catch (const vk::SystemError& systemError)
 			{
-				if (isDebugging)
-				{
-					std::cout << systemError.what() << "\n";
-				}
+				std::cout << systemError.what() << "\n";
 			}
 
 			GraphicsPipelineOutBundle out{};

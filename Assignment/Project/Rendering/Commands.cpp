@@ -1,8 +1,8 @@
 #include "Commands.h"
 
-vk::CommandPool vkInit::CreateCommandPool(const vk::Device& device, const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface, bool isDebugging)
+vk::CommandPool vkInit::CreateCommandPool(const vk::Device& device, const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface)
 {
-	vkUtil::QueueFamilyIndices queueFamilyIndices{ vkUtil::FindQueueFamilies(physicalDevice, surface, isDebugging) };
+	vkUtil::QueueFamilyIndices queueFamilyIndices{ vkUtil::FindQueueFamilies(physicalDevice, surface) };
 
 	vk::CommandPoolCreateInfo poolCreateInfo{};
 	poolCreateInfo.flags = vk::CommandPoolCreateFlags{} | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
@@ -14,15 +14,13 @@ vk::CommandPool vkInit::CreateCommandPool(const vk::Device& device, const vk::Ph
 	}
 	catch (const vk::SystemError& systemError)
 	{
-		if (isDebugging)
-		{
-			std::cout << systemError.what() << "\n";
-		}
+		std::cout << systemError.what() << "\n";
+
 		return nullptr;
 	}
 }
 
-void vkInit::CreateFrameCommandBuffers(const CommandBufferInBundle& in, bool isDebugging)
+void vkInit::CreateFrameCommandBuffers(const CommandBufferInBundle& in)
 {
 	vk::CommandBufferAllocateInfo bufferAllocInfo{};
 	bufferAllocInfo.commandPool = in.CommandPool;
@@ -34,23 +32,17 @@ void vkInit::CreateFrameCommandBuffers(const CommandBufferInBundle& in, bool isD
 		try
 		{
 			in.FrameVec[idx].CommandBuffer = in.Device.allocateCommandBuffers(bufferAllocInfo)[0];
-			if (isDebugging)
-			{
-				std::cout << "Command buffer allocated for frame " << idx << "\n";
-			}
+			std::cout << "Command buffer allocated for frame " << idx << "\n";
 		}
 		catch (const vk::SystemError& systemError)
 		{
-			if (isDebugging)
-			{
-				std::cout << "Command buffer allocation for frame " << idx << " failed\n";
-				std::cout << systemError.what() << "\n";
-			}
+			std::cout << "Command buffer allocation for frame " << idx << " failed\n";
+			std::cout << systemError.what() << "\n";
 		}
 	}
 }
 
-vk::CommandBuffer vkInit::CreateMainCommandBuffer(const CommandBufferInBundle& in, bool isDebugging)
+vk::CommandBuffer vkInit::CreateMainCommandBuffer(const CommandBufferInBundle& in)
 {
 	vk::CommandBufferAllocateInfo bufferAllocInfo{};
 	bufferAllocInfo.commandPool = in.CommandPool;
@@ -61,19 +53,13 @@ vk::CommandBuffer vkInit::CreateMainCommandBuffer(const CommandBufferInBundle& i
 	{
 		vk::CommandBuffer commandBuffer{ in.Device.allocateCommandBuffers(bufferAllocInfo)[0] };
 
-		if (isDebugging)
-		{
-			std::cout << "\nMain command buffer allocation successful\n";
-		}
+		std::cout << "\nMain command buffer allocation successful\n";
 
 		return commandBuffer;
 	}
 	catch (const vk::SystemError& systemError)
 	{
-		if (isDebugging)
-		{
-			std::cout << systemError.what() << "\n";
-		}
+		std::cout << systemError.what() << "\n";
 
 		return nullptr;
 	}

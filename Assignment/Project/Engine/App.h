@@ -11,7 +11,7 @@ namespace ave
 	class App final
 	{
 	public:
-		App(const std::string& windowName, uint32_t width, uint32_t height, bool isDebugging);
+		App(const std::string& windowName, uint32_t width, uint32_t height);
 		~App();
 
 		App(const App& other) = delete;
@@ -32,7 +32,7 @@ namespace ave
 		double m_TimeElapsed{ 0 };
 		int m_NumberOfFrames{ 0 };
 
-		void CreateGLFWWindow(bool isDebugging);
+		void CreateGLFWWindow();
 
 		void CalculateFPS();
 	};

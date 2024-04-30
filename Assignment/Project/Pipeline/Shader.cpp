@@ -1,10 +1,10 @@
 #include "Shader.h"
 
-std::vector<char> vkUtil::ReadFile(const std::string& fileName, bool isDebugging)
+std::vector<char> vkUtil::ReadFile(const std::string& fileName)
 {
 	std::ifstream file{ fileName, std::ios::ate | std::ios::binary };
 
-	if (isDebugging && not file.is_open())
+	if (not file.is_open())
 	{
 		std::cout << "Failed to open: \"" << fileName << "\'\n";
 	}
@@ -23,9 +23,9 @@ std::vector<char> vkUtil::ReadFile(const std::string& fileName, bool isDebugging
 	return charVec;
 }
 
-vk::ShaderModule vkUtil::CreateModule(const vk::Device& device, const std::string& fileName, bool isDebugging)
+vk::ShaderModule vkUtil::CreateModule(const vk::Device& device, const std::string& fileName)
 {
-	std::vector<char> sourceCodeVec{ ReadFile(fileName, isDebugging) };
+	std::vector<char> sourceCodeVec{ ReadFile(fileName) };
 
 	vk::ShaderModuleCreateInfo moduleInfo{};
 	moduleInfo.flags = vk::ShaderModuleCreateFlags{};
@@ -38,11 +38,9 @@ vk::ShaderModule vkUtil::CreateModule(const vk::Device& device, const std::strin
 	}
 	catch (const vk::SystemError& systemError)
 	{
-		if (isDebugging)
-		{
-			std::cout << "Shader module (" << fileName << ") creation failure\n";
-			std::cout << systemError.what() << "\n";
-		}
+		std::cout << "Shader module (" << fileName << ") creation failure\n";
+		std::cout << systemError.what() << "\n";
+
 		return nullptr;
 	}
 }

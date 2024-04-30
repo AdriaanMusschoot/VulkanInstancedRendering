@@ -31,7 +31,7 @@ void vkUtil::SwapchainFrame::WriteDescriptorSet()
 	Device.updateDescriptorSets(writeInfo, nullptr);
 }
 
-void vkUtil::SwapchainFrame::CreateDepthResources(bool isDebugging)
+void vkUtil::SwapchainFrame::CreateDepthResources()
 {
 	std::vector<vk::Format> formatVec{};
 	formatVec.emplace_back(vk::Format::eD32Sfloat);
@@ -52,8 +52,8 @@ void vkUtil::SwapchainFrame::CreateDepthResources(bool isDebugging)
 	imgInput.MemoryPropertyFlags = vk::MemoryPropertyFlagBits::eDeviceLocal;
 	imgInput.Extent = DepthExtent;
 	imgInput.Format = DepthFormat;
-	DepthBuffer = vkInit::CreateImage(imgInput, isDebugging);
-	DepthBufferMemory = vkInit::CreateImageMemory(imgInput, DepthBuffer, isDebugging);
+	DepthBuffer = vkInit::CreateImage(imgInput);
+	DepthBufferMemory = vkInit::CreateImageMemory(imgInput, DepthBuffer);
 	DepthBufferView = vkInit::CreateImageView
 	(
 		Device, DepthBuffer, DepthFormat, vk::ImageAspectFlagBits::eDepth

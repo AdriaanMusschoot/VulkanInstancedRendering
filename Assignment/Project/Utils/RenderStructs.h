@@ -15,6 +15,7 @@ namespace vkUtil
 	{
 		glm::vec2 Position;
 		glm::vec3 Color;
+		glm::vec2 TextureCoordinate;
 	};
 	std::vector<vk::VertexInputBindingDescription> GetBindingDescription2D();
 	std::vector<vk::VertexInputAttributeDescription> GetAttributeDescription2D();

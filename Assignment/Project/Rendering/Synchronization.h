@@ -5,7 +5,7 @@
 namespace vkInit
 {
 
-	vk::Semaphore CreateSemaphore(const vk::Device& device, bool isDebugging)
+	vk::Semaphore CreateSemaphore(const vk::Device& device)
 	{
 		vk::SemaphoreCreateInfo semaphoreCreateInfo{};
 		semaphoreCreateInfo.flags = vk::SemaphoreCreateFlags{};
@@ -16,16 +16,13 @@ namespace vkInit
 		}
 		catch (const vk::SystemError& systemError)
 		{
-			if (isDebugging)
-			{
-				std::cout << systemError.what() << "\n";
-			}
+			std::cout << systemError.what() << "\n";
 
 			return nullptr;
 		}
 	}
 
-	vk::Fence CreateFence(const vk::Device& device, bool isDebugging)
+	vk::Fence CreateFence(const vk::Device& device)
 	{
 		vk::FenceCreateInfo fenceCreateInfo{};
 		fenceCreateInfo.flags = vk::FenceCreateFlags{} | vk::FenceCreateFlagBits::eSignaled;
@@ -36,10 +33,7 @@ namespace vkInit
 		}
 		catch (const vk::SystemError& systemError)
 		{
-			if (isDebugging)
-			{
-				std::cout << systemError.what() << "\n";
-			}
+			std::cout << systemError.what() << "\n";
 
 			return nullptr;
 		}
