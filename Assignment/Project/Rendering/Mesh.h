@@ -27,9 +27,8 @@ namespace ave
 		{
 
 		}
-		Mesh(const vk::Device& device, const vk::PhysicalDevice& physicalDevice, const MeshInBundle& in, const std::string& filePath, bool flipWinding)
-			: m_Device{ device }
-			, m_PhysicalDevice{ physicalDevice }
+		Mesh(const vk::Device& device, const vk::PhysicalDevice& physicalDevice, const MeshInBundle& in, const vkInit::TextureInBundle& texIn, const std::string& filePath, bool flipWinding)
+			: Mesh::Mesh(device, physicalDevice, texIn)
 		{
 			if (not vkUtil::ParseOBJ(filePath, m_VertexVec, m_IndexVec, flipWinding))
 			{

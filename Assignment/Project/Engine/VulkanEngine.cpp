@@ -216,6 +216,7 @@ void ave::VulkanEngine::CreatePipelines()
 	specification3D.Device = m_Device;
 	specification3D.SwapchainExtent = m_SwapchainExtent;
 	specification3D.DescriptorSetLayoutVec.emplace_back(m_DescriptorSetLayoutFrame);
+	specification3D.DescriptorSetLayoutVec.emplace_back(m_DescriptorSetLayoutMesh);
 	specification3D.VertexFilePath = "shaders/Shader3D.vert.spv";
 	specification3D.FragmentFilePath = "shaders/Shader3D.frag.spv";
 	specification3D.RenderPass = m_RenderPassUPtr->GetRenderPass();
@@ -244,6 +245,12 @@ void ave::VulkanEngine::SetUpRendering()
 
 	CreateFrameResources();
 
+	vkInit::DescriptorSetLayoutData descriptorSetLayoutData{};
+	descriptorSetLayoutData.Count = 1;
+	descriptorSetLayoutData.TypeVec.emplace_back(vk::DescriptorType::eCombinedImageSampler);
+	//allow for 10 textures
+	m_DescriptorPoolMesh = vkInit::CreateDescriptorPool(m_Device, 10, descriptorSetLayoutData);
+
 	m_Pipeline2DUPtr->SetScene(std::move(CreateScene2D()));
 
 	m_Pipeline3DUPtr->SetScene(std::move(CreateScene3D()));
@@ -260,12 +267,6 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
 	};
 
 	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene<vkUtil::Vertex2D>>() };
-	
-	vkInit::DescriptorSetLayoutData descriptorSetLayoutData{};
-	descriptorSetLayoutData.Count = 1;
-	descriptorSetLayoutData.TypeVec.emplace_back(vk::DescriptorType::eCombinedImageSampler);
-	//allow for 10 textures
-	m_DescriptorPoolMesh = vkInit::CreateDescriptorPool(m_Device, 10, descriptorSetLayoutData);
 
 	vkInit::TextureInBundle textureIn{};
 	textureIn.CommandBuffer = m_MainCommandBuffer;
@@ -362,18 +363,27 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> ave::VulkanEngine::CreateScene3D()
 	};
 
 	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene<vkUtil::Vertex3D>>() };
+
+	vkInit::TextureInBundle textureIn{};
+	textureIn.CommandBuffer = m_MainCommandBuffer;
+	textureIn.Queue = m_GraphicsQueue;
+	textureIn.Device = m_Device;
+	textureIn.PhysicalDevice = m_PhysicalDevice;
+	textureIn.DescriptorSetLayout = m_DescriptorSetLayoutMesh;
+	textureIn.DescriptorPool = m_DescriptorPoolMesh;
 	
+	textureIn.FileName = "Resources/vehicle_diffuse.png";
 	const std::string fileNameVehicle{ "Resources/vehicle.obj" };
-	
-	std::unique_ptr vehicleMeshUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, fileNameVehicle, true)};
+	std::unique_ptr vehicleMeshUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, textureIn, fileNameVehicle, true)};
 	
 	vehicleMeshUPtr->SetWorldMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 0.0f, 0.0f)));
 	
 	sceneUPtr->AddMesh(std::move(vehicleMeshUPtr));
 	
-	const std::string fileNameRaceCar{ "Resources/ferrari.obj" };
 	
-	std::unique_ptr raceCarUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, fileNameRaceCar, false)};
+	textureIn.FileName = "Resources/ferrari_diffuse.jpg";
+	const std::string fileNameRaceCar{ "Resources/ferrari.obj" };
+	std::unique_ptr raceCarUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, textureIn, fileNameRaceCar, false)};
 	
 	raceCarUPtr->SetWorldMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 0.0f, 0.0f)));
 	
