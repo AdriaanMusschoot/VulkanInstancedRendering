@@ -63,14 +63,17 @@ namespace vkUtil
 				//
 				// faces or triangles
 				VertexStruct vertex{};
-				size_t idxposition, idxtexcoord, idxnormal;
+				size_t idxPosition, idxTexCoord, idxNormal;
 
 				uint32_t tempindexvec[3];
 				for (size_t idxface = 0; idxface < 3; idxface++)
 				{
 					// obj format uses 1-based arrays
-					file >> idxposition;
-					vertex.Position = positionVec[idxposition - 1];
+					file >> idxPosition;
+
+					vertex.Position = positionVec[idxPosition - 1];
+					//flip z because vulkan uses inverted depth
+					vertex.Position.z *= -1.f;
 
 					if ('/' == file.peek())//is next in buffer ==  '/' ?
 					{
@@ -79,8 +82,8 @@ namespace vkUtil
 						if ('/' != file.peek())
 						{
 							// optional texture coordinate
-							file >> idxtexcoord;
-							//vertex.uv = uvvec[itexcoord - 1];
+							file >> idxTexCoord;
+							vertex.UV = uvVec[idxTexCoord - 1];
 						}
 
 						if ('/' == file.peek())
@@ -88,8 +91,8 @@ namespace vkUtil
 							file.ignore();
 
 							// optional vertex normal
-							file >> idxnormal;
-							vertex.Normal = normalVec[idxnormal - 1];
+							file >> idxNormal;
+							vertex.Normal = normalVec[idxNormal - 1];
 						}
 					}
 
@@ -140,12 +143,10 @@ namespace vkUtil
 		//}
 
 		//fix the tangents per vertex now because we accumulated
-		for (auto& v : vertexVec)
-		{
-			//	v.tangent = vector3::reject(v.tangent, v.normal).normalized();
-			v.Position.z *= -1.f;
-			v.Color = glm::vec3{ 1.f, 1.f, 1.f };
-		}
+		//for (auto& v : vertexVec)
+		//{
+		//	//	v.tangent = vector3::reject(v.tangent, v.normal).normalized();
+		//}
 		return true;
 	}
 }

@@ -25,20 +25,38 @@ add_custom_target(
 
 
 set(SOURCES 
-    "Engine/main.cpp" "Engine/VulkanEngine.cpp" "Engine/App.cpp" 
-    "Engine/Clock.cpp" "Engine/Configuration.h" 
+    "Engine/main.cpp" 
+    "Engine/Configuration.h"
 
-    "Device/Instance.h" "Device/Device.h" 
+    "Engine/VulkanEngine.cpp"       "Engine/VulkanEngine.h"
+    "Engine/App.cpp"                "Engine/App.h"
+    "Engine/Clock.cpp"              "Engine/Clock.h"
 
-    "Utils/QueueFamilies.cpp" "Utils/Frame.cpp"  "Utils/Logging.h" 
-    "Utils/RenderStructs.cpp" "Utils/Buffer.cpp" "Utils/Camera.cpp"
-    "Utils/FileReader.cpp"
+    "Device/Instance.h" 
+    "Device/Device.h" 
 
-    "Pipeline/Shader.cpp"   "Pipeline/Descriptor.cpp" "Pipeline/RenderPass.cpp"
+    "Utils/Logging.h"               
+    "Utils/FileReader.h"      
     
-    "Rendering/Swapchain.h" "Rendering/FrameBuffer.cpp" "Rendering/Commands.cpp" 
-    "Rendering/Synchronization.h" "Rendering/Scene.h"
-    "Rendering/Image.cpp")
+    "Utils/QueueFamilies.cpp"       "Utils/QueueFamilies.h"
+    "Utils/Frame.cpp"               "Utils/Frame.h"
+    "Utils/RenderStructs.cpp"       "Utils/RenderStructs.h"
+    "Utils/Buffer.cpp"              "Utils/Buffer.h"
+    "Utils/Camera.cpp"              "Utils/Camera.h"
+    
+
+    "Pipeline/Shader.cpp"           "Pipeline/Shader.h"
+    "Pipeline/Descriptor.cpp"       "Pipeline/Descriptor.h"
+    "Pipeline/RenderPass.cpp"       "Pipeline/RenderPass.h"
+    
+    "Rendering/Swapchain.h"
+    "Rendering/Synchronization.h"
+    "Rendering/Scene.h"
+
+    "Rendering/FrameBuffer.cpp"     "Rendering/FrameBuffer.h"
+    "Rendering/Commands.cpp"        "Rendering/Commands.h"
+    "Rendering/Image.cpp"           "Rendering/Image.h"
+)
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})
