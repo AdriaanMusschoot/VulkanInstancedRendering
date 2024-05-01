@@ -1,15 +1,13 @@
 #include "QueueFamilies.h"
 
-vkUtil::QueueFamilyIndices vkUtil::FindQueueFamilies(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface, bool isDebugging)
+vkUtil::QueueFamilyIndices vkUtil::FindQueueFamilies(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface)
 {
 	QueueFamilyIndices queueFamilyIndices;
 
 	std::vector queueFamilyVec = physicalDevice.getQueueFamilyProperties();
 
-	if (isDebugging)
-	{
-		std::cout << "\nNumber of queue families supported: " << queueFamilyVec.size() << "\n";
-	}
+	std::cout << "\nNumber of queue families supported: " << queueFamilyVec.size() << "\n";
+
 
 	int index{};
 	for (const auto& queueFamily : queueFamilyVec)
@@ -18,20 +16,14 @@ vkUtil::QueueFamilyIndices vkUtil::FindQueueFamilies(const vk::PhysicalDevice& p
 		{
 			queueFamilyIndices.GraphicsFamily = index;
 
-			if (isDebugging)
-			{
-				std::cout << "Queue family \"" << index << "\" is suitable for graphics\n";
-			}
+			std::cout << "Queue family \"" << index << "\" is suitable for graphics\n";
 		}
 
 		if (physicalDevice.getSurfaceSupportKHR(index, surface))
 		{
 			queueFamilyIndices.PresentFamily = index;
 
-			if (isDebugging)
-			{
-				std::cout << "Queue family \"" << index << "\" is suitable for presenting\n";
-			}
+			std::cout << "Queue family \"" << index << "\" is suitable for presenting\n";
 		}
 		if (queueFamilyIndices.AllIndicesSet())
 		{

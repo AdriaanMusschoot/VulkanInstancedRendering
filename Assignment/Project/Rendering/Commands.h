@@ -13,11 +13,11 @@ namespace vkInit
 		std::vector<vkUtil::SwapchainFrame>& FrameVec;
 	};
 
-	vk::CommandPool CreateCommandPool(const vk::Device& device, const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface, bool isDebugging);
+	vk::CommandPool CreateCommandPool(const vk::Device& device, const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface);
 
-	void CreateFrameCommandBuffers(const CommandBufferInBundle& in, bool isDebugging);
+	void CreateFrameCommandBuffers(const CommandBufferInBundle& in);
 
-	vk::CommandBuffer CreateMainCommandBuffer(const CommandBufferInBundle& in, bool isDebugging);
+	vk::CommandBuffer CreateMainCommandBuffer(const CommandBufferInBundle& in);
 
 	void BeginSingleCommand(const vk::CommandBuffer& commandBuffer);
 

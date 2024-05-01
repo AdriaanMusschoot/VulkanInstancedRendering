@@ -44,7 +44,7 @@ namespace vkUtil
 
 		void WriteDescriptorSet();
 
-		void CreateDepthResources(bool isDebugging);
+		void CreateDepthResources();
 
 		void Destroy();
 	};

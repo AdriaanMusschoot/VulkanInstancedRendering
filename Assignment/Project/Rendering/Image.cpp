@@ -1,6 +1,149 @@
 #include "Image.h"
+#include "Utils/Buffer.h"
+#include "Pipeline/Descriptor.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "Utils/STBI.h"
 
-vk::Image vkInit::CreateImage(const ImageInBundle& in, bool isDebugging)
+vkInit::Texture::Texture(const TextureInBundle& texIn)
+	: m_Device{ texIn.Device }
+	, m_PhysicalDevice{ texIn.PhysicalDevice }
+	, m_FileName{ texIn.FileName }
+	, m_CommandBuffer{ texIn.CommandBuffer }
+	, m_Queue{ texIn.Queue }
+	, m_DescriptorSetLayout{ texIn.DescriptorSetLayout }
+	, m_DescriptorPool{ texIn.DescriptorPool }
+{
+	m_Pixels = stbi_load(m_FileName.c_str(), &m_Width, &m_Height, &m_Channels, STBI_rgb_alpha);
+	
+	ImageInBundle imageInBundle{};
+	imageInBundle.Device = m_Device;
+	imageInBundle.PhysicalDevice = m_PhysicalDevice;
+	imageInBundle.Extent = vk::Extent2D{ static_cast<uint32_t>(m_Width), static_cast<uint32_t>(m_Height) };
+	imageInBundle.Tiling = vk::ImageTiling::eOptimal;
+	imageInBundle.UsageFlags = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
+	imageInBundle.MemoryPropertyFlags = vk::MemoryPropertyFlagBits::eDeviceLocal;
+	imageInBundle.Format = vk::Format::eR8G8B8A8Unorm;
+	
+	m_Image = CreateImage(imageInBundle);
+	
+	m_ImageMemory = CreateImageMemory(imageInBundle, m_Image);
+	
+	Populate();
+	
+	//stbi function
+	free(m_Pixels);
+	
+	m_ImageView = CreateImageView(m_Device, m_Image, vk::Format::eR8G8B8A8Unorm, vk::ImageAspectFlagBits::eColor);
+	
+	CreateSampler();
+	
+	CreateDescriptorSet();
+}
+
+vkInit::Texture::~Texture()
+{
+	m_Device.freeMemory(m_ImageMemory);
+	m_Device.destroyImage(m_Image);
+	m_Device.destroyImageView(m_ImageView);
+	m_Device.destroySampler(m_Sampler);
+}
+
+void vkInit::Texture::Apply(const vk::CommandBuffer& commandBuffer, const vk::PipelineLayout& pipelineLayout)
+{
+	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 1, m_DescriptorSet, nullptr);
+}
+
+void vkInit::Texture::Populate()
+{
+	vkUtil::BufferInBundle bufferInBundle{};
+	bufferInBundle.Device = m_Device;
+	bufferInBundle.PhysicalDevice = m_PhysicalDevice;
+	bufferInBundle.MemoryPropertyFlags = vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible;
+	bufferInBundle.UsageFlags = vk::BufferUsageFlagBits::eTransferSrc;
+	bufferInBundle.Size = m_Width * m_Height * 4; //multiply by the size of the bites per pixel (uint32 -> 4 bytes)
+
+	vkUtil::DataBuffer stagingBuffer = vkUtil::CreateBuffer(bufferInBundle);
+
+	void* writeLocationPtr{ m_Device.mapMemory(stagingBuffer.BufferMemory, 0, bufferInBundle.Size) };
+	memcpy(writeLocationPtr, m_Pixels, bufferInBundle.Size);
+	m_Device.unmapMemory(stagingBuffer.BufferMemory);
+
+	ImageLayoutTransitionInBundle transitionInBundle{};
+	transitionInBundle.CommandBuffer = m_CommandBuffer;
+	transitionInBundle.Queue = m_Queue;
+	transitionInBundle.Image = m_Image;
+	transitionInBundle.OldLayout = vk::ImageLayout::eUndefined;
+	transitionInBundle.NewLayout = vk::ImageLayout::eTransferDstOptimal;
+	TransitionImageLayout(transitionInBundle);
+
+	BufferCopyImageInBundle copyInBundle{};
+	copyInBundle.CommandBuffer = m_CommandBuffer;
+	copyInBundle.Queue = m_Queue;
+	copyInBundle.SourceBuffer = stagingBuffer.Buffer;
+	copyInBundle.DestinationImage = m_Image;
+	copyInBundle.Extent = vk::Extent2D{ static_cast<uint32_t>(m_Width), static_cast<uint32_t>(m_Height) };
+	CopyBufferToImage(copyInBundle);
+
+
+	transitionInBundle.OldLayout = vk::ImageLayout::eTransferDstOptimal;
+	transitionInBundle.NewLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+	TransitionImageLayout(transitionInBundle);
+
+	m_Device.freeMemory(stagingBuffer.BufferMemory);
+	m_Device.destroyBuffer(stagingBuffer.Buffer);
+}
+
+void vkInit::Texture::CreateSampler()
+{
+	vk::SamplerCreateInfo samplerCreateInfo{};
+	samplerCreateInfo.flags = vk::SamplerCreateFlags{};
+	samplerCreateInfo.minFilter = vk::Filter::eNearest;
+	samplerCreateInfo.magFilter = vk::Filter::eLinear;
+	samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
+	samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
+	samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
+	samplerCreateInfo.anisotropyEnable = vk::False;
+	samplerCreateInfo.maxAnisotropy = 1.0f;
+	samplerCreateInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+	samplerCreateInfo.unnormalizedCoordinates = vk::False;
+	samplerCreateInfo.compareEnable = vk::False;
+	samplerCreateInfo.compareOp = vk::CompareOp::eAlways;
+	samplerCreateInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+	samplerCreateInfo.mipLodBias = 0.0f;
+	samplerCreateInfo.minLod = 0.0f;
+	samplerCreateInfo.maxLod = 0.0f;
+
+	try
+	{
+		m_Sampler = m_Device.createSampler(samplerCreateInfo);
+	}
+	catch (const vk::SystemError& systemError)
+	{
+		std::cout << systemError.what() << "\n";
+	}
+}
+
+void vkInit::Texture::CreateDescriptorSet()
+{
+	m_DescriptorSet = vkInit::CreateDescriptorSet(m_Device, m_DescriptorPool, m_DescriptorSetLayout);
+
+	vk::DescriptorImageInfo descriptorImageInfo{};
+	descriptorImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+	descriptorImageInfo.imageView = m_ImageView;
+	descriptorImageInfo.sampler = m_Sampler;
+
+	vk::WriteDescriptorSet des{};
+	des.dstSet = m_DescriptorSet;
+	des.dstBinding = 0;
+	des.dstArrayElement = 0;
+	des.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+	des.descriptorCount = 1;
+	des.pImageInfo = &descriptorImageInfo;
+
+	m_Device.updateDescriptorSets(des, nullptr);
+}
+
+vk::Image vkInit::CreateImage(const ImageInBundle& in)
 {
 	vk::ImageCreateInfo imgCreateInfo{};
 	imgCreateInfo.flags = vk::ImageCreateFlags{};
@@ -21,15 +164,14 @@ vk::Image vkInit::CreateImage(const ImageInBundle& in, bool isDebugging)
 	}
 	catch (const vk::SystemError& systemError)
 	{
-		if (isDebugging)
-		{
-			std::cout << systemError.what() << "\n";
-		}
+		
+		std::cout << systemError.what() << "\n";
+		
 		return nullptr;
 	}
 }
 
-vk::DeviceMemory vkInit::CreateImageMemory(const ImageInBundle& in, const vk::Image& image, bool isDebugging)
+vk::DeviceMemory vkInit::CreateImageMemory(const ImageInBundle& in, const vk::Image& image)
 {
 	vk::MemoryRequirements memoryRequirements{ in.Device.getImageMemoryRequirements(image) };
 
@@ -45,10 +187,9 @@ vk::DeviceMemory vkInit::CreateImageMemory(const ImageInBundle& in, const vk::Im
 	}
 	catch (const vk::SystemError& systemError)
 	{
-		if (isDebugging)
-		{
-			std::cout << systemError.what() << "\n";
-		}
+		
+		std::cout << systemError.what() << "\n";
+		
 		return nullptr;
 	}
 
@@ -75,7 +216,8 @@ void vkInit::TransitionImageLayout(const ImageLayoutTransitionInBundle& in)
 
 	vk::PipelineStageFlags sourceStageFlags;
 	vk::PipelineStageFlags destinationStageFlags;
-	if (in.OldLayout == vk::ImageLayout::eUndefined)
+	if (in.OldLayout == vk::ImageLayout::eUndefined
+		and in.NewLayout == vk::ImageLayout::eTransferDstOptimal)
 	{
 		barrier.srcAccessMask = vk::AccessFlagBits::eNoneKHR;
 		barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
@@ -144,10 +286,10 @@ vk::ImageView vkInit::CreateImageView(const vk::Device& device, const vk::Image&
 	imgViewCreateInfo.image = image;
 	imgViewCreateInfo.format = format;
 	imgViewCreateInfo.viewType = vk::ImageViewType::e2D;
-	/*imgViewCreateInfo.components.r = vk::ComponentSwizzle::eIdentity;
+	imgViewCreateInfo.components.r = vk::ComponentSwizzle::eIdentity;
 	imgViewCreateInfo.components.g = vk::ComponentSwizzle::eIdentity;
 	imgViewCreateInfo.components.b = vk::ComponentSwizzle::eIdentity;
-	imgViewCreateInfo.components.a = vk::ComponentSwizzle::eIdentity;*/
+	imgViewCreateInfo.components.a = vk::ComponentSwizzle::eIdentity;
 	imgViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
 	imgViewCreateInfo.subresourceRange.baseMipLevel = 0;
 	imgViewCreateInfo.subresourceRange.levelCount = 1;

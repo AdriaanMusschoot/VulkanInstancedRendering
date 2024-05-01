@@ -14,6 +14,7 @@ std::vector<vk::VertexInputAttributeDescription> vkUtil::GetAttributeDescription
 
 	attributeDescriptionVec.emplace_back(vk::VertexInputAttributeDescription{ 0, 0, vk::Format::eR32G32Sfloat, 0 });
 	attributeDescriptionVec.emplace_back(vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32B32Sfloat, sizeof(Vertex2D::Position) });
+	attributeDescriptionVec.emplace_back(vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32Sfloat, sizeof(Vertex2D::Position) + sizeof(Vertex2D::Color) });
 
 	return attributeDescriptionVec;
 }

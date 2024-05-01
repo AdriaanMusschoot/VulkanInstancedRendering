@@ -23,66 +23,57 @@ namespace vkInit
 		vk::Extent2D Extent;
 	};
 
-	SwapchainSupportDetails QuerySwapchainSupport(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface, bool isDebugging)
+	SwapchainSupportDetails QuerySwapchainSupport(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface)
 	{
 		SwapchainSupportDetails supportDetails;
 
 		supportDetails.Capabilities = physicalDevice.getSurfaceCapabilitiesKHR(surface);
 
-		if (isDebugging)
+		std::cout << "\nSwapchain supports following surface capabilities:\n";
+		std::cout << "\tMinimum image count: " << supportDetails.Capabilities.minImageCount << "\n";
+		std::cout << "\tMaximum image count: " << supportDetails.Capabilities.maxImageCount << "\n";
+
+		std::cout << "\tCurrent extend:\n";
+		std::cout << "\t\tWidth: " << supportDetails.Capabilities.currentExtent.width << "\n";
+		std::cout << "\t\tHeight: " << supportDetails.Capabilities.currentExtent.height << "\n";
+
+		std::cout << "\tMaximum image array layers: " << supportDetails.Capabilities.maxImageArrayLayers << "\n";
+
+		std::cout << "\tCurrent transform(s):\n";
+		std::vector stringVec{ LogTransformBits(supportDetails.Capabilities.currentTransform) };
+		for (const auto& line : stringVec)
 		{
-			std::cout << "\nSwapchain supports following surface capabilities:\n";
-			std::cout << "\tMinimum image count: " << supportDetails.Capabilities.minImageCount << "\n";
-			std::cout << "\tMaximum image count: " << supportDetails.Capabilities.maxImageCount << "\n";
+			std::cout << "\t\t\"" << line << "\"\n";
+		}
 
-			std::cout << "\tCurrent extend:\n";
-			std::cout << "\t\tWidth: " << supportDetails.Capabilities.currentExtent.width << "\n";
-			std::cout << "\t\tHeight: " << supportDetails.Capabilities.currentExtent.height << "\n";
+		std::cout << "\tCurrent alpha composite(s):\n";
+		stringVec = LogAlphaCompositeBits(supportDetails.Capabilities.supportedCompositeAlpha);
+		for (const auto& line : stringVec)
+		{
+			std::cout << "\t\t\"" << line << "\"\n";
+		}
 
-			std::cout << "\tMaximum image array layers: " << supportDetails.Capabilities.maxImageArrayLayers << "\n";
-
-			std::cout << "\tCurrent transform(s):\n";
-			std::vector stringVec{ LogTransformBits(supportDetails.Capabilities.currentTransform) };
-			for (const auto& line : stringVec)
-			{
-				std::cout << "\t\t\"" << line << "\"\n";
-			}
-
-			std::cout << "\tCurrent alpha composite(s):\n";
-			stringVec = LogAlphaCompositeBits(supportDetails.Capabilities.supportedCompositeAlpha);
-			for (const auto& line : stringVec)
-			{
-				std::cout << "\t\t\"" << line << "\"\n";
-			}
-
-			std::cout << "\tCurrent alpha composite(s):\n";
-			stringVec = LogImageUsageBits(supportDetails.Capabilities.supportedUsageFlags);
-			for (const auto& line : stringVec)
-			{
-				std::cout << "\t\t\"" << line << "\"\n";
-			}
+		std::cout << "\tCurrent alpha composite(s):\n";
+		stringVec = LogImageUsageBits(supportDetails.Capabilities.supportedUsageFlags);
+		for (const auto& line : stringVec)
+		{
+			std::cout << "\t\t\"" << line << "\"\n";
 		}
 
 		supportDetails.FormatVec = physicalDevice.getSurfaceFormatsKHR(surface);
 
-		if (isDebugging)
+		std::cout << "\nSupported pixel formats and color spaces:\n";
+		for (const auto& supportedFormat : supportDetails.FormatVec)
 		{
-			std::cout << "\nSupported pixel formats and color spaces:\n";
-			for (const auto& supportedFormat : supportDetails.FormatVec)
-			{
-				std::cout << "\tpixel format: " << vk::to_string(supportedFormat.format) << '\n';
-				std::cout << "\tcolor space: " << vk::to_string(supportedFormat.colorSpace) << '\n';
-			}
+			std::cout << "\tpixel format: " << vk::to_string(supportedFormat.format) << '\n';
+			std::cout << "\tcolor space: " << vk::to_string(supportedFormat.colorSpace) << '\n';
 		}
 
 		supportDetails.PresentModeVec = physicalDevice.getSurfacePresentModesKHR(surface);
-		if (isDebugging)
+		std::cout << "\nSurface present modes:\n";
+		for (const auto& presentMode : supportDetails.PresentModeVec)
 		{
-			std::cout << "\nSurface present modes:\n";
-			for (const auto& presentMode : supportDetails.PresentModeVec)
-			{
-				std::cout << "\t" << LogPresentMode(presentMode) << "\n";
-			}
+			std::cout << "\t" << LogPresentMode(presentMode) << "\n";
 		}
 
 		return supportDetails;
@@ -140,9 +131,9 @@ namespace vkInit
 		}
 	}
 
-	SwapchainBundle CreateSwapchain(const vk::PhysicalDevice& physicalDevice, const vk::Device& device, const vk::SurfaceKHR& surface, uint32_t width, uint32_t height, bool isDebugging)
+	SwapchainBundle CreateSwapchain(const vk::PhysicalDevice& physicalDevice, const vk::Device& device, const vk::SurfaceKHR& surface, uint32_t width, uint32_t height)
 	{
-		SwapchainSupportDetails supportDetails{ QuerySwapchainSupport(physicalDevice, surface, isDebugging) };
+		SwapchainSupportDetails supportDetails{ QuerySwapchainSupport(physicalDevice, surface) };
 
 		vk::SurfaceFormatKHR format{ ChooseSwapchainSurfaceFormat(supportDetails.FormatVec) };
 
@@ -171,7 +162,7 @@ namespace vkInit
 			vk::ImageUsageFlagBits::eColorAttachment
 		};
 
-		vkUtil::QueueFamilyIndices familyIndices{ vkUtil::FindQueueFamilies(physicalDevice, surface, isDebugging) };
+		vkUtil::QueueFamilyIndices familyIndices{ vkUtil::FindQueueFamilies(physicalDevice, surface) };
 
 		std::array<uint32_t, 2> queueFamilyIndices
 		{
@@ -204,10 +195,8 @@ namespace vkInit
 		}
 		catch (const vk::SystemError& systemError)
 		{
-			if (isDebugging)
-			{
-				std::cout << systemError.what() << "\n";
-			}
+			std::cout << systemError.what() << "\n";
+
 			throw std::runtime_error{ "Swapchain creation failed\n" };
 		}
 

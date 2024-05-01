@@ -23,6 +23,7 @@ namespace ave
 			{
 				mesh->PushWorldMatrix(commandBuffer, pipelineLayout);
 				mesh->BindBuffers(commandBuffer);
+				mesh->SetTexture(commandBuffer, pipelineLayout);
 				mesh->Draw(commandBuffer);
 			}
 		}

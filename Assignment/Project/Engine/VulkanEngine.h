@@ -14,7 +14,7 @@ namespace ave
 	class VulkanEngine final
 	{
 	public:
-		VulkanEngine(const std::string& windowName, int width, int height, GLFWwindow* windowPtr, bool isDebugging);
+		VulkanEngine(const std::string& windowName, int width, int height, GLFWwindow* windowPtr);
 		~VulkanEngine();
 	
 		VulkanEngine(const VulkanEngine& other) = delete;
@@ -24,7 +24,6 @@ namespace ave
 	
 		void Render();
 	private:
-		bool m_IsDebugging{ true };
 	
 		const std::string m_WindowName{ "GP2 Assignment" };
 		int m_Width{ 690 };
@@ -45,8 +44,11 @@ namespace ave
 		vk::Extent2D m_SwapchainExtent;
 		vk::Format m_SwapchainFormat;
 	
-		vk::DescriptorSetLayout m_DescriptorSetLayout;
-		vk::DescriptorPool m_DescriptorPool;
+		vk::DescriptorSetLayout m_DescriptorSetLayoutFrame;
+		vk::DescriptorPool m_DescriptorPoolFrame;
+	
+		vk::DescriptorSetLayout m_DescriptorSetLayoutMesh;
+		vk::DescriptorPool m_DescriptorPoolMesh;
 
 		std::unique_ptr<vkInit::RenderPass> m_RenderPassUPtr;
 		std::unique_ptr<vkInit::Pipeline<vkUtil::Vertex2D>> m_Pipeline2DUPtr;
@@ -65,8 +67,8 @@ namespace ave
 		void CreateSwapchain();
 		void CreateFrameBuffers();
 		void CreateFrameResources();
-		void CreateDescriptorSetLayout();
-		void CreatePipeline();
+		void CreateDescriptorSetLayouts();
+		void CreatePipelines();
 		void SetUpRendering();
 		std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> CreateScene2D();
 		std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> CreateScene3D();

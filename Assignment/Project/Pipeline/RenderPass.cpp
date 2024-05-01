@@ -1,8 +1,8 @@
 #include "RenderPass.h"
-vkInit::RenderPass::RenderPass(const RenderPassInBundle& in, bool isDebugging)
+vkInit::RenderPass::RenderPass(const RenderPassInBundle& in)
 	: m_Device{ in.Device }
 {
-	m_RenderPass = CreateRenderPass(in, isDebugging);
+	m_RenderPass = CreateRenderPass(in);
 }
 
 vkInit::RenderPass::~RenderPass()
@@ -44,12 +44,9 @@ vk::RenderPass const& vkInit::RenderPass::GetRenderPass() const
 	return m_RenderPass;
 }
 
-vk::RenderPass vkInit::RenderPass::CreateRenderPass(const RenderPassInBundle& in, bool isDebugging)
+vk::RenderPass vkInit::RenderPass::CreateRenderPass(const RenderPassInBundle& in)
 {
-	if (isDebugging)
-	{
-		std::cout << "RenderPass creation started\n";
-	}
+	std::cout << "RenderPass creation started\n";
 
 	std::vector<vk::AttachmentDescription> attachmentDescriptionVec;
 	std::vector<vk::AttachmentReference> attachmentReferenceVec;
@@ -100,7 +97,6 @@ vk::RenderPass vkInit::RenderPass::CreateRenderPass(const RenderPassInBundle& in
 		depthAttachmentReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
 		attachmentReferenceVec.emplace_back(depthAttachmentReference);
-		
 	}
 ;
 	subpass.colorAttachmentCount = 1;
@@ -139,10 +135,7 @@ vk::RenderPass vkInit::RenderPass::CreateRenderPass(const RenderPassInBundle& in
 	}
 	catch (const vk::SystemError& systemError)
 	{
-		if (isDebugging)
-		{
-			std::cout << systemError.what() << "\n";
-		}
+		std::cout << systemError.what() << "\n";
 		return nullptr;
 	}
 }

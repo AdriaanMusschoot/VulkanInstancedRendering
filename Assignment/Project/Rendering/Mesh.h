@@ -5,9 +5,11 @@
 #include "Utils/RenderStructs.h"
 #include "Utils/FileReader.h"
 #include <unordered_map>
+#include "Rendering/Image.h"
 
 namespace ave
 {
+
 	struct MeshInBundle
 	{
 		const vk::Queue& GraphicsQueue; 
@@ -18,9 +20,10 @@ namespace ave
 	class Mesh final
 	{
 	public:
-		Mesh(const vk::Device& device, const vk::PhysicalDevice& physicalDevice)
+		Mesh(const vk::Device& device, const vk::PhysicalDevice& physicalDevice, const vkInit::TextureInBundle& texIn)
 			: m_Device{ device }
 			, m_PhysicalDevice{ physicalDevice }
+			, m_TextureUPtr{ std::make_unique<vkInit::Texture>(texIn) }
 		{
 
 		}
@@ -122,6 +125,13 @@ namespace ave
 			commandBuffer.bindVertexBuffers(0, 1, vertexBufferArr, offsetArr);
 			commandBuffer.bindIndexBuffer(m_IndexBuffer.Buffer, 0, vk::IndexType::eUint32);
 		}
+		void SetTexture(const vk::CommandBuffer& commandBuffer, const vk::PipelineLayout& pipelineLayout)
+		{
+			if (m_TextureUPtr)
+			{
+				m_TextureUPtr->Apply(commandBuffer, pipelineLayout);
+			}
+		}
 		void Draw(const vk::CommandBuffer& commandBuffer) const
 		{
 			commandBuffer.drawIndexed(static_cast<uint32_t>(m_IndexVec.size()), 1, 0, 0, 0);
@@ -137,7 +147,7 @@ namespace ave
 		vk::PhysicalDevice m_PhysicalDevice;
 
 		glm::mat4 m_WorldMatrix{ 1.0f };	
-
+		std::unique_ptr<vkInit::Texture> m_TextureUPtr{ nullptr };
 	};
 }
 

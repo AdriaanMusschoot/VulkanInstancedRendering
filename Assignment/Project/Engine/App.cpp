@@ -1,14 +1,14 @@
 #include "App.h"
 #include "Clock.h"
 
-ave::App::App(const std::string& windowName, uint32_t width, uint32_t height, bool isDebugging)
+ave::App::App(const std::string& windowName, uint32_t width, uint32_t height)
 	: m_WindowName{ windowName }
 	, m_Width{ width }
 	, m_Height{ height }
 {
-	CreateGLFWWindow(isDebugging);
+	CreateGLFWWindow();
 
-	m_VKEngineUPtr = std::make_unique<VulkanEngine>(m_WindowName, m_Width, m_Height, m_WindowPtr, isDebugging);
+	m_VKEngineUPtr = std::make_unique<VulkanEngine>(m_WindowName, m_Width, m_Height, m_WindowPtr);
 }
 
 ave::App::~App()
@@ -27,7 +27,7 @@ void ave::App::Run()
 	}
 }
 
-void ave::App::CreateGLFWWindow(bool isDebugging)
+void ave::App::CreateGLFWWindow()
 {
 	glfwInit();
 
@@ -36,17 +36,11 @@ void ave::App::CreateGLFWWindow(bool isDebugging)
 
 	if (m_WindowPtr = glfwCreateWindow(m_Width, m_Height, m_WindowName.c_str(), nullptr, nullptr); m_WindowPtr != nullptr)
 	{
-		if (isDebugging)
-		{
-			std::cout << "Window creation successful\n";
-		}
+		std::cout << "Window creation successful\n";
 	}
 	else
 	{
-		if (isDebugging)
-		{
-			std::cout << "Window creation failure\n";
-		}
+		std::cout << "Window creation failure\n";
 	}
 
 	glfwSetWindowUserPointer(m_WindowPtr, this);

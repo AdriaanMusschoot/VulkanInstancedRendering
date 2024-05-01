@@ -11,29 +11,25 @@
 #include "Pipeline/Descriptor.h"
 #include "Utils/Frame.h"
 
-ave::VulkanEngine::VulkanEngine(const std::string& windowName, int width, int height, GLFWwindow* windowPtr, bool isDebugging)
+ave::VulkanEngine::VulkanEngine(const std::string& windowName, int width, int height, GLFWwindow* windowPtr)
 	: m_WindowName{ windowName }
 	, m_Width{ width }
 	, m_Height{ height }
 	, m_WindowPtr{ windowPtr }
-	, m_IsDebugging{ isDebugging }
 {
-	if (m_IsDebugging)
-	{
-		std::cout << "Ladies and gentleman, start your engines\n";
-	}
+	std::cout << "Ladies and gentleman, start your engines\n";
 
 	CreateInstance();
 	CreateDevice();
-	CreateDescriptorSetLayout();
-	CreatePipeline();
+	CreateDescriptorSetLayouts();
+	CreatePipelines();
 	SetUpRendering();	
-	CreateScene2D();
 }
 
 ave::VulkanEngine::~VulkanEngine()
 {
 	m_Device.waitIdle();	
+
 
 	m_RenderPassUPtr.reset();
 	m_Pipeline2DUPtr.reset();
@@ -41,22 +37,21 @@ ave::VulkanEngine::~VulkanEngine()
 
 	m_Device.destroyCommandPool(m_CommandPool);
 
-	m_Device.destroyDescriptorSetLayout(m_DescriptorSetLayout);
+	m_Device.destroyDescriptorSetLayout(m_DescriptorSetLayoutFrame);
+	m_Device.destroyDescriptorSetLayout(m_DescriptorSetLayoutMesh);
+	m_Device.destroyDescriptorPool(m_DescriptorPoolMesh);
 
 	DestroySwapchain();
+
 	m_Device.destroy();
 
 	m_Instance.destroySurfaceKHR(m_Surface);
-	if (m_IsDebugging)
-	{
-		m_Instance.destroyDebugUtilsMessengerEXT(m_DebugMessenger, nullptr, m_DLDInstance);
-	}
+	
+	m_Instance.destroyDebugUtilsMessengerEXT(m_DebugMessenger, nullptr, m_DLDInstance);
+	
 	m_Instance.destroy();
 
-	if (m_IsDebugging)
-	{
-		std::cout << "The engine died out\n";
-	}
+	std::cout << "The engine died out\n";
 }
 
 void ave::VulkanEngine::Render() 
@@ -67,19 +62,13 @@ void ave::VulkanEngine::Render()
 	result = m_Device.waitForFences(1, &m_SwapchainFrameVec[m_CurrentFrameNr].InFlightFence, VK_TRUE, UINT64_MAX);
 	if (result != vk::Result::eSuccess)
 	{
-		if (m_IsDebugging)
-		{
-			std::cout << "Waiting for fence failure\n";
-		}
+		std::cout << "Waiting for fence failure\n";
 	}
 
 	result = m_Device.resetFences(1, &m_SwapchainFrameVec[m_CurrentFrameNr].InFlightFence);
 	if (result != vk::Result::eSuccess)
 	{
-		if (m_IsDebugging)
-		{
-			std::cout << "Waiting for fence failure\n";
-		}
+		std::cout << "Waiting for fence failure\n";
 	}
 	
 	uint32_t imageIndex{ m_Device.acquireNextImageKHR(m_Swapchain, UINT64_MAX, m_SwapchainFrameVec[m_CurrentFrameNr].SemaphoreImageAvailable, nullptr).value };
@@ -116,10 +105,7 @@ void ave::VulkanEngine::Render()
 	}
 	catch (const vk::SystemError& systemError)
 	{
-		if (m_IsDebugging)
-		{
-			std::cout << systemError.what() << "\n";
-		}
+		std::cout << systemError.what() << "\n";
 	}
 
 	std::vector<vk::SwapchainKHR> swapchainVec;
@@ -138,11 +124,9 @@ void ave::VulkanEngine::Render()
 	}
 	catch (const vk::OutOfDateKHRError& outOfDateError)
 	{
-		if (m_IsDebugging)
-		{
-			std::cout << "Swapchain recreation\n";
-			std::cout << outOfDateError.what() << "\n";
-		}
+		std::cout << "Swapchain recreation\n";
+		std::cout << outOfDateError.what() << "\n";
+
 		RecreateSwapchain();
 		return;
 	}
@@ -152,24 +136,18 @@ void ave::VulkanEngine::Render()
 
 void ave::VulkanEngine::CreateInstance()
 {
-	m_Instance = vkInit::CreateInstance(m_IsDebugging, m_WindowName);
+	m_Instance = vkInit::CreateInstance(m_WindowName);
 
 	m_DLDInstance = vk::DispatchLoaderDynamic{ m_Instance, vkGetInstanceProcAddr };
 
-	if (m_IsDebugging)
-	{
-		m_DebugMessenger = vkInit::CreateDebugMessenger(m_Instance, m_DLDInstance);
-	}
+	m_DebugMessenger = vkInit::CreateDebugMessenger(m_Instance, m_DLDInstance);
 
 	VkSurfaceKHR oldStyleSurface;
 	if (glfwCreateWindowSurface(m_Instance, m_WindowPtr, nullptr, &oldStyleSurface) != VK_SUCCESS)
 	{
-		if (m_IsDebugging)
-		{
-			std::cout << "Window surface creation failure\n";
-		}
+		std::cout << "Window surface creation failure\n";
 	}
-	else if (m_IsDebugging)
+	else
 	{
 		std::cout << "Window surface creation successful\n";
 	}
@@ -179,11 +157,11 @@ void ave::VulkanEngine::CreateInstance()
 
 void ave::VulkanEngine::CreateDevice()
 {
-	m_PhysicalDevice = vkInit::ChoosePhysicalDevice(m_Instance, m_IsDebugging);
+	m_PhysicalDevice = vkInit::ChoosePhysicalDevice(m_Instance);
 
-	m_Device = vkInit::CreateLogicalDevice(m_PhysicalDevice, m_Surface, m_IsDebugging);
+	m_Device = vkInit::CreateLogicalDevice(m_PhysicalDevice, m_Surface);
 
-	std::array<vk::Queue, 2> queues = vkInit::GetQueuesFromGPU(m_PhysicalDevice, m_Device, m_Surface, m_IsDebugging);
+	std::array<vk::Queue, 2> queues = vkInit::GetQueuesFromGPU(m_PhysicalDevice, m_Device, m_Surface);
 	m_GraphicsQueue = queues[0];
 	m_PresentQueue = queues[1];
 
@@ -194,7 +172,7 @@ void ave::VulkanEngine::CreateDevice()
 
 void ave::VulkanEngine::CreateSwapchain()
 {
-	vkInit::SwapchainBundle tempBunlde = vkInit::CreateSwapchain(m_PhysicalDevice, m_Device, m_Surface, m_Width, m_Height, m_IsDebugging);
+	vkInit::SwapchainBundle tempBunlde = vkInit::CreateSwapchain(m_PhysicalDevice, m_Device, m_Surface, m_Width, m_Height);
 	m_Swapchain = tempBunlde.Swapchain;
 	m_SwapchainFrameVec = tempBunlde.FrameVec;
 	m_SwapchainExtent = tempBunlde.Extent;
@@ -208,49 +186,50 @@ void ave::VulkanEngine::CreateSwapchain()
 		frame.PhysicalDevice = m_PhysicalDevice;
 		frame.DepthExtent = m_SwapchainExtent;
 
-		frame.CreateDepthResources(m_IsDebugging);
+		frame.CreateDepthResources();
 	}
 }
 
-void ave::VulkanEngine::CreatePipeline()
+void ave::VulkanEngine::CreatePipelines()
 {
 	vkInit::RenderPassInBundle inRenderPass{};
 	inRenderPass.Device = m_Device;
 	inRenderPass.DepthFormat = m_SwapchainFrameVec[0].DepthFormat;
 	inRenderPass.SwapchainImageFormat = m_SwapchainFormat;
 	inRenderPass.AttachmentFlags = static_cast<vkUtil::AttachmentFlags>(vkUtil::AttachmentFlags::Color | vkUtil::AttachmentFlags::Depth);
-	m_RenderPassUPtr = std::make_unique<vkInit::RenderPass>(inRenderPass, m_IsDebugging);
+	m_RenderPassUPtr = std::make_unique<vkInit::RenderPass>(inRenderPass);
 
 	vkInit::Pipeline<vkUtil::Vertex2D>::GraphicsPipelineInBundle specification2D{};
 	specification2D.Device = m_Device;
 	specification2D.SwapchainExtent = m_SwapchainExtent;
-	specification2D.DescriptorSetLayout = m_DescriptorSetLayout;
+	specification2D.DescriptorSetLayoutVec.emplace_back(m_DescriptorSetLayoutFrame);
+	specification2D.DescriptorSetLayoutVec.emplace_back(m_DescriptorSetLayoutMesh);
 	specification2D.VertexFilePath = "shaders/Shader2D.vert.spv";
 	specification2D.FragmentFilePath = "shaders/Shader2D.frag.spv";
 	specification2D.RenderPass = m_RenderPassUPtr->GetRenderPass();
 	specification2D.GetBindingDescription = vkUtil::GetBindingDescription2D;
 	specification2D.GetAttributeDescription = vkUtil::GetAttributeDescription2D;
 
-	m_Pipeline2DUPtr = std::make_unique<vkInit::Pipeline<vkUtil::Vertex2D>>(specification2D, m_IsDebugging);
+	m_Pipeline2DUPtr = std::make_unique<vkInit::Pipeline<vkUtil::Vertex2D>>(specification2D);
 
 	vkInit::Pipeline<vkUtil::Vertex3D>::GraphicsPipelineInBundle specification3D{};
 	specification3D.Device = m_Device;
 	specification3D.SwapchainExtent = m_SwapchainExtent;
-	specification3D.DescriptorSetLayout = m_DescriptorSetLayout;
+	specification3D.DescriptorSetLayoutVec.emplace_back(m_DescriptorSetLayoutFrame);
 	specification3D.VertexFilePath = "shaders/Shader3D.vert.spv";
 	specification3D.FragmentFilePath = "shaders/Shader3D.frag.spv";
 	specification3D.RenderPass = m_RenderPassUPtr->GetRenderPass();
 	specification3D.GetBindingDescription = vkUtil::GetBindingDescription3D;
 	specification3D.GetAttributeDescription = vkUtil::GetAttributeDescription3D;
 
-	m_Pipeline3DUPtr = std::make_unique<vkInit::Pipeline<vkUtil::Vertex3D>>(specification3D, m_IsDebugging);
+	m_Pipeline3DUPtr = std::make_unique<vkInit::Pipeline<vkUtil::Vertex3D>>(specification3D);
 }
 
 void ave::VulkanEngine::SetUpRendering()
 {
 	CreateFrameBuffers();
 
-	m_CommandPool = vkInit::CreateCommandPool(m_Device, m_PhysicalDevice, m_Surface, m_IsDebugging);
+	m_CommandPool = vkInit::CreateCommandPool(m_Device, m_PhysicalDevice, m_Surface);
 
 	vkInit::CommandBufferInBundle commandBufferIn
 	{
@@ -259,9 +238,9 @@ void ave::VulkanEngine::SetUpRendering()
 		m_SwapchainFrameVec
 	};
 
-	m_MainCommandBuffer = vkInit::CreateMainCommandBuffer(commandBufferIn, m_IsDebugging);
+	m_MainCommandBuffer = vkInit::CreateMainCommandBuffer(commandBufferIn);
 
-	vkInit::CreateFrameCommandBuffers(commandBufferIn, m_IsDebugging);
+	vkInit::CreateFrameCommandBuffers(commandBufferIn);
 
 	CreateFrameResources();
 
@@ -282,24 +261,41 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
 
 	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene<vkUtil::Vertex2D>>() };
 	
-	std::unique_ptr RectangleMeshUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice) };
-	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.2f, 0.0f }, { 0.0f, 1.0f, 0.0f } });
-	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } });
-	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.2f, 0.2f }, { 0.0f, 1.0f, 0.0f } });
-	RectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.2f }, { 0.0f, 0.0f, 1.0f } });
-	RectangleMeshUPtr->AddIndex(0);
-	RectangleMeshUPtr->AddIndex(1);
-	RectangleMeshUPtr->AddIndex(2);
-	RectangleMeshUPtr->AddIndex(3);
-	RectangleMeshUPtr->AddIndex(2);
-	RectangleMeshUPtr->AddIndex(1);
+	vkInit::DescriptorSetLayoutData descriptorSetLayoutData{};
+	descriptorSetLayoutData.Count = 1;
+	descriptorSetLayoutData.TypeVec.emplace_back(vk::DescriptorType::eCombinedImageSampler);
+	//allow for 10 textures
+	m_DescriptorPoolMesh = vkInit::CreateDescriptorPool(m_Device, 10, descriptorSetLayoutData);
+
+	vkInit::TextureInBundle textureIn{};
+	textureIn.CommandBuffer = m_MainCommandBuffer;
+	textureIn.Queue = m_GraphicsQueue;
+	textureIn.Device = m_Device;
+	textureIn.PhysicalDevice = m_PhysicalDevice;
+	textureIn.DescriptorSetLayout = m_DescriptorSetLayoutMesh;
+	textureIn.DescriptorPool = m_DescriptorPoolMesh;
+
+	textureIn.FileName = "Resources/vehicle_diffuse.png";
+	std::unique_ptr rectangleMeshUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice, textureIn) };
+
+	rectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.2f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.f, 1.f } });
+	rectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.f, 1.f } });
+	rectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.2f, 0.2f }, { 0.0f, 1.0f, 0.0f }, { 0.f, 0.f } });
+	rectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.2f }, { 0.0f, 0.0f, 1.0f }, { 1.f, 0.f } });
+	rectangleMeshUPtr->AddIndex(2);
+	rectangleMeshUPtr->AddIndex(1);
+	rectangleMeshUPtr->AddIndex(0);
+	rectangleMeshUPtr->AddIndex(1);
+	rectangleMeshUPtr->AddIndex(2);
+	rectangleMeshUPtr->AddIndex(3);
 		
-	RectangleMeshUPtr->InitializeIndexBuffer(meshInput);
-	RectangleMeshUPtr->InitializeVertexBuffer(meshInput);
+	rectangleMeshUPtr->InitializeIndexBuffer(meshInput);
+	rectangleMeshUPtr->InitializeVertexBuffer(meshInput);
 	
-	sceneUPtr->AddMesh(std::move(RectangleMeshUPtr));
+	sceneUPtr->AddMesh(std::move(rectangleMeshUPtr));
 	
-	std::unique_ptr circleMeshPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice) };
+	textureIn.FileName = "Resources/vehicle_diffuse.png";
+	std::unique_ptr circleMeshPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice, textureIn) };
 	
 	constexpr double radius{ 0.1f };
 	constexpr int nrOfPoints{ 100 };
@@ -325,25 +321,25 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
 	{
 		if (idx < tempVertexVec.size() - 1)
 		{
-			circleMeshPtr->AddVertex(tempVertexVec[idx]);
+			circleMeshPtr->AddVertex(tempVertexVec[idx + 1]);
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
 			circleMeshPtr->AddVertex(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec3{ 1, 1, 1 } });
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
-			circleMeshPtr->AddVertex(tempVertexVec[idx + 1]);
+			circleMeshPtr->AddVertex(tempVertexVec[idx]);
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
 		}
 		else
 		{
-			circleMeshPtr->AddVertex(tempVertexVec[idx]);
+			circleMeshPtr->AddVertex(tempVertexVec[0]);
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
 			circleMeshPtr->AddVertex(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec3{ 1, 1, 1 } });
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
-			circleMeshPtr->AddVertex(tempVertexVec[0]);
+			circleMeshPtr->AddVertex(tempVertexVec[idx]);
 			circleMeshPtr->AddIndex(vIdx);
 			++vIdx;
 		}
@@ -404,7 +400,7 @@ void ave::VulkanEngine::CreateFrameBuffers()
 	frameBufferIn.RenderPass = m_RenderPassUPtr->GetRenderPass();
 	frameBufferIn.SwapchainExtent = m_SwapchainExtent;
 
-	vkInit::CreateFrameBuffers(frameBufferIn, m_SwapchainFrameVec, m_IsDebugging);
+	vkInit::CreateFrameBuffers(frameBufferIn, m_SwapchainFrameVec);
 }
 
 void ave::VulkanEngine::CreateFrameResources()
@@ -412,29 +408,38 @@ void ave::VulkanEngine::CreateFrameResources()
 	vkInit::DescriptorSetLayoutData setLayoutData;
 	setLayoutData.Count = 1;
 	setLayoutData.TypeVec.emplace_back(vk::DescriptorType::eUniformBuffer);
-	m_DescriptorPool = vkInit::CreateDescriptorPool(m_Device, static_cast<uint32_t>(m_SwapchainFrameVec.size()), setLayoutData, m_IsDebugging);
+	m_DescriptorPoolFrame = vkInit::CreateDescriptorPool(m_Device, static_cast<uint32_t>(m_SwapchainFrameVec.size()), setLayoutData);
 
 	for (auto& frame : m_SwapchainFrameVec)
 	{
-		frame.InFlightFence = vkInit::CreateFence(m_Device, m_IsDebugging);
-		frame.SemaphoreImageAvailable = vkInit::CreateSemaphore(m_Device, m_IsDebugging);
-		frame.SemaphoreRenderingFinished = vkInit::CreateSemaphore(m_Device, m_IsDebugging);
+		frame.InFlightFence = vkInit::CreateFence(m_Device);
+		frame.SemaphoreImageAvailable = vkInit::CreateSemaphore(m_Device);
+		frame.SemaphoreRenderingFinished = vkInit::CreateSemaphore(m_Device);
 
 		frame.CreateUBOResources();
-		frame.UBODescriptorSet = vkInit::CreateDescriptorSet(m_Device, m_DescriptorPool, m_DescriptorSetLayout, m_IsDebugging);
+		frame.UBODescriptorSet = vkInit::CreateDescriptorSet(m_Device, m_DescriptorPoolFrame, m_DescriptorSetLayoutFrame);
 	}
 }
 
-void ave::VulkanEngine::CreateDescriptorSetLayout()
+void ave::VulkanEngine::CreateDescriptorSetLayouts()
 {
-	vkInit::DescriptorSetLayoutData setLayoutData;
-	setLayoutData.Count = 1;
-	setLayoutData.IndexVec.emplace_back(0);
-	setLayoutData.TypeVec.emplace_back(vk::DescriptorType::eUniformBuffer);
-	setLayoutData.CountVec.emplace_back(1);
-	setLayoutData.StageFlagVec.emplace_back(vk::ShaderStageFlagBits::eVertex);
+	vkInit::DescriptorSetLayoutData setLayoutDataFrame;
+	setLayoutDataFrame.Count = 1;
+	setLayoutDataFrame.IndexVec.emplace_back(0);
+	setLayoutDataFrame.TypeVec.emplace_back(vk::DescriptorType::eUniformBuffer);
+	setLayoutDataFrame.CountVec.emplace_back(1);
+	setLayoutDataFrame.StageFlagVec.emplace_back(vk::ShaderStageFlagBits::eVertex);
 
-	m_DescriptorSetLayout = vkInit::CreateDescriptorSetLayout(m_Device, setLayoutData, m_IsDebugging);
+	m_DescriptorSetLayoutFrame = vkInit::CreateDescriptorSetLayout(m_Device, setLayoutDataFrame);
+
+	vkInit::DescriptorSetLayoutData setLayoutDataMesh;
+	setLayoutDataMesh.Count = 1;
+	setLayoutDataMesh.IndexVec.emplace_back(0);
+	setLayoutDataMesh.TypeVec.emplace_back(vk::DescriptorType::eCombinedImageSampler);
+	setLayoutDataMesh.CountVec.emplace_back(1);
+	setLayoutDataMesh.StageFlagVec.emplace_back(vk::ShaderStageFlagBits::eFragment);
+
+	m_DescriptorSetLayoutMesh = vkInit::CreateDescriptorSetLayout(m_Device, setLayoutDataMesh);
 }
 
 void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffer, uint32_t imageIndex)
@@ -446,10 +451,7 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 	}
 	catch (const vk::SystemError& systemError)
 	{
-		if (m_IsDebugging)
-		{
-			std::cout << systemError.what() << "\n";
-		}
+		std::cout << systemError.what() << "\n";
 	}
 
 	m_RenderPassUPtr->BeginRenderPass(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent);
@@ -466,10 +468,7 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 	}
 	catch (const vk::SystemError& systemError)
 	{
-		if (m_IsDebugging)
-		{
-			std::cout << systemError.what() << "\n";
-		}
+		std::cout << systemError.what() << "\n";
 	}
 }
 
@@ -496,7 +495,7 @@ void ave::VulkanEngine::RecreateSwapchain()
 		m_CommandPool,
 		m_SwapchainFrameVec
 	};
-	vkInit::CreateFrameCommandBuffers(commandBufferIn, m_IsDebugging);
+	vkInit::CreateFrameCommandBuffers(commandBufferIn);
 }
 
 void ave::VulkanEngine::DestroySwapchain()
@@ -505,7 +504,7 @@ void ave::VulkanEngine::DestroySwapchain()
 	{
 		frame.Destroy();
 	}
-	m_Device.destroyDescriptorPool(m_DescriptorPool);	
+	m_Device.destroyDescriptorPool(m_DescriptorPoolFrame);	
 
 	m_Device.destroySwapchainKHR(m_Swapchain);
 }
