@@ -376,8 +376,8 @@ void ave::VulkanEngine::Create3DScene()
 	vkUtil::ParseOBJ<V3D>("Resources/vehicle.obj", vehicleVertexVec, vehicleIndexVec, true);
 
 	std::vector<glm::vec3> vehiclePositionVec{};
-	float x = 0.5f;
-	for (float y = -0.5f; y < 0.5; y += 0.2f)
+	float x = 0;
+	for (float y = -50.f; y < 50.f; y += 1.f)
 	{
 		vehiclePositionVec.emplace_back(glm::vec3(x, y, 0.0f));
 	}
@@ -409,7 +409,10 @@ void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
 	{
 		swapchainFrame.WMatrixVec[idx++] = glm::translate(glm::mat4(1.0f), position);
 	}
-
+	for (auto const& position : InstancedMesh<vkUtil::Vertex3D>::GetPositions())
+	{
+		swapchainFrame.WMatrixVec[idx++] = glm::translate(glm::mat4(1.0f), position);
+	}
 	memcpy(swapchainFrame.WBufferWriteLocationPtr, swapchainFrame.WMatrixVec.data(), idx * sizeof(glm::mat4));
 
 	swapchainFrame.WriteDescriptorSet();

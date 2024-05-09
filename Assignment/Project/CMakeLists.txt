@@ -56,7 +56,7 @@ set(SOURCES
     "Rendering/FrameBuffer.cpp"     "Rendering/FrameBuffer.h"
     "Rendering/Commands.cpp"        "Rendering/Commands.h"
     "Rendering/Image.cpp"           "Rendering/Image.h"
-    "Rendering/InstancedMesh.cpp"   "Rendering/InstancedMesh.h")
+       "Rendering/InstancedMesh.h")
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES} )

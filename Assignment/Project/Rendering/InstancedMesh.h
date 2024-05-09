@@ -7,6 +7,8 @@
 
 namespace ave
 {
+	//scuffed way to keep track of 2D and 3D at the same time
+	static std::int64_t m_TotalInstances{ 0 };
 
 	template<typename VertexStruct>
 	class InstancedMesh final
@@ -17,7 +19,7 @@ namespace ave
 			, m_IndexVec{ indexVec }
 			, m_Device{ in.Device }
 			, m_PhysicalDevice{ in.PhysicalDevice }
-			, m_StartOffset{ std::ssize(m_PositionVec) }
+			, m_StartOffset{ m_TotalInstances }
 			, m_InstanceCount{ std::ssize(positionVec) }
 			, m_TextureUPtr{ std::make_unique<vkInit::Texture>(texIn) }
 		{
@@ -28,6 +30,8 @@ namespace ave
 					//sequential because order matters and we avoid emplacing at the same time
 					m_PositionVec.emplace_back(position);
 				});
+
+			m_TotalInstances += std::ssize(positionVec);
 			InitializeVertexBuffer(in.GraphicsQueue, in.MainCommandBuffer);
 			InitializeIndexBuffer(in.GraphicsQueue, in.MainCommandBuffer);
 		}
@@ -127,6 +131,7 @@ namespace ave
 		std::int64_t const m_InstanceCount{ 0 };
 
 		std::unique_ptr<vkInit::Texture> m_TextureUPtr{ nullptr };
+		//static position vector per vertex tyep
 		static std::vector<glm::vec3> m_PositionVec;
 	};
 
