@@ -10,6 +10,8 @@
 #include "Utils/RenderStructs.h"
 #include "Pipeline/Descriptor.h"
 #include "Utils/Frame.h"
+#include <algorithm>
+#include <execution>
 
 ave::VulkanEngine::VulkanEngine(const std::string& windowName, int width, int height, GLFWwindow* windowPtr)
 	: m_WindowName{ windowName }
@@ -249,7 +251,7 @@ void ave::VulkanEngine::SetUpRendering()
 	descriptorSetLayoutData.Count = 1;
 	descriptorSetLayoutData.TypeVec.emplace_back(vk::DescriptorType::eCombinedImageSampler);
 	//allow for 10 textures
-	m_DescriptorPoolMesh = vkInit::CreateDescriptorPool(m_Device, 10, descriptorSetLayoutData);
+	m_DescriptorPoolMesh = vkInit::CreateDescriptorPool(m_Device, m_NumberOfTextures, descriptorSetLayoutData);
 
 	m_Pipeline2DUPtr->SetScene(std::move(CreateScene2D()));
 
@@ -382,12 +384,23 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> ave::VulkanEngine::CreateScene3D()
 	
 	
 	textureIn.FileName = "Resources/ferrari_diffuse.jpg";
-	const std::string fileNameRaceCar{ "Resources/ferrari.obj" };
-	std::unique_ptr raceCarUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, textureIn, fileNameRaceCar, false)};
+
+	std::vector<bool> count(m_NumberOfTextures - 5);
+	int offset{ 1 };
+	int total = std::count_if(std::execution::unseq, count.begin(), count.end(),
+		[&](const bool& )
+		{
+			const std::string fileNameRaceCar{ "Resources/ferrari.obj" };
+			std::unique_ptr raceCarUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, textureIn, fileNameRaceCar, false) };
+			
+			raceCarUPtr->SetWorldMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(20 * offset, 0.0f, 0.0f)));
+			
+			sceneUPtr->AddMesh(std::move(raceCarUPtr));
 	
-	raceCarUPtr->SetWorldMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(15.0f, 0.0f, 0.0f)));
-	
-	sceneUPtr->AddMesh(std::move(raceCarUPtr));
+			++offset;
+
+			return true;
+		});
 
 	return sceneUPtr;
 }
@@ -466,9 +479,9 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 
 	m_RenderPassUPtr->BeginRenderPass(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent);
 	
-	m_Pipeline3DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
-
 	m_Pipeline2DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
+
+	m_Pipeline3DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
 
 	m_RenderPassUPtr->EndRenderPass(commandBuffer);
 

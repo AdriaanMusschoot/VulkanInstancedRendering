@@ -49,6 +49,7 @@ namespace ave
 	
 		vk::DescriptorSetLayout m_DescriptorSetLayoutMesh;
 		vk::DescriptorPool m_DescriptorPoolMesh;
+		uint32_t m_NumberOfTextures{ 10 };
 
 		std::unique_ptr<vkInit::RenderPass> m_RenderPassUPtr;
 		std::unique_ptr<vkInit::Pipeline<vkUtil::Vertex2D>> m_Pipeline2DUPtr;
