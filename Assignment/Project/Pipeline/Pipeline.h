@@ -10,7 +10,7 @@
 namespace vkInit
 {
 
-	template <typename VertexStruct>
+	template <vkUtil::Vertex VertexStruct>
 	class Pipeline final
 	{
 	public:
@@ -23,8 +23,6 @@ namespace vkInit
 			vk::Extent2D SwapchainExtent;
 			vk::RenderPass RenderPass;
 			std::vector<vk::DescriptorSetLayout> DescriptorSetLayoutVec;
-			std::function<std::vector<vk::VertexInputBindingDescription>()> GetBindingDescription;
-			std::function<std::vector<vk::VertexInputAttributeDescription>()> GetAttributeDescription;
 		};
 
 		struct GraphicsPipelineOutBundle
@@ -234,8 +232,8 @@ namespace vkInit
 			std::vector<vk::PipelineShaderStageCreateInfo> shaderStageCreateInfoVec{};
 
 			//Vertex input/what we will be sending
-			std::vector<vk::VertexInputBindingDescription> bindingDescription{ in.GetBindingDescription() };
-			std::vector attributeDescriptionArr{ in.GetAttributeDescription() };
+			std::vector<vk::VertexInputBindingDescription> bindingDescription{ VertexStruct::GetBindingDescription() };
+			std::vector attributeDescriptionArr{ VertexStruct::GetAttributeDescription() };
 
 			vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{ PopulateVertexInput(bindingDescription, attributeDescriptionArr) };
 			pipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;

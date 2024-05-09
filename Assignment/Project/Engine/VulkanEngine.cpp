@@ -38,6 +38,7 @@ ave::VulkanEngine::~VulkanEngine()
 	m_Pipeline3DUPtr.reset();
 	m_InstancedRectUPtr.reset();
 	m_InstancedCircleUPtr.reset();
+	m_InstancedVehicleUPtr.reset();
 
 	m_Device.destroyCommandPool(m_CommandPool);
 
@@ -211,8 +212,6 @@ void ave::VulkanEngine::CreatePipelines()
 	specification2D.VertexFilePath = "shaders/Shader2D.vert.spv";
 	specification2D.FragmentFilePath = "shaders/Shader2D.frag.spv";
 	specification2D.RenderPass = m_RenderPassUPtr->GetRenderPass();
-	specification2D.GetBindingDescription = vkUtil::GetBindingDescription2D;
-	specification2D.GetAttributeDescription = vkUtil::GetAttributeDescription2D;
 
 	m_Pipeline2DUPtr = std::make_unique<vkInit::Pipeline<vkUtil::Vertex2D>>(specification2D);
 
@@ -224,8 +223,6 @@ void ave::VulkanEngine::CreatePipelines()
 	specification3D.VertexFilePath = "shaders/Shader3D.vert.spv";
 	specification3D.FragmentFilePath = "shaders/Shader3D.frag.spv";
 	specification3D.RenderPass = m_RenderPassUPtr->GetRenderPass();
-	specification3D.GetBindingDescription = vkUtil::GetBindingDescription3D;
-	specification3D.GetAttributeDescription = vkUtil::GetAttributeDescription3D;
 
 	m_Pipeline3DUPtr = std::make_unique<vkInit::Pipeline<vkUtil::Vertex3D>>(specification3D);
 }
@@ -258,11 +255,13 @@ void ave::VulkanEngine::SetUpRendering()
 	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -150 }, 20, m_SwapchainExtent.width, m_SwapchainExtent.height);
 
 	Create2DScene();
+
+	Create3DScene();
 }
 
 void ave::VulkanEngine::Create2DScene()
 {
-	ave::InstancedMesh::MeshInBundle meshIn
+	vkUtil::MeshInBundle meshIn
 	{
 		m_GraphicsQueue,
 		m_MainCommandBuffer,
@@ -300,7 +299,7 @@ void ave::VulkanEngine::Create2DScene()
 
 	textureIn.FileName = "Resources/vehicle_diffuse.png";
 
-	m_InstancedRectUPtr = std::make_unique<ave::InstancedMesh>(meshIn, vertexRectVec, indexRectVec, positionRectVec, textureIn);
+	m_InstancedRectUPtr = std::make_unique<ave::InstancedMesh<vkUtil::Vertex2D>>(meshIn, vertexRectVec, indexRectVec, positionRectVec, textureIn);
 
 	std::vector<vkUtil::Vertex2D> vertexCircleVec{};
 	std::vector<uint32_t> indexCircleVec{};
@@ -357,7 +356,42 @@ void ave::VulkanEngine::Create2DScene()
 		positionCircleVec.emplace_back(glm::vec3(x, y, 0.0f));
 	}
 
-	m_InstancedCircleUPtr = std::make_unique<ave::InstancedMesh>(meshIn, vertexCircleVec, indexCircleVec, positionCircleVec, textureIn);
+	m_InstancedCircleUPtr = std::make_unique<ave::InstancedMesh<vkUtil::Vertex2D>>(meshIn, vertexCircleVec, indexCircleVec, positionCircleVec, textureIn);
+}
+
+void ave::VulkanEngine::Create3DScene()
+{
+	using V3D = vkUtil::Vertex3D;
+	vkUtil::MeshInBundle meshIn
+	{
+		m_GraphicsQueue,
+		m_MainCommandBuffer,
+		m_Device,
+		m_PhysicalDevice
+	};
+
+	std::vector<V3D> vehicleVertexVec{};
+	std::vector<uint32_t> vehicleIndexVec{};
+
+	vkUtil::ParseOBJ<V3D>("Resources/vehicle.obj", vehicleVertexVec, vehicleIndexVec, true);
+
+	std::vector<glm::vec3> vehiclePositionVec{};
+	float x = 0.5f;
+	for (float y = -0.5f; y < 0.5; y += 0.2f)
+	{
+		vehiclePositionVec.emplace_back(glm::vec3(x, y, 0.0f));
+	}
+
+	vkInit::TextureInBundle textureIn{};
+	textureIn.CommandBuffer = m_MainCommandBuffer;
+	textureIn.Queue = m_GraphicsQueue;
+	textureIn.Device = m_Device;
+	textureIn.PhysicalDevice = m_PhysicalDevice;
+	textureIn.DescriptorSetLayout = m_DescriptorSetLayoutMesh;
+	textureIn.DescriptorPool = m_DescriptorPoolMesh;
+
+	textureIn.FileName = "Resources/vehicle_diffuse.png";
+	m_InstancedVehicleUPtr = std::make_unique<ave::InstancedMesh<V3D>>(meshIn, vehicleVertexVec, vehicleIndexVec, vehiclePositionVec, textureIn);
 }
 
 void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
@@ -371,7 +405,7 @@ void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
 	memcpy(swapchainFrame.VPWriteLocationPtr, &swapchainFrame.VPMatrix, sizeof(vkUtil::UBO));
 
 	int idx{};
-	for (auto const& position : InstancedMesh::GetPositions())
+	for (auto const& position : InstancedMesh<vkUtil::Vertex2D>::GetPositions())
 	{
 		swapchainFrame.WMatrixVec[idx++] = glm::translate(glm::mat4(1.0f), position);
 	}
@@ -455,7 +489,9 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 
 	m_InstancedCircleUPtr->Draw(commandBuffer, m_Pipeline2DUPtr->GetPipelineLayout());
 
-	//m_Pipeline3DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].DescriptorSet);
+	m_Pipeline3DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].DescriptorSet);
+
+	m_InstancedVehicleUPtr->Draw(commandBuffer, m_Pipeline3DUPtr->GetPipelineLayout());
 
 	m_RenderPassUPtr->EndRenderPass(commandBuffer);
 

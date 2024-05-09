@@ -9,12 +9,6 @@
 namespace ave
 {
 
-	struct MeshInBundle
-	{
-		vk::Queue const& GraphicsQueue;
-		vk::CommandBuffer const& MainCommandBuffer;
-	};
-
 	template <typename VertexStruct>
 	class Mesh final
 	{
@@ -26,7 +20,7 @@ namespace ave
 		{
 
 		}
-		Mesh(vk::Device const& device, vk::PhysicalDevice const& physicalDevice, MeshInBundle const& in, vkInit::TextureInBundle const& texIn, std::string const& filePath, bool flipWinding)
+		Mesh(vk::Device const& device, vk::PhysicalDevice const& physicalDevice, vkUtil::MeshInBundle const& in, vkInit::TextureInBundle const& texIn, std::string const& filePath, bool flipWinding)
 			: Mesh::Mesh(device, physicalDevice, texIn)
 		{
 			if (not vkUtil::ParseOBJ(filePath, m_VertexVec, m_IndexVec, flipWinding))
@@ -53,7 +47,7 @@ namespace ave
 		{
 			m_VertexVec.emplace_back(vertex);
 		}
-		void InitializeVertexBuffer(MeshInBundle const& in)
+		void InitializeVertexBuffer(vkUtil::MeshInBundle const& in)
 		{
 			vkUtil::BufferInBundle inBundle{};
 			inBundle.Device = m_Device;
@@ -82,7 +76,7 @@ namespace ave
 		{
 			m_IndexVec.emplace_back(idx);
 		}
-		void InitializeIndexBuffer(MeshInBundle const& in)
+		void InitializeIndexBuffer(vkUtil::MeshInBundle const& in)
 		{
 			vkUtil::BufferInBundle inBundle{};
 			inBundle.Device = m_Device;

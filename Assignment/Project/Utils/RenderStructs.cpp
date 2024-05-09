@@ -1,6 +1,6 @@
 #include "RenderStructs.h"
 
-std::vector<vk::VertexInputBindingDescription> vkUtil::GetBindingDescription2D()
+std::vector<vk::VertexInputBindingDescription> vkUtil::Vertex2D::GetBindingDescription()
 {
 	std::vector<vk::VertexInputBindingDescription> bindingDescriptionVec;
 	bindingDescriptionVec.emplace_back(vk::VertexInputBindingDescription{ 0, sizeof(Vertex2D), vk::VertexInputRate::eVertex });
@@ -8,7 +8,7 @@ std::vector<vk::VertexInputBindingDescription> vkUtil::GetBindingDescription2D()
 	return bindingDescriptionVec;
 }
 
-std::vector<vk::VertexInputAttributeDescription> vkUtil::GetAttributeDescription2D()
+std::vector<vk::VertexInputAttributeDescription> vkUtil::Vertex2D::GetAttributeDescription()
 {
 	std::vector<vk::VertexInputAttributeDescription> attributeDescriptionVec{};
 
@@ -18,7 +18,7 @@ std::vector<vk::VertexInputAttributeDescription> vkUtil::GetAttributeDescription
 	return attributeDescriptionVec;
 }
 
-std::vector<vk::VertexInputBindingDescription> vkUtil::GetBindingDescription3D()
+std::vector<vk::VertexInputBindingDescription> vkUtil::Vertex3D::GetBindingDescription()
 {
 	std::vector<vk::VertexInputBindingDescription> bindingDescriptionVec;
 	bindingDescriptionVec.emplace_back(vk::VertexInputBindingDescription{ 0, sizeof(Vertex3D), vk::VertexInputRate::eVertex });
@@ -26,7 +26,7 @@ std::vector<vk::VertexInputBindingDescription> vkUtil::GetBindingDescription3D()
 	return bindingDescriptionVec;
 }
 
-std::vector<vk::VertexInputAttributeDescription> vkUtil::GetAttributeDescription3D()
+std::vector<vk::VertexInputAttributeDescription> vkUtil::Vertex3D::GetAttributeDescription()
 {
 	std::vector<vk::VertexInputAttributeDescription> attributeDescriptionVec{};
 
