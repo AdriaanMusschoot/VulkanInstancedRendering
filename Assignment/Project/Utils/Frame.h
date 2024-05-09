@@ -38,9 +38,17 @@ namespace vkUtil
 		void* VPWriteLocationPtr{ nullptr };
 
 		vk::DescriptorBufferInfo UBODescriptorInfo;
-		vk::DescriptorSet UBODescriptorSet;
 
-		void CreateUBOResources();
+		std::vector<glm::mat4> WMatrixVec;
+		vkUtil::DataBuffer WBuffer;
+		void* WBufferWriteLocationPtr{ nullptr };
+
+		vk::DescriptorBufferInfo WDescriptorInfo;
+
+		//shared by WDescriptorInfo and VPDescriptorInfo
+		vk::DescriptorSet DescriptorSet;
+
+		void CreateDescriptorResources();
 
 		void WriteDescriptorSet();
 

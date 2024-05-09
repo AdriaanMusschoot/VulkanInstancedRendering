@@ -12,6 +12,8 @@
 #include <glm/glm.hpp>
 #include <chrono>
 #include <glm/gtc/matrix_transform.hpp>
+#include <execution>
+
 namespace ave
 {
 

@@ -17,7 +17,7 @@ namespace ave
 			m_MeshVec.emplace_back(std::move(meshUPtr));
 		}
 
-		void Draw(const vk::CommandBuffer& commandBuffer, const vk::PipelineLayout& pipelineLayout)
+		void Draw(vk::CommandBuffer const& commandBuffer, vk::PipelineLayout const& pipelineLayout)
 		{
 			for (const auto& mesh : m_MeshVec)
 			{
@@ -28,11 +28,15 @@ namespace ave
 			}
 		}
 
-		Scene(const Scene& other) = delete;
+		Scene(Scene const& other) = delete;
 		Scene(Scene&& other) = delete;
-		Scene& operator=(const Scene& other) = delete;
+		Scene& operator=(Scene const& other) = delete;
 		Scene& operator=(Scene&& other) = delete;
 
+		ave::Mesh<VertexStruct> const* const GetMesh(int idx) const
+		{
+			return m_MeshVec[idx].get();
+		}
 	private:
 		std::vector<std::unique_ptr<ave::Mesh<VertexStruct>>> m_MeshVec;
 	};

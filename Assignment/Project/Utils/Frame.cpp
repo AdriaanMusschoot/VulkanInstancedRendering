@@ -1,34 +1,62 @@
 #include "Frame.h"
 #include "Rendering/Image.h"
+#include <execution>
 
-void vkUtil::SwapchainFrame::CreateUBOResources()
+void vkUtil::SwapchainFrame::CreateDescriptorResources()
 {
-	BufferInBundle input;
-	input.Device = Device;
-	input.PhysicalDevice = PhysicalDevice;
-	input.MemoryPropertyFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
-	input.Size = sizeof(UBO);
-	input.UsageFlags = vk::BufferUsageFlagBits::eUniformBuffer;
+	BufferInBundle inputUBO;
+	inputUBO.Device = Device;
+	inputUBO.PhysicalDevice = PhysicalDevice;
+	inputUBO.MemoryPropertyFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
+	inputUBO.Size = sizeof(UBO);
+	inputUBO.UsageFlags = vk::BufferUsageFlagBits::eUniformBuffer;
 
-	VPBuffer = vkUtil::CreateBuffer(input);
-	VPWriteLocationPtr = Device.mapMemory(VPBuffer.BufferMemory, 0, sizeof(UBO));
+	VPBuffer = vkUtil::CreateBuffer(inputUBO);
+	VPWriteLocationPtr = Device.mapMemory(VPBuffer.BufferMemory, 0, inputUBO.Size);
 
 	UBODescriptorInfo.buffer = VPBuffer.Buffer;
 	UBODescriptorInfo.offset = 0;
 	UBODescriptorInfo.range = sizeof(UBO);
+
+	BufferInBundle inputStorage;
+	inputStorage.Device = Device;
+	inputStorage.PhysicalDevice = PhysicalDevice;
+	inputStorage.MemoryPropertyFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
+	//TODO make input parameter out of 1069
+	inputStorage.Size = 1069 * sizeof(glm::mat4);
+	inputStorage.UsageFlags = vk::BufferUsageFlagBits::eStorageBuffer;
+
+	WBuffer = vkUtil::CreateBuffer(inputStorage);
+	WBufferWriteLocationPtr = Device.mapMemory(WBuffer.BufferMemory, 0, inputStorage.Size);
+
+	WMatrixVec.resize(inputStorage.Size, glm::mat4(1.0f));
+
+	WDescriptorInfo.buffer = WBuffer.Buffer;
+	WDescriptorInfo.offset = 0;
+	WDescriptorInfo.range = inputStorage.Size;
 }
 
 void vkUtil::SwapchainFrame::WriteDescriptorSet()
 {
-	vk::WriteDescriptorSet writeInfo{};
-	writeInfo.dstSet = UBODescriptorSet;
-	writeInfo.dstBinding = 0;
-	writeInfo.dstArrayElement = 0;
-	writeInfo.descriptorCount = 1;
-	writeInfo.descriptorType = vk::DescriptorType::eUniformBuffer;
-	writeInfo.pBufferInfo = &UBODescriptorInfo;
+	vk::WriteDescriptorSet writeInfoUBO{};
+	writeInfoUBO.dstSet = DescriptorSet;
+	writeInfoUBO.dstBinding = 0;
+	writeInfoUBO.dstArrayElement = 0;
+	writeInfoUBO.descriptorCount = 1;
+	writeInfoUBO.descriptorType = vk::DescriptorType::eUniformBuffer;
+	writeInfoUBO.pBufferInfo = &UBODescriptorInfo;
 
-	Device.updateDescriptorSets(writeInfo, nullptr);
+	Device.updateDescriptorSets(writeInfoUBO, nullptr);
+
+	vk::WriteDescriptorSet writeInfoStorage{};
+	writeInfoStorage.dstSet = DescriptorSet;
+	writeInfoStorage.dstBinding = 1;
+	writeInfoStorage.dstArrayElement = 0;
+	writeInfoStorage.descriptorCount = 1;
+	writeInfoStorage.descriptorType = vk::DescriptorType::eStorageBuffer;
+	writeInfoStorage.pBufferInfo = &WDescriptorInfo;
+
+	Device.updateDescriptorSets(writeInfoStorage, nullptr);
 }
 
 void vkUtil::SwapchainFrame::CreateDepthResources()
@@ -73,4 +101,7 @@ void vkUtil::SwapchainFrame::Destroy()
 	Device.unmapMemory(VPBuffer.BufferMemory);
 	Device.freeMemory(VPBuffer.BufferMemory);
 	Device.destroyBuffer(VPBuffer.Buffer);
+	Device.unmapMemory(WBuffer.BufferMemory);
+	Device.freeMemory(WBuffer.BufferMemory);
+	Device.destroyBuffer(WBuffer.Buffer);
 }

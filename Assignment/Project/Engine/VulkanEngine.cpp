@@ -36,6 +36,7 @@ ave::VulkanEngine::~VulkanEngine()
 	m_RenderPassUPtr.reset();
 	m_Pipeline2DUPtr.reset();
 	m_Pipeline3DUPtr.reset();
+	m_InstancedMeshUPtr.reset();
 
 	m_Device.destroyCommandPool(m_CommandPool);
 
@@ -253,22 +254,35 @@ void ave::VulkanEngine::SetUpRendering()
 	//allow for 10 textures
 	m_DescriptorPoolMesh = vkInit::CreateDescriptorPool(m_Device, m_NumberOfTextures, descriptorSetLayoutData);
 
-	m_Pipeline2DUPtr->SetScene(std::move(CreateScene2D()));
-
-	m_Pipeline3DUPtr->SetScene(std::move(CreateScene3D()));
-
 	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -150 }, 20, m_SwapchainExtent.width, m_SwapchainExtent.height);
-}
 
-std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
-{
-	ave::MeshInBundle meshInput
+	ave::InstancedMesh::MeshInBundle meshIn
 	{
 		m_GraphicsQueue,
-		m_MainCommandBuffer
+		m_MainCommandBuffer,
+		m_Device,
+		m_PhysicalDevice
 	};
 
-	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene<vkUtil::Vertex2D>>() };
+	std::vector<vkUtil::Vertex2D> vertexVec{};
+	std::vector<uint32_t> indexVec{};
+	vertexVec.emplace_back(vkUtil::Vertex2D{ { 0.2f, 0.0f }, { 0.f, 1.f } });
+	vertexVec.emplace_back(vkUtil::Vertex2D{ { 0.0f, 0.0f }, { 1.f, 1.f } });
+	vertexVec.emplace_back(vkUtil::Vertex2D{ { 0.2f, 0.2f }, { 0.f, 0.f } });
+	vertexVec.emplace_back(vkUtil::Vertex2D{ { 0.0f, 0.2f }, { 1.f, 0.f } });
+	indexVec.emplace_back(2);
+	indexVec.emplace_back(1);
+	indexVec.emplace_back(0);
+	indexVec.emplace_back(1);
+	indexVec.emplace_back(2);
+	indexVec.emplace_back(3);
+
+	std::vector<glm::vec3> positionVec{};
+	float x = -0.6f;
+	for (float y = -1.0f; y < 0.5; y += 0.2f) 
+	{
+		positionVec.emplace_back(glm::vec3(x, y, 0.0f));
+	}
 
 	vkInit::TextureInBundle textureIn{};
 	textureIn.CommandBuffer = m_MainCommandBuffer;
@@ -279,141 +293,29 @@ std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> ave::VulkanEngine::CreateScene2D()
 	textureIn.DescriptorPool = m_DescriptorPoolMesh;
 
 	textureIn.FileName = "Resources/vehicle_diffuse.png";
-	std::unique_ptr rectangleMeshUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice, textureIn) };
 
-	rectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.2f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.f, 1.f } });
-	rectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.f, 1.f } });
-	rectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.2f, 0.2f }, { 0.0f, 1.0f, 0.0f }, { 0.f, 0.f } });
-	rectangleMeshUPtr->AddVertex(vkUtil::Vertex2D{ { 0.0f, 0.2f }, { 0.0f, 0.0f, 1.0f }, { 1.f, 0.f } });
-	rectangleMeshUPtr->AddIndex(2);
-	rectangleMeshUPtr->AddIndex(1);
-	rectangleMeshUPtr->AddIndex(0);
-	rectangleMeshUPtr->AddIndex(1);
-	rectangleMeshUPtr->AddIndex(2);
-	rectangleMeshUPtr->AddIndex(3);
-		
-	rectangleMeshUPtr->InitializeIndexBuffer(meshInput);
-	rectangleMeshUPtr->InitializeVertexBuffer(meshInput);
-	
-	sceneUPtr->AddMesh(std::move(rectangleMeshUPtr));
-	
-	textureIn.FileName = "Resources/vehicle_diffuse.png";
-	std::unique_ptr circleMeshPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex2D>>(m_Device, m_PhysicalDevice, textureIn) };
-	
-	constexpr double radius{ 0.1f };
-	constexpr int nrOfPoints{ 100 };
-	constexpr float centerX{ 0.1f };
-	constexpr float centerY{ -0.1f };
-	
-	std::vector<vkUtil::Vertex2D> tempVertexVec;
-	tempVertexVec.reserve(nrOfPoints);
-	for (int idx{ 0 }; idx < nrOfPoints; ++idx)
-	{
-		double theta = 2.0 * 3.14 * idx / nrOfPoints;
-		vkUtil::Vertex2D vert{};
-		vert.Position.x = static_cast<float>(centerX + radius * std::cos(theta));
-		vert.Position.y = static_cast<float>(centerY + radius * std::sin(theta));
-	
-		const float hue = static_cast<float>(idx) / static_cast<float>(nrOfPoints);
-		vert.Color = glm::vec3(glm::abs(glm::cos(hue * 3.14 * 2.0f)), glm::abs(glm::sin(hue * 3.14 * 2.0f)), 0.5f);
-		tempVertexVec.emplace_back(vert);
-	}
-	
-	uint32_t vIdx{};
-	for (int idx{ 0 }; idx < tempVertexVec.size(); ++idx)
-	{
-		if (idx < tempVertexVec.size() - 1)
-		{
-			circleMeshPtr->AddVertex(tempVertexVec[idx + 1]);
-			circleMeshPtr->AddIndex(vIdx);
-			++vIdx;
-			circleMeshPtr->AddVertex(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec3{ 1, 1, 1 } });
-			circleMeshPtr->AddIndex(vIdx);
-			++vIdx;
-			circleMeshPtr->AddVertex(tempVertexVec[idx]);
-			circleMeshPtr->AddIndex(vIdx);
-			++vIdx;
-		}
-		else
-		{
-			circleMeshPtr->AddVertex(tempVertexVec[0]);
-			circleMeshPtr->AddIndex(vIdx);
-			++vIdx;
-			circleMeshPtr->AddVertex(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec3{ 1, 1, 1 } });
-			circleMeshPtr->AddIndex(vIdx);
-			++vIdx;
-			circleMeshPtr->AddVertex(tempVertexVec[idx]);
-			circleMeshPtr->AddIndex(vIdx);
-			++vIdx;
-		}
-	}
-	
-	circleMeshPtr->InitializeIndexBuffer(meshInput);
-	circleMeshPtr->InitializeVertexBuffer(meshInput);
-	
-	sceneUPtr->AddMesh(std::move(circleMeshPtr));
-	
-	return sceneUPtr;
-}
-
-std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> ave::VulkanEngine::CreateScene3D()
-{
-	ave::MeshInBundle meshInput
-	{
-		m_GraphicsQueue,
-		m_MainCommandBuffer
-	};
-
-	std::unique_ptr sceneUPtr{ std::make_unique<ave::Scene<vkUtil::Vertex3D>>() };
-
-	vkInit::TextureInBundle textureIn{};
-	textureIn.CommandBuffer = m_MainCommandBuffer;
-	textureIn.Queue = m_GraphicsQueue;
-	textureIn.Device = m_Device;
-	textureIn.PhysicalDevice = m_PhysicalDevice;
-	textureIn.DescriptorSetLayout = m_DescriptorSetLayoutMesh;
-	textureIn.DescriptorPool = m_DescriptorPoolMesh;
-	
-	textureIn.FileName = "Resources/vehicle_diffuse.png";
-	const std::string fileNameVehicle{ "Resources/vehicle.obj" };
-	std::unique_ptr vehicleMeshUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, textureIn, fileNameVehicle, true)};
-	
-	vehicleMeshUPtr->SetWorldMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(-15.0f, 0.0f, 0.0f)));
-	
-	sceneUPtr->AddMesh(std::move(vehicleMeshUPtr));
-	
-	
-	textureIn.FileName = "Resources/ferrari_diffuse.jpg";
-
-	std::vector<bool> count(m_NumberOfTextures - 5);
-	int offset{ 1 };
-	int total = std::count_if(std::execution::unseq, count.begin(), count.end(),
-		[&](const bool& )
-		{
-			const std::string fileNameRaceCar{ "Resources/ferrari.obj" };
-			std::unique_ptr raceCarUPtr{ std::make_unique<ave::Mesh<vkUtil::Vertex3D>>(m_Device, m_PhysicalDevice, meshInput, textureIn, fileNameRaceCar, false) };
-			
-			raceCarUPtr->SetWorldMatrix(glm::translate(glm::mat4(1.0f), glm::vec3(20 * offset, 0.0f, 0.0f)));
-			
-			sceneUPtr->AddMesh(std::move(raceCarUPtr));
-	
-			++offset;
-
-			return true;
-		});
-
-	return sceneUPtr;
+	m_InstancedMeshUPtr = std::make_unique<ave::InstancedMesh>(meshIn, vertexVec, indexVec, positionVec, textureIn);
 }
 
 void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
 {
+	auto& swapchainFrame = m_SwapchainFrameVec[imgIdx];
+
 	m_CameraUPtr->Update();
 
-	m_SwapchainFrameVec[imgIdx].VPMatrix.ViewMatrix = m_CameraUPtr->GetViewMatrix();
-	m_SwapchainFrameVec[imgIdx].VPMatrix.ProjectionMatrix = m_CameraUPtr->GetProjectionMatrix();
-	memcpy(m_SwapchainFrameVec[imgIdx].VPWriteLocationPtr, &m_SwapchainFrameVec[imgIdx].VPMatrix, sizeof(vkUtil::UBO));
+	swapchainFrame.VPMatrix.ViewMatrix = m_CameraUPtr->GetViewMatrix();
+	swapchainFrame.VPMatrix.ProjectionMatrix = m_CameraUPtr->GetProjectionMatrix();
+	memcpy(swapchainFrame.VPWriteLocationPtr, &swapchainFrame.VPMatrix, sizeof(vkUtil::UBO));
 
-	m_SwapchainFrameVec[imgIdx].WriteDescriptorSet();
+	int idx{};
+	for (auto const& position : InstancedMesh::GetPositions())
+	{
+		swapchainFrame.WMatrixVec[idx++] = glm::translate(glm::mat4(1.0f), position);
+	}
+
+	memcpy(swapchainFrame.WBufferWriteLocationPtr, swapchainFrame.WMatrixVec.data(), idx * sizeof(glm::mat4));
+
+	swapchainFrame.WriteDescriptorSet();
 }
 
 void ave::VulkanEngine::CreateFrameBuffers()
@@ -439,17 +341,22 @@ void ave::VulkanEngine::CreateFrameResources()
 		frame.SemaphoreImageAvailable = vkInit::CreateSemaphore(m_Device);
 		frame.SemaphoreRenderingFinished = vkInit::CreateSemaphore(m_Device);
 
-		frame.CreateUBOResources();
-		frame.UBODescriptorSet = vkInit::CreateDescriptorSet(m_Device, m_DescriptorPoolFrame, m_DescriptorSetLayoutFrame);
+		frame.CreateDescriptorResources();
+		frame.DescriptorSet = vkInit::CreateDescriptorSet(m_Device, m_DescriptorPoolFrame, m_DescriptorSetLayoutFrame);
 	}
 }
 
 void ave::VulkanEngine::CreateDescriptorSetLayouts()
 {
 	vkInit::DescriptorSetLayoutData setLayoutDataFrame;
-	setLayoutDataFrame.Count = 1;
+	setLayoutDataFrame.Count = 2;
 	setLayoutDataFrame.IndexVec.emplace_back(0);
 	setLayoutDataFrame.TypeVec.emplace_back(vk::DescriptorType::eUniformBuffer);
+	setLayoutDataFrame.CountVec.emplace_back(1);
+	setLayoutDataFrame.StageFlagVec.emplace_back(vk::ShaderStageFlagBits::eVertex);
+
+	setLayoutDataFrame.IndexVec.emplace_back(1);
+	setLayoutDataFrame.TypeVec.emplace_back(vk::DescriptorType::eStorageBuffer);
 	setLayoutDataFrame.CountVec.emplace_back(1);
 	setLayoutDataFrame.StageFlagVec.emplace_back(vk::ShaderStageFlagBits::eVertex);
 
@@ -479,9 +386,11 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 
 	m_RenderPassUPtr->BeginRenderPass(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent);
 	
-	m_Pipeline2DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
+	m_Pipeline2DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].DescriptorSet);
 
-	m_Pipeline3DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].UBODescriptorSet);
+	m_InstancedMeshUPtr->Draw(commandBuffer, m_Pipeline2DUPtr->GetPipelineLayout());
+
+	//m_Pipeline3DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].DescriptorSet);
 
 	m_RenderPassUPtr->EndRenderPass(commandBuffer);
 

@@ -7,6 +7,7 @@
 #include "Pipeline/Pipeline.h"
 #include "Pipeline/RenderPass.h"
 #include "Rendering/Scene.h"
+#include "Rendering/InstancedMesh.h"
 
 namespace ave
 {
@@ -55,6 +56,8 @@ namespace ave
 		std::unique_ptr<vkInit::Pipeline<vkUtil::Vertex2D>> m_Pipeline2DUPtr;
 		std::unique_ptr<vkInit::Pipeline<vkUtil::Vertex3D>> m_Pipeline3DUPtr;
 
+		std::unique_ptr<ave::InstancedMesh> m_InstancedMeshUPtr{ nullptr };
+
 		vk::CommandPool m_CommandPool;
 		vk::CommandBuffer m_MainCommandBuffer;
 
@@ -71,8 +74,6 @@ namespace ave
 		void CreateDescriptorSetLayouts();
 		void CreatePipelines();
 		void SetUpRendering();
-		std::unique_ptr<ave::Scene<vkUtil::Vertex2D>> CreateScene2D();
-		std::unique_ptr<ave::Scene<vkUtil::Vertex3D>> CreateScene3D();
 		void PrepareFrame(uint32_t imgIdx);
 
 		void RecordDrawCommands(const vk::CommandBuffer& commandBuffer, uint32_t imageIndex);

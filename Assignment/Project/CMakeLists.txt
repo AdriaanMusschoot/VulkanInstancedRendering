@@ -56,10 +56,10 @@ set(SOURCES
     "Rendering/FrameBuffer.cpp"     "Rendering/FrameBuffer.h"
     "Rendering/Commands.cpp"        "Rendering/Commands.h"
     "Rendering/Image.cpp"           "Rendering/Image.h"
-)
+    "Rendering/InstancedMesh.cpp"   "Rendering/InstancedMesh.h")
 
 # Create the executable
-add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES})
+add_executable(${PROJECT_NAME} ${SOURCES} ${GLSL_SOURCE_FILES} )
 add_dependencies(${PROJECT_NAME} Shaders)
 # Link libraries
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

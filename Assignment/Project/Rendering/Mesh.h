@@ -4,7 +4,6 @@
 #include "Utils/Buffer.h"
 #include "Utils/RenderStructs.h"
 #include "Utils/FileReader.h"
-#include <unordered_map>
 #include "Rendering/Image.h"
 
 namespace ave
@@ -12,22 +11,22 @@ namespace ave
 
 	struct MeshInBundle
 	{
-		const vk::Queue& GraphicsQueue; 
-		const vk::CommandBuffer& MainCommandBuffer;
+		vk::Queue const& GraphicsQueue;
+		vk::CommandBuffer const& MainCommandBuffer;
 	};
 
 	template <typename VertexStruct>
 	class Mesh final
 	{
 	public:
-		Mesh(const vk::Device& device, const vk::PhysicalDevice& physicalDevice, const vkInit::TextureInBundle& texIn)
+		Mesh(vk::Device const& device, vk::PhysicalDevice const& physicalDevice, vkInit::TextureInBundle const& texIn)
 			: m_Device{ device }
 			, m_PhysicalDevice{ physicalDevice }
 			, m_TextureUPtr{ std::make_unique<vkInit::Texture>(texIn) }
 		{
 
 		}
-		Mesh(const vk::Device& device, const vk::PhysicalDevice& physicalDevice, const MeshInBundle& in, const vkInit::TextureInBundle& texIn, const std::string& filePath, bool flipWinding)
+		Mesh(vk::Device const& device, vk::PhysicalDevice const& physicalDevice, MeshInBundle const& in, vkInit::TextureInBundle const& texIn, std::string const& filePath, bool flipWinding)
 			: Mesh::Mesh(device, physicalDevice, texIn)
 		{
 			if (not vkUtil::ParseOBJ(filePath, m_VertexVec, m_IndexVec, flipWinding))
@@ -45,16 +44,16 @@ namespace ave
 			m_Device.freeMemory(m_IndexBuffer.BufferMemory);
 		}
 
-		Mesh(const Mesh& other) = delete;
+		Mesh(Mesh const& other) = delete;
 		Mesh(Mesh&& other) = delete;
-		Mesh& operator=(const Mesh& other) = delete;
+		Mesh& operator=(Mesh const& other) = delete;
 		Mesh& operator=(Mesh&& other) = delete;
 
 		void AddVertex(const VertexStruct& vertex)
 		{
 			m_VertexVec.emplace_back(vertex);
 		}
-		void InitializeVertexBuffer(const MeshInBundle& in)
+		void InitializeVertexBuffer(MeshInBundle const& in)
 		{
 			vkUtil::BufferInBundle inBundle{};
 			inBundle.Device = m_Device;
@@ -83,7 +82,7 @@ namespace ave
 		{
 			m_IndexVec.emplace_back(idx);
 		}
-		void InitializeIndexBuffer(const MeshInBundle& in)
+		void InitializeIndexBuffer(MeshInBundle const& in)
 		{
 			vkUtil::BufferInBundle inBundle{};
 			inBundle.Device = m_Device;
@@ -108,30 +107,34 @@ namespace ave
 			m_Device.freeMemory(stagingBuffer.BufferMemory);
 		}
 
-		void SetWorldMatrix(const glm::mat4& worldMatrix)
+		void SetWorldMatrix(glm::mat4 const& worldMatrix)
 		{
 			m_WorldMatrix = worldMatrix;
 		}
+		glm::mat4 const& GetWorldMatrix() const
+		{
+			return m_WorldMatrix;
+		}
 
-		void PushWorldMatrix(const vk::CommandBuffer& commandBuffer, const vk::PipelineLayout& pipelineLayout)
+		void PushWorldMatrix(vk::CommandBuffer const& commandBuffer, vk::PipelineLayout const& pipelineLayout)
 		{
 			commandBuffer.pushConstants(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(glm::mat4), &m_WorldMatrix);
 		}
-		void BindBuffers(const vk::CommandBuffer& commandBuffer)
+		void BindBuffers(vk::CommandBuffer const& commandBuffer)
 		{
 			vk::Buffer vertexBufferArr[]{ m_VertexBuffer.Buffer };
 			vk::DeviceSize offsetArr[]{ 0 };
 			commandBuffer.bindVertexBuffers(0, 1, vertexBufferArr, offsetArr);
 			commandBuffer.bindIndexBuffer(m_IndexBuffer.Buffer, 0, vk::IndexType::eUint32);
 		}
-		void SetTexture(const vk::CommandBuffer& commandBuffer, const vk::PipelineLayout& pipelineLayout)
+		void SetTexture(vk::CommandBuffer const& commandBuffer, vk::PipelineLayout const& pipelineLayout)
 		{
 			if (m_TextureUPtr)
 			{
 				m_TextureUPtr->Apply(commandBuffer, pipelineLayout);
 			}
 		}
-		void Draw(const vk::CommandBuffer& commandBuffer) const
+		void Draw(vk::CommandBuffer const& commandBuffer) const
 		{
 			commandBuffer.drawIndexed(static_cast<uint32_t>(m_IndexVec.size()), 1, 0, 0, 0);
 		}

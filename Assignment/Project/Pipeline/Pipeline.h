@@ -33,7 +33,7 @@ namespace vkInit
 			vk::Pipeline Pipeline;
 		};
 
-		Pipeline(const GraphicsPipelineInBundle& in)
+		Pipeline(GraphicsPipelineInBundle const& in)
 			: m_Device{ in.Device }
 		{
 			GraphicsPipelineOutBundle out = CreateGraphicsPipeline(in);
@@ -46,12 +46,12 @@ namespace vkInit
 			m_Device.destroyPipelineLayout(m_PipelineLayout);
 		}
 
-		Pipeline(const Pipeline& other) = delete;
+		Pipeline(Pipeline const& other) = delete;
 		Pipeline(Pipeline&& other) = delete;
-		Pipeline& operator=(const Pipeline& other) = delete;
+		Pipeline& operator=(Pipeline const& other) = delete;
 		Pipeline& operator=(Pipeline&& other) = delete;
 
-		void Record(const vk::CommandBuffer& commandBuffer, const vk::Framebuffer& frameBuffer, const vk::Extent2D& swapchainExtent, const vk::DescriptorSet& descriptorSet)
+		void Record(vk::CommandBuffer const& commandBuffer, vk::Framebuffer const& frameBuffer, vk::Extent2D const& swapchainExtent, vk::DescriptorSet const& descriptorSet)
 		{
 			commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_PipelineLayout, 0, descriptorSet, nullptr);
 
@@ -67,6 +67,15 @@ namespace vkInit
 		{
 			m_SceneUPtr = std::move(sceneUPtr);
 		}
+
+		ave::Scene<VertexStruct> const* const GetScene() const
+		{
+			return m_SceneUPtr.get();
+		}
+		vk::PipelineLayout const& GetPipelineLayout() const
+		{
+			return m_PipelineLayout;
+		}
 	private:
 		vk::PipelineLayout m_PipelineLayout;
 		vk::Pipeline m_Pipeline;
@@ -75,7 +84,7 @@ namespace vkInit
 
 		std::unique_ptr<ave::Scene<VertexStruct>> m_SceneUPtr;
 
-		vk::PipelineLayout CreatePipelineLayout(const vk::Device& device, const std::vector<vk::DescriptorSetLayout>& descriptorSetLayout)
+		vk::PipelineLayout CreatePipelineLayout(vk::Device const& device, std::vector<vk::DescriptorSetLayout> const& descriptorSetLayout)
 		{
 			vk::PushConstantRange pushConstantRange{};
 			pushConstantRange.offset = 0;
@@ -100,7 +109,7 @@ namespace vkInit
 				return nullptr;
 			}
 		}
-		vk::PipelineVertexInputStateCreateInfo PopulateVertexInput(const std::vector<vk::VertexInputBindingDescription>& bindingDescriptionVec, const std::vector<vk::VertexInputAttributeDescription>& attributeDescriptionVec)
+		vk::PipelineVertexInputStateCreateInfo PopulateVertexInput(std::vector<vk::VertexInputBindingDescription> const& bindingDescriptionVec, std::vector<vk::VertexInputAttributeDescription> const& attributeDescriptionVec)
 		{
 			vk::PipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
 			vertexInputStateCreateInfo.flags = vk::PipelineVertexInputStateCreateFlags{};
@@ -120,7 +129,7 @@ namespace vkInit
 
 			return inputAssemblyCreateInfo;
 		}
-		vk::PipelineShaderStageCreateInfo PopulateShaderStage(const vk::ShaderModule& shaderModule, const vk::ShaderStageFlagBits& flagBits)
+		vk::PipelineShaderStageCreateInfo PopulateShaderStage(vk::ShaderModule const& shaderModule, vk::ShaderStageFlagBits const& flagBits)
 		{
 			vk::PipelineShaderStageCreateInfo shaderStageCreateInfo{};
 			shaderStageCreateInfo.flags = vk::PipelineShaderStageCreateFlags{};
@@ -146,7 +155,7 @@ namespace vkInit
 
 			return depthStateCreateInfo;
 		}
-		vk::PipelineViewportStateCreateInfo PopulateViewportState(const vk::Viewport& viewport, const vk::Rect2D& scissor)
+		vk::PipelineViewportStateCreateInfo PopulateViewportState(vk::Viewport const& viewport, vk::Rect2D const& scissor)
 		{
 			vk::PipelineViewportStateCreateInfo viewportStateCreateInfo{};
 			viewportStateCreateInfo.flags = vk::PipelineViewportStateCreateFlags{};
@@ -200,7 +209,7 @@ namespace vkInit
 
 			return colorBlendAttachmentState;
 		}
-		vk::PipelineColorBlendStateCreateInfo PopulateColorBlendState(const vk::PipelineColorBlendAttachmentState& colorBlendAttachment)
+		vk::PipelineColorBlendStateCreateInfo PopulateColorBlendState(vk::PipelineColorBlendAttachmentState const& colorBlendAttachment)
 		{
 			vk::PipelineColorBlendStateCreateInfo colorBlendStateCreateInfo{};
 			colorBlendStateCreateInfo.flags = vk::PipelineColorBlendStateCreateFlags{};
@@ -215,7 +224,7 @@ namespace vkInit
 
 			return colorBlendStateCreateInfo;
 		}
-		GraphicsPipelineOutBundle CreateGraphicsPipeline(const GraphicsPipelineInBundle& in)
+		GraphicsPipelineOutBundle CreateGraphicsPipeline(GraphicsPipelineInBundle const& in)
 		{
 			std::cout << "\nPipeline creation started\n";
 
