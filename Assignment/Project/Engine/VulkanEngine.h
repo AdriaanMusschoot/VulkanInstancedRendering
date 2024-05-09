@@ -56,7 +56,8 @@ namespace ave
 		std::unique_ptr<vkInit::Pipeline<vkUtil::Vertex2D>> m_Pipeline2DUPtr;
 		std::unique_ptr<vkInit::Pipeline<vkUtil::Vertex3D>> m_Pipeline3DUPtr;
 
-		std::unique_ptr<ave::InstancedMesh> m_InstancedMeshUPtr{ nullptr };
+		std::unique_ptr<ave::InstancedMesh> m_InstancedRectUPtr{ nullptr };
+		std::unique_ptr<ave::InstancedMesh> m_InstancedCircleUPtr{ nullptr };
 
 		vk::CommandPool m_CommandPool;
 		vk::CommandBuffer m_MainCommandBuffer;
@@ -74,8 +75,9 @@ namespace ave
 		void CreateDescriptorSetLayouts();
 		void CreatePipelines();
 		void SetUpRendering();
-		void PrepareFrame(uint32_t imgIdx);
+		void Create2DScene();
 
+		void PrepareFrame(uint32_t imgIdx);
 		void RecordDrawCommands(const vk::CommandBuffer& commandBuffer, uint32_t imageIndex);
 
 		void RecreateSwapchain();

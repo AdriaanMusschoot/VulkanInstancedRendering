@@ -36,7 +36,8 @@ ave::VulkanEngine::~VulkanEngine()
 	m_RenderPassUPtr.reset();
 	m_Pipeline2DUPtr.reset();
 	m_Pipeline3DUPtr.reset();
-	m_InstancedMeshUPtr.reset();
+	m_InstancedRectUPtr.reset();
+	m_InstancedCircleUPtr.reset();
 
 	m_Device.destroyCommandPool(m_CommandPool);
 
@@ -256,6 +257,11 @@ void ave::VulkanEngine::SetUpRendering()
 
 	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -150 }, 20, m_SwapchainExtent.width, m_SwapchainExtent.height);
 
+	Create2DScene();
+}
+
+void ave::VulkanEngine::Create2DScene()
+{
 	ave::InstancedMesh::MeshInBundle meshIn
 	{
 		m_GraphicsQueue,
@@ -264,24 +270,24 @@ void ave::VulkanEngine::SetUpRendering()
 		m_PhysicalDevice
 	};
 
-	std::vector<vkUtil::Vertex2D> vertexVec{};
-	std::vector<uint32_t> indexVec{};
-	vertexVec.emplace_back(vkUtil::Vertex2D{ { 0.2f, 0.0f }, { 0.f, 1.f } });
-	vertexVec.emplace_back(vkUtil::Vertex2D{ { 0.0f, 0.0f }, { 1.f, 1.f } });
-	vertexVec.emplace_back(vkUtil::Vertex2D{ { 0.2f, 0.2f }, { 0.f, 0.f } });
-	vertexVec.emplace_back(vkUtil::Vertex2D{ { 0.0f, 0.2f }, { 1.f, 0.f } });
-	indexVec.emplace_back(2);
-	indexVec.emplace_back(1);
-	indexVec.emplace_back(0);
-	indexVec.emplace_back(1);
-	indexVec.emplace_back(2);
-	indexVec.emplace_back(3);
+	std::vector<vkUtil::Vertex2D> vertexRectVec{};
+	std::vector<uint32_t> indexRectVec{};
+	vertexRectVec.emplace_back(vkUtil::Vertex2D{ { 0.2f, 0.0f }, { 0.f, 1.f } });
+	vertexRectVec.emplace_back(vkUtil::Vertex2D{ { 0.0f, 0.0f }, { 1.f, 1.f } });
+	vertexRectVec.emplace_back(vkUtil::Vertex2D{ { 0.2f, 0.2f }, { 0.f, 0.f } });
+	vertexRectVec.emplace_back(vkUtil::Vertex2D{ { 0.0f, 0.2f }, { 1.f, 0.f } });
+	indexRectVec.emplace_back(2);
+	indexRectVec.emplace_back(1);
+	indexRectVec.emplace_back(0);
+	indexRectVec.emplace_back(1);
+	indexRectVec.emplace_back(2);
+	indexRectVec.emplace_back(3);
 
-	std::vector<glm::vec3> positionVec{};
-	float x = -0.6f;
-	for (float y = -1.0f; y < 0.5; y += 0.2f) 
+	std::vector<glm::vec3> positionRectVec{};
+	float x = -0.5f;
+	for (float y = -0.5f; y < 0.5f; y += 0.2f)
 	{
-		positionVec.emplace_back(glm::vec3(x, y, 0.0f));
+		positionRectVec.emplace_back(glm::vec3(x, y, 0.0f));
 	}
 
 	vkInit::TextureInBundle textureIn{};
@@ -294,7 +300,64 @@ void ave::VulkanEngine::SetUpRendering()
 
 	textureIn.FileName = "Resources/vehicle_diffuse.png";
 
-	m_InstancedMeshUPtr = std::make_unique<ave::InstancedMesh>(meshIn, vertexVec, indexVec, positionVec, textureIn);
+	m_InstancedRectUPtr = std::make_unique<ave::InstancedMesh>(meshIn, vertexRectVec, indexRectVec, positionRectVec, textureIn);
+
+	std::vector<vkUtil::Vertex2D> vertexCircleVec{};
+	std::vector<uint32_t> indexCircleVec{};
+	constexpr double radius{ 0.1f };
+	constexpr int nrOfPoints{ 100 };
+	constexpr float centerX{ 0.1f };
+	constexpr float centerY{ -0.1f };
+
+	std::vector<vkUtil::Vertex2D> tempVertexVec;
+	tempVertexVec.reserve(nrOfPoints);
+	for (int idx{ 0 }; idx < nrOfPoints; ++idx)
+	{
+		double theta = 2.0 * 3.14 * idx / nrOfPoints;
+		vkUtil::Vertex2D vert{};
+		vert.Position.x = static_cast<float>(centerX + radius * std::cos(theta));
+		vert.Position.y = static_cast<float>(centerY + radius * std::sin(theta));
+		tempVertexVec.emplace_back(vert);
+	}
+
+	std::vector<uint32_t> tempIdxVec;
+	uint32_t vIdx{};
+	for (int idx{ 0 }; idx < tempVertexVec.size(); ++idx)
+	{
+		if (idx < tempVertexVec.size() - 1)
+		{
+			vertexCircleVec.emplace_back(tempVertexVec[idx + 1]);
+			indexCircleVec.emplace_back(vIdx);
+			++vIdx;
+			vertexCircleVec.emplace_back(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec2{ 1, 1 } });
+			indexCircleVec.emplace_back(vIdx);
+			++vIdx;
+			vertexCircleVec.emplace_back(tempVertexVec[idx]);
+			indexCircleVec.emplace_back(vIdx);
+			++vIdx;
+		}
+		else
+		{
+			vertexCircleVec.emplace_back(tempVertexVec[0]);
+			indexCircleVec.emplace_back(vIdx);
+			++vIdx;
+			vertexCircleVec.emplace_back(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec2{ 1, 1 } });
+			indexCircleVec.emplace_back(vIdx);
+			++vIdx;
+			vertexCircleVec.emplace_back(tempVertexVec[idx]);
+			indexCircleVec.emplace_back(vIdx);
+			++vIdx;
+		}
+	}
+
+	std::vector<glm::vec3> positionCircleVec{};
+	x = 0.5f;
+	for (float y = -0.5f; y < 0.5; y += 0.2f)
+	{
+		positionCircleVec.emplace_back(glm::vec3(x, y, 0.0f));
+	}
+
+	m_InstancedCircleUPtr = std::make_unique<ave::InstancedMesh>(meshIn, vertexCircleVec, indexCircleVec, positionCircleVec, textureIn);
 }
 
 void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
@@ -388,7 +451,9 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 	
 	m_Pipeline2DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].DescriptorSet);
 
-	m_InstancedMeshUPtr->Draw(commandBuffer, m_Pipeline2DUPtr->GetPipelineLayout());
+	m_InstancedRectUPtr->Draw(commandBuffer, m_Pipeline2DUPtr->GetPipelineLayout());
+
+	m_InstancedCircleUPtr->Draw(commandBuffer, m_Pipeline2DUPtr->GetPipelineLayout());
 
 	//m_Pipeline3DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].DescriptorSet);
 
