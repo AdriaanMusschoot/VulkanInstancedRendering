@@ -65,7 +65,12 @@ void ave::Camera::Update()
 	m_LastMousePositionX = mousePositionX;
 	m_LastMousePositionY = mousePositionY;
 
-	if (glfwGetMouseButton(m_WindowPtr, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+	if (glfwGetMouseButton(m_WindowPtr, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS and glfwGetMouseButton(m_WindowPtr, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+	{
+		m_Origin.y += m_Up.y * deltaMouseY * m_SpeedTranslation * deltaTime * 10;
+		calculateCameraMatrix = true;
+	}
+	else if (glfwGetMouseButton(m_WindowPtr, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 	{
 		m_TotalYaw -= deltaMouseX * m_SpeedRotation * deltaTime;
 		m_TotalPitch -= deltaMouseY * m_SpeedRotation * deltaTime;
@@ -78,7 +83,6 @@ void ave::Camera::Update()
 		m_Forward = glm::normalize(m_Forward);
 		calculateCameraMatrix = true;
 	}
-
 	if (calculateCameraMatrix)
 	{
 		CalculateViewMatrix();

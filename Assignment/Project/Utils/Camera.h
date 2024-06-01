@@ -27,7 +27,7 @@ namespace ave
 		glm::vec3 m_Up{ glm::vec3{ 0, -1, 0 } };
 		glm::vec3 m_Right{ glm::vec3{ 1, 0, 0 } };
 
-		float m_FarPlane{ 1000.0f };
+		float m_FarPlane{ 10000.0f };
 		float m_NearPlane{ 0.1f };
 		float m_AspectRatio{};
 		
