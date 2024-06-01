@@ -11,7 +11,7 @@ namespace ave
 	class InstancedMesh final
 	{
 	public:
-		InstancedMesh(vkUtil::MeshInBundle const& in, std::vector<VertexStruct> const& vertexVec, std::vector<uint32_t> const& indexVec, std::vector<glm::vec3> const& positionVec, vkInit::TextureInBundle const& texIn)
+		InstancedMesh(vkUtil::MeshInBundle const& in, std::vector<VertexStruct> const& vertexVec, std::vector<uint32_t> const& indexVec, std::vector<glm::mat4> const& positionVec, vkInit::TextureInBundle const& texIn)
 			: m_VertexVec{ vertexVec }
 			, m_IndexVec{ indexVec }
 			, m_Device{ in.Device }
@@ -99,7 +99,7 @@ namespace ave
 
 			commandBuffer.drawIndexed(std::ssize(m_IndexVec), std::ssize(m_PositionVec), 0, 0, startOffset);
 		}
-		std::vector<glm::vec3> const& GetPositions()
+		std::vector<glm::mat4> const& GetPositions()
 		{
 			return m_PositionVec;
 		}
@@ -116,7 +116,7 @@ namespace ave
 
 		std::unique_ptr<vkInit::Texture> m_TextureUPtr{ nullptr };
 		//static position vector per vertex type
-		std::vector<glm::vec3> m_PositionVec;
+		std::vector<glm::mat4> m_PositionVec;
 	};
 }
 

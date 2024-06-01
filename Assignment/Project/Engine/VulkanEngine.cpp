@@ -284,11 +284,11 @@ void ave::VulkanEngine::Create2DScene()
 	indexRectVec.emplace_back(2);
 	indexRectVec.emplace_back(3);
 
-	std::vector<glm::vec3> positionRectVec{};
+	std::vector<glm::mat4> positionRectVec{};
 	float x = -0.5f;
 	for (float y = -0.5f; y < 0.5f; y += 0.2f)
 	{
-		positionRectVec.emplace_back(glm::vec3(x, y, 0.0f));
+		positionRectVec.emplace_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f)));
 	}
 
 	vkInit::TextureInBundle textureIn{};
@@ -351,11 +351,11 @@ void ave::VulkanEngine::Create2DScene()
 		}
 	}
 
-	std::vector<glm::vec3> positionCircleVec{};
+	std::vector<glm::mat4> positionCircleVec{};
 	x = 0.5f;
 	for (float y = -0.5f; y < 0.5; y += 0.2f)
 	{
-		positionCircleVec.emplace_back(glm::vec3(x, y, 0.0f));
+		positionCircleVec.emplace_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f)));
 	}
 	m_InstancedScene2DUPtr->AddMesh(std::move(std::make_unique<ave::InstancedMesh<vkUtil::Vertex2D>>(meshIn, vertexCircleVec, indexCircleVec, positionCircleVec, textureIn)));
 }
@@ -378,11 +378,32 @@ void ave::VulkanEngine::Create3DScene()
 
 	vkUtil::ParseOBJ<V3D>("Resources/vehicle.obj", vehicleVertexVec, vehicleIndexVec, true);
 
-	std::vector<glm::vec3> vehiclePositionVec{};
-	float x = 0;
-	for (float y = -50.f; y < 50.f; y += 1.f)
-	{
-		vehiclePositionVec.emplace_back(glm::vec3(x, y, 0.0f));
+	std::vector<glm::mat4> vehiclePositionVec{};
+	int numRows = 10;    // Number of rows
+	int numCols = 10;    // Number of columns
+	float spacing = 50;  // Distance between each mesh in the grid
+
+	for (int row = 0; row < numRows; ++row) {
+		for (int col = 0; col < numCols; ++col) {
+			// Calculate the position for each mesh in the grid
+			float x = col * spacing;
+			float z = row * spacing;
+
+			// Create the translation matrix for the current position
+			glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, z));
+
+			// Generate a random rotation angle
+			float angle = glm::radians(float(rand() % 360));  // Convert degrees to radians
+
+			// Create the rotation matrix (rotate around the y-axis)
+			glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
+
+			// Combine the translation and rotation matrices
+			glm::mat4 modelMatrix = translationMatrix * rotationMatrix;
+
+			// Store the transformation matrix
+			vehiclePositionVec.emplace_back(modelMatrix);
+		}
 	}
 
 	vkInit::TextureInBundle textureIn{};

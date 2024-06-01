@@ -29,7 +29,7 @@ namespace ave
 				{
 					for (const auto& worldMatrix : mesh->GetPositions())
 					{
-						m_WorldMatricesVec.emplace_back(glm::translate(glm::mat4(1.0f), worldMatrix));
+						m_WorldMatricesVec.emplace_back(worldMatrix);
 					}
 				}
 				m_DirtyFlagWorldMatrices = false;
