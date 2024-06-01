@@ -29,6 +29,6 @@ void main()
 {
 	fragWorldPosition = vec3(WorldMatrix.Model[gl_InstanceIndex] * vec4(vertexPosition, 1.0));
 	gl_Position = VPMatrix.Projection * VPMatrix.View * vec4(fragWorldPosition, 1.0);
-	fragWorldNormal = normalize(vec3(WorldMatrix.Model[gl_InstanceIndex] * vec4(vertexNormal, 0.0)));
+	fragWorldNormal = normalize(normalize(vertexNormal) * mat3(WorldMatrix.Model[gl_InstanceIndex]));
 	fragTexCoor = vertexTexCoor;
 }

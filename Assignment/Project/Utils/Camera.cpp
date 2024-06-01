@@ -34,24 +34,39 @@ void ave::Camera::Update()
 
 	bool calculateCameraMatrix{ false };
 
+	float speedTranslation
+	{
+		[&]() -> float
+		{
+			if (glfwGetKey(m_WindowPtr, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+			{
+				return m_SpeedTranslation * 5;
+			}
+			else
+			{
+				return m_SpeedTranslation;
+			}
+		}()
+	};
+
 	if (glfwGetKey(m_WindowPtr, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(m_WindowPtr, GLFW_KEY_UP) == GLFW_PRESS)
 	{
-		m_Origin += m_Forward * m_SpeedTranslation * deltaTime;
+		m_Origin += m_Forward * speedTranslation * deltaTime;
 		calculateCameraMatrix = true;
 	}
 	if (glfwGetKey(m_WindowPtr, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(m_WindowPtr, GLFW_KEY_DOWN) == GLFW_PRESS)
 	{
-		m_Origin -= m_Forward * m_SpeedTranslation * deltaTime;
+		m_Origin -= m_Forward * speedTranslation * deltaTime;
 		calculateCameraMatrix = true;
 	}
 	if (glfwGetKey(m_WindowPtr, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(m_WindowPtr, GLFW_KEY_RIGHT) == GLFW_PRESS)
 	{
-		m_Origin += m_Right * m_SpeedTranslation * deltaTime;
+		m_Origin += m_Right * speedTranslation * deltaTime;
 		calculateCameraMatrix = true;
 	}
 	if (glfwGetKey(m_WindowPtr, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(m_WindowPtr, GLFW_KEY_LEFT) == GLFW_PRESS)
 	{
-		m_Origin -= m_Right * m_SpeedTranslation * deltaTime;
+		m_Origin -= m_Right * speedTranslation * deltaTime;
 		calculateCameraMatrix = true;
 	}
 
@@ -67,13 +82,13 @@ void ave::Camera::Update()
 
 	if (glfwGetMouseButton(m_WindowPtr, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS and glfwGetMouseButton(m_WindowPtr, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 	{
-		m_Origin.y += m_Up.y * deltaMouseY * m_SpeedTranslation * deltaTime * 10;
+		m_Origin.y += m_Up.y * deltaMouseY * speedTranslation * deltaTime * 10;
 		calculateCameraMatrix = true;
 	}
 	else if (glfwGetMouseButton(m_WindowPtr, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 	{
-		m_TotalYaw -= deltaMouseX * m_SpeedRotation * deltaTime;
-		m_TotalPitch -= deltaMouseY * m_SpeedRotation * deltaTime;
+		m_TotalYaw += deltaMouseX * m_SpeedRotation * deltaTime;
+		m_TotalPitch += deltaMouseY * m_SpeedRotation * deltaTime;
 
 		//takes in current matrix and assigns the new value to it
 		glm::mat4 rotationMatrix{ 1.0f };

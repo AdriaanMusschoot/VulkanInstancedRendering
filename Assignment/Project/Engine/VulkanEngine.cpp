@@ -10,6 +10,7 @@
 #include "Utils/RenderStructs.h"
 #include "Pipeline/Descriptor.h"
 #include "Utils/Frame.h"
+#include "Clock.h"
 #include <algorithm>
 #include <execution>
 
@@ -379,29 +380,26 @@ void ave::VulkanEngine::Create3DScene()
 	vkUtil::ParseOBJ<V3D>("Resources/vehicle.obj", vehicleVertexVec, vehicleIndexVec, true);
 
 	std::vector<glm::mat4> vehiclePositionVec{};
-	int numRows = 10;    // Number of rows
-	int numCols = 10;    // Number of columns
-	float spacing = 50;  // Distance between each mesh in the grid
+	int numRows = 50;  
+	int numCols = 50;  
+	float spacingX = 45;
+	float spacingY = 45;
 
-	for (int row = 0; row < numRows; ++row) {
-		for (int col = 0; col < numCols; ++col) {
-			// Calculate the position for each mesh in the grid
-			float x = col * spacing;
-			float z = row * spacing;
+	for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) 
+	{
+		for (int colIdx = 0; colIdx < numCols; ++colIdx)
+		{
+			glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(colIdx * spacingX, 0.0f, rowIdx * spacingY));
 
-			// Create the translation matrix for the current position
-			glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(x, 0.0f, z));
-
-			// Generate a random rotation angle
-			float angle = glm::radians(float(rand() % 360));  // Convert degrees to radians
-
-			// Create the rotation matrix (rotate around the y-axis)
+			float angle = glm::radians(float(rand() % 360));
 			glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
 
-			// Combine the translation and rotation matrices
-			glm::mat4 modelMatrix = translationMatrix * rotationMatrix;
+			float scale = (rand() % 5 + 5) / 10.0f;
+			glm::vec3 scaleVec = glm::vec3(scale, scale, scale);
+			glm::mat4 scalingMatrix = glm::scale(glm::mat4(1.0f), scaleVec);
 
-			// Store the transformation matrix
+			glm::mat4 modelMatrix = translationMatrix * rotationMatrix * scalingMatrix;
+
 			vehiclePositionVec.emplace_back(modelMatrix);
 		}
 	}
@@ -427,6 +425,8 @@ void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
 	swapchainFrame.VPMatrix.ViewMatrix = m_CameraUPtr->GetViewMatrix();
 	swapchainFrame.VPMatrix.ProjectionMatrix = m_CameraUPtr->GetProjectionMatrix();
 	memcpy(swapchainFrame.VPWriteLocationPtr, &swapchainFrame.VPMatrix, sizeof(vkUtil::UBO));
+
+	m_InstancedScene3DUPtr->RotateMeshAll(0, 10 * ave::Clock::GetInstance().GetDeltaTime());
 
 	int idx{};
 	for (auto const& worldMatrix : m_InstancedScene2DUPtr->GetWorldMatrices())
@@ -465,7 +465,7 @@ void ave::VulkanEngine::CreateFrameResources()
 		frame.SemaphoreImageAvailable = vkInit::CreateSemaphore(m_Device);
 		frame.SemaphoreRenderingFinished = vkInit::CreateSemaphore(m_Device);
 
-		frame.CreateDescriptorResources();
+		frame.CreateDescriptorResources(1'000'000);
 		frame.DescriptorSet = vkInit::CreateDescriptorSet(m_Device, m_DescriptorPoolFrame, m_DescriptorSetLayoutFrame);
 	}
 }

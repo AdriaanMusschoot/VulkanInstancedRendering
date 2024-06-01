@@ -53,6 +53,12 @@ namespace ave
 		InstancedScene& operator=(InstancedScene const& other) = delete;
 		InstancedScene& operator=(InstancedScene&& other) = delete;
 
+		void RotateMeshAll(int idx, float angle)
+		{
+			m_InstancedMeshUPtrVec[idx]->RotateAll(angle);
+			m_DirtyFlagWorldMatrices = true;
+		}
+
 	private:
 		std::vector<std::unique_ptr<ave::InstancedMesh<VertexStruct>>> m_InstancedMeshUPtrVec;
 

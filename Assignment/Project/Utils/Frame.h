@@ -48,7 +48,7 @@ namespace vkUtil
 		//shared by WDescriptorInfo and VPDescriptorInfo
 		vk::DescriptorSet DescriptorSet;
 
-		void CreateDescriptorResources();
+		void CreateDescriptorResources(std::int64_t const& nrWorldMatrices);
 
 		void WriteDescriptorSet();
 

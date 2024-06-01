@@ -17,7 +17,7 @@ namespace ave
 			, m_Device{ in.Device }
 			, m_PhysicalDevice{ in.PhysicalDevice }
 			, m_TextureUPtr{ std::make_unique<vkInit::Texture>(texIn) }
-			, m_PositionVec{ positionVec }
+			, m_WorldMatrixVec{ positionVec }
 		{
 			InitializeVertexBuffer(in.GraphicsQueue, in.MainCommandBuffer);
 			InitializeIndexBuffer(in.GraphicsQueue, in.MainCommandBuffer);
@@ -97,13 +97,21 @@ namespace ave
 				m_TextureUPtr->Apply(commandBuffer, pipelineLayout);
 			}
 
-			commandBuffer.drawIndexed(std::ssize(m_IndexVec), std::ssize(m_PositionVec), 0, 0, startOffset);
-		}
-		std::vector<glm::mat4> const& GetPositions()
-		{
-			return m_PositionVec;
+			commandBuffer.drawIndexed(std::ssize(m_IndexVec), std::ssize(m_WorldMatrixVec), 0, 0, startOffset);
 		}
 
+		std::vector<glm::mat4> const& GetPositions()
+		{
+			return m_WorldMatrixVec;
+		}
+
+		void RotateAll(float angle)
+		{
+			for (auto& worldMatrix : m_WorldMatrixVec)
+			{
+				worldMatrix = glm::rotate(worldMatrix, glm::radians(angle), glm::vec3(0, 1, 0));
+			}
+		}
 	private:
 		std::vector<VertexStruct> m_VertexVec;
 		vkUtil::DataBuffer m_VertexBuffer;
@@ -116,7 +124,7 @@ namespace ave
 
 		std::unique_ptr<vkInit::Texture> m_TextureUPtr{ nullptr };
 		//static position vector per vertex type
-		std::vector<glm::mat4> m_PositionVec;
+		std::vector<glm::mat4> m_WorldMatrixVec;
 	};
 }
 

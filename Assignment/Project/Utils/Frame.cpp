@@ -2,7 +2,7 @@
 #include "Rendering/Image.h"
 #include <execution>
 
-void vkUtil::SwapchainFrame::CreateDescriptorResources()
+void vkUtil::SwapchainFrame::CreateDescriptorResources(std::int64_t const& nrWorldMatrices)
 {
 	BufferInBundle inputUBO;
 	inputUBO.Device = Device;
@@ -23,7 +23,7 @@ void vkUtil::SwapchainFrame::CreateDescriptorResources()
 	inputStorage.PhysicalDevice = PhysicalDevice;
 	inputStorage.MemoryPropertyFlags = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
 	//TODO make input parameter out of 1069
-	inputStorage.Size = 1069 * sizeof(glm::mat4);
+	inputStorage.Size = nrWorldMatrices * sizeof(glm::mat4);
 	inputStorage.UsageFlags = vk::BufferUsageFlagBits::eStorageBuffer;
 
 	WBuffer = vkUtil::CreateBuffer(inputStorage);
