@@ -377,11 +377,11 @@ void ave::VulkanEngine::Create3DScene()
 	std::vector<V3D> vehicleVertexVec{};
 	std::vector<uint32_t> vehicleIndexVec{};
 
-	vkUtil::ParseOBJ<V3D>("Resources/vehicle.obj", vehicleVertexVec, vehicleIndexVec, true);
+	vkUtil::ParseOBJ<V3D>("Resources/ferrari.obj", vehicleVertexVec, vehicleIndexVec, false);
 
 	std::vector<glm::mat4> vehiclePositionVec{};
-	int numRows = 50;  
-	int numCols = 50;  
+	int numRows = 2;  
+	int numCols = 2;  
 	float spacingX = 45;
 	float spacingY = 45;
 
@@ -412,7 +412,7 @@ void ave::VulkanEngine::Create3DScene()
 	textureIn.DescriptorSetLayout = m_DescriptorSetLayoutMesh;
 	textureIn.DescriptorPool = m_DescriptorPoolMesh;
 
-	textureIn.FileName = "Resources/vehicle_diffuse.png";
+	textureIn.FileName = "Resources/ferrari_diffuse.jpg";
 	m_InstancedScene3DUPtr->AddMesh(std::move(std::make_unique<ave::InstancedMesh<V3D>>(meshIn, vehicleVertexVec, vehicleIndexVec, vehiclePositionVec, textureIn)));
 }
 
@@ -426,7 +426,29 @@ void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
 	swapchainFrame.VPMatrix.ProjectionMatrix = m_CameraUPtr->GetProjectionMatrix();
 	memcpy(swapchainFrame.VPWriteLocationPtr, &swapchainFrame.VPMatrix, sizeof(vkUtil::UBO));
 
-	m_InstancedScene3DUPtr->RotateMeshAll(0, 10 * ave::Clock::GetInstance().GetDeltaTime());
+	m_InstancedScene3DUPtr->RotateAllInstancesMesh(0, 10 * ave::Clock::GetInstance().GetDeltaTime(), glm::vec3(0, 1, 0));
+
+	static float scaleTime{};
+	static int changes{ 0 };
+	static int currInstance{ 0 };
+	scaleTime += ave::Clock::GetInstance().GetDeltaTime();
+	static int scaleValue{ 10001 };
+	if (scaleTime > 5)
+	{
+		scaleTime = 0;
+		++changes;
+		scaleValue += 2;
+		if (scaleValue > 10001)
+		{
+			scaleValue = 9999;
+		}
+		if (changes > 2)
+		{
+			changes = 1;
+			currInstance = ++currInstance % 4;
+		}
+	}
+	m_InstancedScene3DUPtr->ScaleMeshInstance(0, currInstance, glm::vec3(scaleValue / 10000.f, scaleValue / 10000.f, scaleValue / 10000.f));
 
 	int idx{};
 	for (auto const& worldMatrix : m_InstancedScene2DUPtr->GetWorldMatrices())

@@ -105,12 +105,19 @@ namespace ave
 			return m_WorldMatrixVec;
 		}
 
-		void RotateAll(float angle)
+		std::int64_t GetInstanceCount() const
 		{
-			for (auto& worldMatrix : m_WorldMatrixVec)
-			{
-				worldMatrix = glm::rotate(worldMatrix, glm::radians(angle), glm::vec3(0, 1, 0));
-			}
+			return std::ssize(m_WorldMatrixVec);
+		}
+
+		void RotateInstance(std::int64_t const& idx, float angle, glm::vec3 const& axis)
+		{
+			m_WorldMatrixVec[idx] = glm::rotate(m_WorldMatrixVec[idx], glm::radians(angle), axis);
+		}
+
+		void ScaleInstance(std::int64_t const& idx, glm::vec3 const& scaleVec)
+		{
+			m_WorldMatrixVec[idx] = glm::scale(m_WorldMatrixVec[idx], scaleVec);
 		}
 	private:
 		std::vector<VertexStruct> m_VertexVec;

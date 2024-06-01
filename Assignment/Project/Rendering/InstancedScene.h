@@ -53,10 +53,19 @@ namespace ave
 		InstancedScene& operator=(InstancedScene const& other) = delete;
 		InstancedScene& operator=(InstancedScene&& other) = delete;
 
-		void RotateMeshAll(int idx, float angle)
+		void RotateAllInstancesMesh(int meshIdx, float angle, glm::vec3 const& axis)
 		{
-			m_InstancedMeshUPtrVec[idx]->RotateAll(angle);
+			for (int idx{}; idx < m_InstancedMeshUPtrVec[meshIdx]->GetInstanceCount(); ++idx)
+			{
+				m_InstancedMeshUPtrVec[meshIdx]->RotateInstance(idx, angle, axis);
+			}
+			
 			m_DirtyFlagWorldMatrices = true;
+		}
+
+		void ScaleMeshInstance(int meshIdx, int instanceIdx, glm::vec3 const& scaleVec)
+		{
+			m_InstancedMeshUPtrVec[meshIdx]->ScaleInstance(instanceIdx, scaleVec);
 		}
 
 	private:

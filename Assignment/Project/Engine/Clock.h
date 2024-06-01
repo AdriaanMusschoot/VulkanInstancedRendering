@@ -39,6 +39,7 @@ namespace ave
 		void Update();
 	
 		double GetDeltaTime() const;
+		double GetElapsedTime() const;
 	private:
 		friend class Singleton<Clock>;
 		Clock() = default;
@@ -46,6 +47,7 @@ namespace ave
 		std::chrono::high_resolution_clock::time_point m_PreviousTimePoint;
 	
 		double m_DeltaTime = 0;
+		double m_ElapsedTime = 0;
 	};
 }
 
