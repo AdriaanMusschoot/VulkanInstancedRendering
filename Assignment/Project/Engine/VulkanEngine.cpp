@@ -36,9 +36,8 @@ ave::VulkanEngine::~VulkanEngine()
 	m_RenderPassUPtr.reset();
 	m_Pipeline2DUPtr.reset();
 	m_Pipeline3DUPtr.reset();
-	m_InstancedRectUPtr.reset();
-	m_InstancedCircleUPtr.reset();
-	m_InstancedVehicleUPtr.reset();
+	m_InstancedScene2DUPtr.reset();
+	m_InstancedScene3DUPtr.reset();
 
 	m_Device.destroyCommandPool(m_CommandPool);
 
@@ -261,6 +260,9 @@ void ave::VulkanEngine::SetUpRendering()
 
 void ave::VulkanEngine::Create2DScene()
 {
+	using V2D = vkUtil::Vertex2D;
+	m_InstancedScene2DUPtr = std::make_unique<InstancedScene<V2D>>();
+
 	vkUtil::MeshInBundle meshIn
 	{
 		m_GraphicsQueue,
@@ -299,7 +301,7 @@ void ave::VulkanEngine::Create2DScene()
 
 	textureIn.FileName = "Resources/vehicle_diffuse.png";
 
-	m_InstancedRectUPtr = std::make_unique<ave::InstancedMesh<vkUtil::Vertex2D>>(meshIn, vertexRectVec, indexRectVec, positionRectVec, textureIn);
+	m_InstancedScene2DUPtr->AddMesh(std::move(std::make_unique<ave::InstancedMesh<vkUtil::Vertex2D>>(meshIn, vertexRectVec, indexRectVec, positionRectVec, textureIn)));
 
 	std::vector<vkUtil::Vertex2D> vertexCircleVec{};
 	std::vector<uint32_t> indexCircleVec{};
@@ -355,13 +357,14 @@ void ave::VulkanEngine::Create2DScene()
 	{
 		positionCircleVec.emplace_back(glm::vec3(x, y, 0.0f));
 	}
-
-	m_InstancedCircleUPtr = std::make_unique<ave::InstancedMesh<vkUtil::Vertex2D>>(meshIn, vertexCircleVec, indexCircleVec, positionCircleVec, textureIn);
+	m_InstancedScene2DUPtr->AddMesh(std::move(std::make_unique<ave::InstancedMesh<vkUtil::Vertex2D>>(meshIn, vertexCircleVec, indexCircleVec, positionCircleVec, textureIn)));
 }
 
 void ave::VulkanEngine::Create3DScene()
 {
 	using V3D = vkUtil::Vertex3D;
+	m_InstancedScene3DUPtr = std::make_unique<InstancedScene<V3D>>();
+
 	vkUtil::MeshInBundle meshIn
 	{
 		m_GraphicsQueue,
@@ -391,7 +394,7 @@ void ave::VulkanEngine::Create3DScene()
 	textureIn.DescriptorPool = m_DescriptorPoolMesh;
 
 	textureIn.FileName = "Resources/vehicle_diffuse.png";
-	m_InstancedVehicleUPtr = std::make_unique<ave::InstancedMesh<V3D>>(meshIn, vehicleVertexVec, vehicleIndexVec, vehiclePositionVec, textureIn);
+	m_InstancedScene3DUPtr->AddMesh(std::move(std::make_unique<ave::InstancedMesh<V3D>>(meshIn, vehicleVertexVec, vehicleIndexVec, vehiclePositionVec, textureIn)));
 }
 
 void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
@@ -405,13 +408,13 @@ void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
 	memcpy(swapchainFrame.VPWriteLocationPtr, &swapchainFrame.VPMatrix, sizeof(vkUtil::UBO));
 
 	int idx{};
-	for (auto const& position : InstancedMesh<vkUtil::Vertex2D>::GetPositions())
+	for (auto const& worldMatrix : m_InstancedScene2DUPtr->GetWorldMatrices())
 	{
-		swapchainFrame.WMatrixVec[idx++] = glm::translate(glm::mat4(1.0f), position);
+		swapchainFrame.WMatrixVec[idx++] = worldMatrix;
 	}
-	for (auto const& position : InstancedMesh<vkUtil::Vertex3D>::GetPositions())
+	for (auto const& worldMatrix : m_InstancedScene3DUPtr->GetWorldMatrices())
 	{
-		swapchainFrame.WMatrixVec[idx++] = glm::translate(glm::mat4(1.0f), position);
+		swapchainFrame.WMatrixVec[idx++] = worldMatrix;
 	}
 	memcpy(swapchainFrame.WBufferWriteLocationPtr, swapchainFrame.WMatrixVec.data(), idx * sizeof(glm::mat4));
 
@@ -488,13 +491,13 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 	
 	m_Pipeline2DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].DescriptorSet);
 
-	m_InstancedRectUPtr->Draw(commandBuffer, m_Pipeline2DUPtr->GetPipelineLayout());
+	std::int64_t drawnInstances{};
 
-	m_InstancedCircleUPtr->Draw(commandBuffer, m_Pipeline2DUPtr->GetPipelineLayout());
+	drawnInstances += m_InstancedScene2DUPtr->Draw(commandBuffer, m_Pipeline2DUPtr->GetPipelineLayout(), drawnInstances);
 
 	m_Pipeline3DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].DescriptorSet);
 
-	m_InstancedVehicleUPtr->Draw(commandBuffer, m_Pipeline3DUPtr->GetPipelineLayout());
+	drawnInstances += m_InstancedScene3DUPtr->Draw(commandBuffer, m_Pipeline3DUPtr->GetPipelineLayout(), drawnInstances);
 
 	m_RenderPassUPtr->EndRenderPass(commandBuffer);
 

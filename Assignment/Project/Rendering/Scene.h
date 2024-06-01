@@ -14,12 +14,12 @@ namespace ave
 
 		void AddMesh(std::unique_ptr<ave::Mesh<VertexStruct>> meshUPtr)
 		{
-			m_MeshVec.emplace_back(std::move(meshUPtr));
+			m_InstancedMeshUPtrVec.emplace_back(std::move(meshUPtr));
 		}
 
 		void Draw(vk::CommandBuffer const& commandBuffer, vk::PipelineLayout const& pipelineLayout)
 		{
-			for (const auto& mesh : m_MeshVec)
+			for (const auto& mesh : m_InstancedMeshUPtrVec)
 			{
 				mesh->PushWorldMatrix(commandBuffer, pipelineLayout);
 				mesh->BindBuffers(commandBuffer);
@@ -35,10 +35,10 @@ namespace ave
 
 		ave::Mesh<VertexStruct> const* const GetMesh(int idx) const
 		{
-			return m_MeshVec[idx].get();
+			return m_InstancedMeshUPtrVec[idx].get();
 		}
 	private:
-		std::vector<std::unique_ptr<ave::Mesh<VertexStruct>>> m_MeshVec;
+		std::vector<std::unique_ptr<ave::Mesh<VertexStruct>>> m_InstancedMeshUPtrVec;
 	};
 
 }

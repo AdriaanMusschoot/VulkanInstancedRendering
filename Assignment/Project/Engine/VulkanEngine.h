@@ -9,6 +9,7 @@
 #include "Rendering/Scene.h"
 #include "Rendering/InstancedMesh.h"
 #include "Utils/FileReader.h"
+#include "Rendering/InstancedScene.h"
 
 namespace ave
 {
@@ -57,9 +58,8 @@ namespace ave
 		std::unique_ptr<vkInit::Pipeline<vkUtil::Vertex2D>> m_Pipeline2DUPtr;
 		std::unique_ptr<vkInit::Pipeline<vkUtil::Vertex3D>> m_Pipeline3DUPtr;
 
-		std::unique_ptr<ave::InstancedMesh<vkUtil::Vertex2D>> m_InstancedRectUPtr{ nullptr };
-		std::unique_ptr<ave::InstancedMesh<vkUtil::Vertex2D>> m_InstancedCircleUPtr{ nullptr };
-		std::unique_ptr<ave::InstancedMesh<vkUtil::Vertex3D>> m_InstancedVehicleUPtr{ nullptr };
+		std::unique_ptr <ave::InstancedScene<vkUtil::Vertex2D>> m_InstancedScene2DUPtr{ nullptr };
+		std::unique_ptr <ave::InstancedScene<vkUtil::Vertex3D>> m_InstancedScene3DUPtr{ nullptr };
 
 		vk::CommandPool m_CommandPool;
 		vk::CommandBuffer m_MainCommandBuffer;

@@ -7,10 +7,7 @@
 
 namespace ave
 {
-	//scuffed way to keep track of 2D and 3D at the same time
-	static std::int64_t m_TotalInstances{ 0 };
-
-	template<typename VertexStruct>
+	template<vkUtil::Vertex VertexStruct>
 	class InstancedMesh final
 	{
 	public:
@@ -19,19 +16,9 @@ namespace ave
 			, m_IndexVec{ indexVec }
 			, m_Device{ in.Device }
 			, m_PhysicalDevice{ in.PhysicalDevice }
-			, m_StartOffset{ m_TotalInstances }
-			, m_InstanceCount{ std::ssize(positionVec) }
 			, m_TextureUPtr{ std::make_unique<vkInit::Texture>(texIn) }
+			, m_PositionVec{ positionVec }
 		{
-			m_PositionVec.reserve(std::ssize(m_PositionVec) + std::ssize(positionVec));
-			std::for_each(std::execution::seq, positionVec.begin(), positionVec.end(),
-				[&](glm::vec3 const& position)
-				{
-					//sequential because order matters and we avoid emplacing at the same time
-					m_PositionVec.emplace_back(position);
-				});
-
-			m_TotalInstances += std::ssize(positionVec);
 			InitializeVertexBuffer(in.GraphicsQueue, in.MainCommandBuffer);
 			InitializeIndexBuffer(in.GraphicsQueue, in.MainCommandBuffer);
 		}
@@ -98,7 +85,7 @@ namespace ave
 			m_Device.freeMemory(stagingBuffer.BufferMemory);
 		}
 
-		void Draw(vk::CommandBuffer const& commandBuffer, vk::PipelineLayout const& pipelineLayout) const
+		void Draw(vk::CommandBuffer const& commandBuffer, vk::PipelineLayout const& pipelineLayout, std::int64_t const& startOffset) const
 		{
 			vk::Buffer vertexBufferArr[]{ m_VertexBuffer.Buffer };
 			vk::DeviceSize offsetArr[]{ 0 };
@@ -110,9 +97,9 @@ namespace ave
 				m_TextureUPtr->Apply(commandBuffer, pipelineLayout);
 			}
 
-			commandBuffer.drawIndexed(std::ssize(m_IndexVec), m_InstanceCount, 0, 0, m_StartOffset);
+			commandBuffer.drawIndexed(std::ssize(m_IndexVec), std::ssize(m_PositionVec), 0, 0, startOffset);
 		}
-		static std::vector<glm::vec3> const& GetPositions()
+		std::vector<glm::vec3> const& GetPositions()
 		{
 			return m_PositionVec;
 		}
@@ -127,16 +114,10 @@ namespace ave
 		vk::Device m_Device;
 		vk::PhysicalDevice m_PhysicalDevice;
 
-		std::int64_t const m_StartOffset{ 0 };
-		std::int64_t const m_InstanceCount{ 0 };
-
 		std::unique_ptr<vkInit::Texture> m_TextureUPtr{ nullptr };
-		//static position vector per vertex tyep
-		static std::vector<glm::vec3> m_PositionVec;
+		//static position vector per vertex type
+		std::vector<glm::vec3> m_PositionVec;
 	};
-
-	template<typename VertexStruct>
-	std::vector<glm::vec3> ave::InstancedMesh<VertexStruct>::m_PositionVec = std::vector<glm::vec3>{};
 }
 
 #endif
