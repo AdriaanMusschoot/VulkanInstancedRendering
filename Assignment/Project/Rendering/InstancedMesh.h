@@ -112,13 +112,72 @@ namespace ave
 
 		void RotateInstance(std::int64_t const& idx, float angle, glm::vec3 const& axis)
 		{
+			if (std::ssize(m_WorldMatrixVec) == 0) return;
 			m_WorldMatrixVec[idx] = glm::rotate(m_WorldMatrixVec[idx], glm::radians(angle), axis);
 		}
 
 		void ScaleInstance(std::int64_t const& idx, glm::vec3 const& scaleVec)
 		{
+			if (std::ssize(m_WorldMatrixVec) == 0) return;
 			m_WorldMatrixVec[idx] = glm::scale(m_WorldMatrixVec[idx], scaleVec);
 		}
+
+		void TranslateInstance(std::int64_t const& idx, glm::vec3 const& translateVec)
+		{
+			if (std::ssize(m_WorldMatrixVec) == 0) return;
+			m_WorldMatrixVec[idx] = glm::translate(m_WorldMatrixVec[idx], translateVec);
+		}
+
+		int UpdateTimer(float elapsedSec)
+		{
+			m_ScaleTimer += elapsedSec;
+			if (m_ScaleTimer > m_MaxTimeScaling)
+			{
+				m_ScaleTimer = 0;
+				++m_Changes;
+				m_CurrentScaleValue += 2;
+				if (m_CurrentScaleValue > m_ScaleIncreaseValue)
+				{
+					m_CurrentScaleValue = m_ScaleDecreaseValue;
+				}
+				if (m_Changes > m_MaxChanges)
+				{
+					m_Changes = 1;
+					if (std::ssize(m_WorldMatrixVec) == 0)
+					{
+						return m_CurrentInstance;
+					}
+					m_CurrentInstance = ++m_CurrentInstance % std::ssize(m_WorldMatrixVec);
+				}
+			}
+			return m_CurrentInstance;
+		}
+
+		std::int64_t const& GetCurrentScaleValue() const
+		{
+			return m_CurrentScaleValue;
+		}
+
+		std::float_t const& GetNormalizeValue() const
+		{
+			return m_ScaleNormalizeValue;
+		}
+
+		void AddInstance(glm::mat4 const& worldMatrix)
+		{
+			m_WorldMatrixVec.emplace_back(worldMatrix);
+		}
+
+		void RemoveInstance(int instanceIdx)
+		{
+			if (std::ssize(m_WorldMatrixVec) == 0) return;
+			m_WorldMatrixVec.erase(m_WorldMatrixVec.begin() + instanceIdx);
+			if (std::int64_t size{ std::ssize(m_WorldMatrixVec) }; size != 0)
+			{
+				m_CurrentInstance = m_CurrentInstance % std::ssize(m_WorldMatrixVec);
+			}
+		}
+
 	private:
 		std::vector<VertexStruct> m_VertexVec;
 		vkUtil::DataBuffer m_VertexBuffer;
@@ -132,6 +191,16 @@ namespace ave
 		std::unique_ptr<vkInit::Texture> m_TextureUPtr{ nullptr };
 		//static position vector per vertex type
 		std::vector<glm::mat4> m_WorldMatrixVec;
+
+		float m_ScaleTimer{};
+		float m_MaxTimeScaling{ 5.0f };
+		std::int64_t m_CurrentScaleValue{ 10001 };
+		std::int64_t const m_ScaleIncreaseValue{ 10001 };
+		std::int64_t const m_ScaleDecreaseValue{ 9999 };
+		std::float_t const m_ScaleNormalizeValue{ 10000.f };
+		int m_Changes{ };
+		int const m_MaxChanges{ 2 };
+		int m_CurrentInstance{ };
 	};
 }
 

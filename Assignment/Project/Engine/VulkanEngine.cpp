@@ -27,12 +27,12 @@ ave::VulkanEngine::VulkanEngine(const std::string& windowName, int width, int he
 	CreateDescriptorSetLayouts();
 	CreatePipelines();
 	SetUpRendering();	
+	PrintKeyBindings();
 }
 
 ave::VulkanEngine::~VulkanEngine()
 {
 	m_Device.waitIdle();	
-
 
 	m_RenderPassUPtr.reset();
 	m_Pipeline2DUPtr.reset();
@@ -252,7 +252,7 @@ void ave::VulkanEngine::SetUpRendering()
 	//allow for 10 textures
 	m_DescriptorPoolMesh = vkInit::CreateDescriptorPool(m_Device, m_NumberOfTextures, descriptorSetLayoutData);
 
-	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -150 }, 20, m_SwapchainExtent.width, m_SwapchainExtent.height);
+	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -300 }, 20, m_SwapchainExtent.width, m_SwapchainExtent.height);
 
 	Create2DScene();
 
@@ -286,7 +286,7 @@ void ave::VulkanEngine::Create2DScene()
 	indexRectVec.emplace_back(3);
 
 	std::vector<glm::mat4> positionRectVec{};
-	float x = -0.5f;
+	float x = -1.f;
 	for (float y = -0.5f; y < 0.5f; y += 0.2f)
 	{
 		positionRectVec.emplace_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f)));
@@ -353,7 +353,7 @@ void ave::VulkanEngine::Create2DScene()
 	}
 
 	std::vector<glm::mat4> positionCircleVec{};
-	x = 0.5f;
+	x = 0.8f;
 	for (float y = -0.5f; y < 0.5; y += 0.2f)
 	{
 		positionCircleVec.emplace_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f)));
@@ -374,22 +374,22 @@ void ave::VulkanEngine::Create3DScene()
 		m_PhysicalDevice
 	};
 
-	std::vector<V3D> vehicleVertexVec{};
-	std::vector<uint32_t> vehicleIndexVec{};
+	std::vector<V3D> ferrariVertexVec{};
+	std::vector<uint32_t> ferrariIndexVec{};
 
-	vkUtil::ParseOBJ<V3D>("Resources/ferrari.obj", vehicleVertexVec, vehicleIndexVec, false);
+	vkUtil::ParseOBJ<V3D>("Resources/ferrari.obj", ferrariVertexVec, ferrariIndexVec, false);
 
-	std::vector<glm::mat4> vehiclePositionVec{};
+	std::vector<glm::mat4> ferrariPositionVec{};
 	int numRows = 2;  
 	int numCols = 2;  
-	float spacingX = 45;
-	float spacingY = 45;
-
+	float spacingX = 40;
+	float spacingY = 40;
+	float xStartPos = 20;
 	for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) 
 	{
 		for (int colIdx = 0; colIdx < numCols; ++colIdx)
 		{
-			glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(colIdx * spacingX, 0.0f, rowIdx * spacingY));
+			glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(xStartPos + colIdx * spacingX, 0.0f, rowIdx * spacingY));
 
 			float angle = glm::radians(float(rand() % 360));
 			glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -400,7 +400,7 @@ void ave::VulkanEngine::Create3DScene()
 
 			glm::mat4 modelMatrix = translationMatrix * rotationMatrix * scalingMatrix;
 
-			vehiclePositionVec.emplace_back(modelMatrix);
+			ferrariPositionVec.emplace_back(modelMatrix);
 		}
 	}
 
@@ -413,6 +413,35 @@ void ave::VulkanEngine::Create3DScene()
 	textureIn.DescriptorPool = m_DescriptorPoolMesh;
 
 	textureIn.FileName = "Resources/ferrari_diffuse.jpg";
+	m_InstancedScene3DUPtr->AddMesh(std::move(std::make_unique<ave::InstancedMesh<V3D>>(meshIn, ferrariVertexVec, ferrariIndexVec, ferrariPositionVec, textureIn)));
+
+	//////////////////////////
+	std::vector<V3D> vehicleVertexVec{};
+	std::vector<uint32_t> vehicleIndexVec{};
+
+	vkUtil::ParseOBJ<V3D>("Resources/vehicle.obj", vehicleVertexVec, vehicleIndexVec, true);
+	std::vector<glm::mat4> vehiclePositionVec{};
+
+	for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) 
+	{
+		for (int colIdx = 0; colIdx >= -numCols + 1; --colIdx)
+		{
+			glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-xStartPos + colIdx * spacingX, 0.0f, rowIdx * spacingY));
+
+			float angle = glm::radians(float(rand() % 360));
+			glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+			float scale = (rand() % 5 + 5) / 10.0f;
+			glm::vec3 scaleVec = glm::vec3(scale, scale, scale);
+			glm::mat4 scalingMatrix = glm::scale(glm::mat4(1.0f), scaleVec);
+
+			glm::mat4 modelMatrix = translationMatrix * rotationMatrix * scalingMatrix;
+
+			vehiclePositionVec.emplace_back(modelMatrix);
+		}
+	}
+
+	textureIn.FileName = "Resources/vehicle_diffuse.png";
 	m_InstancedScene3DUPtr->AddMesh(std::move(std::make_unique<ave::InstancedMesh<V3D>>(meshIn, vehicleVertexVec, vehicleIndexVec, vehiclePositionVec, textureIn)));
 }
 
@@ -426,29 +455,67 @@ void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
 	swapchainFrame.VPMatrix.ProjectionMatrix = m_CameraUPtr->GetProjectionMatrix();
 	memcpy(swapchainFrame.VPWriteLocationPtr, &swapchainFrame.VPMatrix, sizeof(vkUtil::UBO));
 
-	m_InstancedScene3DUPtr->RotateAllInstancesMesh(0, 10 * ave::Clock::GetInstance().GetDeltaTime(), glm::vec3(0, 1, 0));
-
-	static float scaleTime{};
-	static int changes{ 0 };
-	static int currInstance{ 0 };
-	scaleTime += ave::Clock::GetInstance().GetDeltaTime();
-	static int scaleValue{ 10001 };
-	if (scaleTime > 5)
+	static bool pressedFThisFrame{ false };
+	static bool pressedVThisFrame{ false };
+	static bool pressedRThisFrame{ false };
+	static bool pressedTThisFrame{ false };
+	if (glfwGetKey(m_WindowPtr, GLFW_KEY_F) == GLFW_PRESS)
 	{
-		scaleTime = 0;
-		++changes;
-		scaleValue += 2;
-		if (scaleValue > 10001)
+		if (not pressedFThisFrame)
 		{
-			scaleValue = 9999;
-		}
-		if (changes > 2)
-		{
-			changes = 1;
-			currInstance = ++currInstance % 4;
+			pressedFThisFrame = true;
+			m_InstancedScene3DUPtr->AddInstanceToMesh(0);
 		}
 	}
-	m_InstancedScene3DUPtr->ScaleMeshInstance(0, currInstance, glm::vec3(scaleValue / 10000.f, scaleValue / 10000.f, scaleValue / 10000.f));
+	else if (glfwGetKey(m_WindowPtr, GLFW_KEY_F) == GLFW_RELEASE)
+	{
+		pressedFThisFrame = false;
+	}
+	if (glfwGetKey(m_WindowPtr, GLFW_KEY_V) == GLFW_PRESS)
+	{
+		if (not pressedVThisFrame)
+		{
+			pressedVThisFrame = true;
+			m_InstancedScene3DUPtr->AddInstanceToMesh(1);
+		}
+	}
+	else if (glfwGetKey(m_WindowPtr, GLFW_KEY_V) == GLFW_RELEASE)
+	{
+		pressedVThisFrame = false;
+	}
+	if (glfwGetKey(m_WindowPtr, GLFW_KEY_R) == GLFW_PRESS)
+	{
+		if (not pressedRThisFrame)
+		{
+			pressedRThisFrame = true;
+			m_InstancedScene3DUPtr->RemoveInstanceFromMesh(0, 0);
+		}
+	}
+	else if (glfwGetKey(m_WindowPtr, GLFW_KEY_R) == GLFW_RELEASE)
+	{
+		pressedRThisFrame = false;
+	}
+	if (glfwGetKey(m_WindowPtr, GLFW_KEY_T) == GLFW_PRESS)
+	{
+		if (not pressedTThisFrame)
+		{
+			pressedTThisFrame = true;
+			m_InstancedScene3DUPtr->RemoveInstanceFromMesh(1, 0);
+		}
+	}
+	else if (glfwGetKey(m_WindowPtr, GLFW_KEY_T) == GLFW_RELEASE)
+	{
+		pressedTThisFrame = false;
+	}
+
+
+	m_InstancedScene3DUPtr->RotateAllInstancesMesh(0, 10 * ave::Clock::GetInstance().GetDeltaTime(), glm::vec3(0, 1, 0));
+
+	m_InstancedScene3DUPtr->RotateAllInstancesMesh(1, -10 * ave::Clock::GetInstance().GetDeltaTime(), glm::vec3(0, 0, 1));
+
+	m_InstancedScene3DUPtr->ScaleMeshInstanceOneByOne(0);
+
+	m_InstancedScene3DUPtr->ScaleMeshInstanceOneByOne(1);
 
 	int idx{};
 	for (auto const& worldMatrix : m_InstancedScene2DUPtr->GetWorldMatrices())
@@ -487,7 +554,7 @@ void ave::VulkanEngine::CreateFrameResources()
 		frame.SemaphoreImageAvailable = vkInit::CreateSemaphore(m_Device);
 		frame.SemaphoreRenderingFinished = vkInit::CreateSemaphore(m_Device);
 
-		frame.CreateDescriptorResources(1'000'000);
+		frame.CreateDescriptorResources(100'000);
 		frame.DescriptorSet = vkInit::CreateDescriptorSet(m_Device, m_DescriptorPoolFrame, m_DescriptorSetLayoutFrame);
 	}
 }
@@ -589,4 +656,33 @@ void ave::VulkanEngine::DestroySwapchain()
 	m_Device.destroyDescriptorPool(m_DescriptorPoolFrame);	
 
 	m_Device.destroySwapchainKHR(m_Swapchain);
+}
+
+void ave::VulkanEngine::PrintKeyBindings()
+{
+	std::cout << "=======================================================" << std::endl;
+	std::cout << "|                     Bindings                        |" << std::endl;
+	std::cout << "=======================================================" << std::endl;
+	std::cout << "| Key / Mouse          | Action                       |" << std::endl;
+	std::cout << "-------------------------------------------------------" << std::endl;
+	std::cout << "| F                    | Add an instance to the       |" << std::endl;
+	std::cout << "|                      | ferrari mesh                 |" << std::endl;
+	std::cout << "| V                    | Add an instance to the       |" << std::endl;
+	std::cout << "|                      | spaceship mesh               |" << std::endl;
+	std::cout << "| R                    | Remove an instance from the  |" << std::endl;
+	std::cout << "|                      | ferrari mesh                 |" << std::endl;
+	std::cout << "| T                    | Remove an instance from the  |" << std::endl;
+	std::cout << "|                      | spaceship mesh               |" << std::endl;
+	std::cout << "| LEFT SHIFT           | Increase translation speed   |" << std::endl;
+	std::cout << "|                      | by 5x                        |" << std::endl;
+	std::cout << "| W or UP              | Move forward                 |" << std::endl;
+	std::cout << "| S or DOWN            | Move backward                |" << std::endl;
+	std::cout << "| D or RIGHT           | Move right                   |" << std::endl;
+	std::cout << "| A or LEFT            | Move left                    |" << std::endl;
+	std::cout << "| Right + Left Mouse   | Move up/down                 |" << std::endl;
+	std::cout << "| (Hold)               |                              |" << std::endl;
+	std::cout << "| Right Mouse (Hold)   | Rotate view                  |" << std::endl;
+	std::cout << "=======================================================" << std::endl;
+	std::cout << std::endl;
+
 }

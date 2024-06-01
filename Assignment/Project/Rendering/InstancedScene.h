@@ -2,6 +2,7 @@
 #define AVE_INSTANCED_SCENE_H
 #include "Engine/Configuration.h"
 #include "InstancedMesh.h"
+#include "Engine/Clock.h"
 
 namespace ave
 {
@@ -63,11 +64,44 @@ namespace ave
 			m_DirtyFlagWorldMatrices = true;
 		}
 
-		void ScaleMeshInstance(int meshIdx, int instanceIdx, glm::vec3 const& scaleVec)
+		void ScaleMeshInstanceOneByOne(int meshIdx)
 		{
-			m_InstancedMeshUPtrVec[meshIdx]->ScaleInstance(instanceIdx, scaleVec);
+			int idx{ m_InstancedMeshUPtrVec[meshIdx]->UpdateTimer(static_cast<float>(ave::Clock::GetInstance().GetDeltaTime())) };
+
+			auto const& currScale = m_InstancedMeshUPtrVec[meshIdx]->GetCurrentScaleValue();
+			auto const& normalizeValue = m_InstancedMeshUPtrVec[meshIdx]->GetNormalizeValue();
+			m_InstancedMeshUPtrVec[meshIdx]->ScaleInstance(idx, glm::vec3(currScale / normalizeValue, currScale / normalizeValue, currScale / normalizeValue));
+
+			m_DirtyFlagWorldMatrices = true;
 		}
 
+		void TranslateMeshInstance(int meshIdx, int instanceIdx, glm::vec3 const& translationVec)
+		{
+			m_InstancedMeshUPtrVec[meshIdx]->TranslateInstance(instanceIdx, translationVec);
+
+			m_DirtyFlagWorldMatrices = true;
+		}
+
+		void AddInstanceToMesh(int meshIdx)
+		{
+			float x{ static_cast<float>(rand() % 100 - 50) };
+			float y{ static_cast<float>(rand() % 100 - 50) };
+			float z{ static_cast<float>(rand() % 100 + 200) };
+			glm::mat4 newWorldMatrix{ glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)) };
+			newWorldMatrix = glm::rotate(newWorldMatrix, glm::radians(x), glm::vec3(1, 0, 0));
+			newWorldMatrix = glm::rotate(newWorldMatrix, glm::radians(y), glm::vec3(0, 1, 0));
+			newWorldMatrix = glm::rotate(newWorldMatrix, glm::radians(z), glm::vec3(0, 0, 1));
+			float scaleX{ (rand() % 10 + 5) / 15.f };
+			newWorldMatrix = glm::scale(newWorldMatrix, glm::vec3(scaleX, scaleX, scaleX));
+			m_InstancedMeshUPtrVec[meshIdx]->AddInstance(newWorldMatrix);
+
+			m_DirtyFlagWorldMatrices = true;
+		}
+		void RemoveInstanceFromMesh(int meshIdx, int instanceIdx)
+		{
+			m_InstancedMeshUPtrVec[meshIdx]->RemoveInstance(instanceIdx);
+			m_DirtyFlagWorldMatrices = true;
+		}
 	private:
 		std::vector<std::unique_ptr<ave::InstancedMesh<VertexStruct>>> m_InstancedMeshUPtrVec;
 

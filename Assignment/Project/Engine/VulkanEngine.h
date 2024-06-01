@@ -85,6 +85,8 @@ namespace ave
 
 		void RecreateSwapchain();
 		void DestroySwapchain();
+
+		void PrintKeyBindings();
 	};
 
 }

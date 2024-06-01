@@ -172,7 +172,7 @@ namespace vkInit
 			rasterizerStateCreateInfo.rasterizerDiscardEnable = vk::False;
 			rasterizerStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
 			rasterizerStateCreateInfo.lineWidth = 1.0f;
-			rasterizerStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
+			rasterizerStateCreateInfo.cullMode = vk::CullModeFlagBits::eNone;
 			rasterizerStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
 			rasterizerStateCreateInfo.depthBiasEnable = vk::False;
 
