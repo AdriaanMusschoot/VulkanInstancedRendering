@@ -3,7 +3,6 @@
 #include "Engine/Configuration.h"
 #include "Shader.h"
 #include "Utils/RenderStructs.h"
-#include "Rendering/Scene.h"
 #include "RenderPass.h"
 #include "functional"
 
@@ -54,22 +53,8 @@ namespace vkInit
 			commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_PipelineLayout, 0, descriptorSet, nullptr);
 
 			commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline);
-
-			if (m_SceneUPtr)
-			{
-				m_SceneUPtr->Draw(commandBuffer, m_PipelineLayout);
-			}
 		}
 		
-		void SetScene(std::unique_ptr<ave::Scene<VertexStruct>> sceneUPtr)
-		{
-			m_SceneUPtr = std::move(sceneUPtr);
-		}
-
-		ave::Scene<VertexStruct> const* const GetScene() const
-		{
-			return m_SceneUPtr.get();
-		}
 		vk::PipelineLayout const& GetPipelineLayout() const
 		{
 			return m_PipelineLayout;
@@ -79,8 +64,6 @@ namespace vkInit
 		vk::Pipeline m_Pipeline;
 
 		vk::Device m_Device;
-
-		std::unique_ptr<ave::Scene<VertexStruct>> m_SceneUPtr;
 
 		vk::PipelineLayout CreatePipelineLayout(vk::Device const& device, std::vector<vk::DescriptorSetLayout> const& descriptorSetLayout)
 		{

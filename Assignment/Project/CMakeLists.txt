@@ -51,7 +51,7 @@ set(SOURCES
     
     "Rendering/Swapchain.h"
     "Rendering/Synchronization.h"
-    "Rendering/Scene.h"
+    
 
     "Rendering/FrameBuffer.cpp"     "Rendering/FrameBuffer.h"
     "Rendering/Commands.cpp"        "Rendering/Commands.h"

@@ -6,7 +6,6 @@
 #include "Utils/Camera.h"
 #include "Pipeline/Pipeline.h"
 #include "Pipeline/RenderPass.h"
-#include "Rendering/Scene.h"
 #include "Rendering/InstancedMesh.h"
 #include "Utils/FileReader.h"
 #include "Rendering/InstancedScene.h"

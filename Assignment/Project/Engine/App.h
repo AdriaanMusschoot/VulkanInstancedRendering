@@ -3,7 +3,6 @@
 #include "Configuration.h"
 #include <GLFW/glfw3.h>
 #include "VulkanEngine.h"
-#include "Rendering/Scene.h"
 
 namespace ave
 {
