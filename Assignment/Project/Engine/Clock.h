@@ -6,13 +6,6 @@
 namespace ave
 {
 
-	//namespace clock
-	//{
-	//	double GetDeltaTime();
-	//	double GetLastTime();
-	//	void SetLastTime(double currentTime);
-	//}
-
 	template <typename T>
 	class Singleton
 	{
