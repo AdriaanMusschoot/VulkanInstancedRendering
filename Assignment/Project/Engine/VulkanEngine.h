@@ -55,10 +55,8 @@ namespace ave
 		uint32_t m_NumberOfTextures{ 10 };
 
 		std::unique_ptr<vkInit::RenderPass> m_RenderPassUPtr;
-		std::unique_ptr<vkInit::Pipeline<vkUtil::Vertex2D>> m_Pipeline2DUPtr;
 		std::unique_ptr<vkInit::Pipeline<vkUtil::Vertex3D>> m_Pipeline3DUPtr;
 
-		std::unique_ptr <ave::InstancedScene<vkUtil::Vertex2D>> m_InstancedScene2DUPtr{ nullptr };
 		std::unique_ptr <ave::InstancedScene<vkUtil::Vertex3D>> m_InstancedScene3DUPtr{ nullptr };
 
 		vk::CommandPool m_CommandPool;
@@ -77,7 +75,6 @@ namespace ave
 		void CreateDescriptorSetLayouts();
 		void CreatePipelines();
 		void SetUpRendering();
-		void Create2DScene();
 		void Create3DScene();
 
 		void PrepareFrame(uint32_t imgIdx);

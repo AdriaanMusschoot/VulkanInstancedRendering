@@ -35,9 +35,7 @@ ave::VulkanEngine::~VulkanEngine()
 	m_Device.waitIdle();	
 
 	m_RenderPassUPtr.reset();
-	m_Pipeline2DUPtr.reset();
 	m_Pipeline3DUPtr.reset();
-	m_InstancedScene2DUPtr.reset();
 	m_InstancedScene3DUPtr.reset();
 
 	m_Device.destroyCommandPool(m_CommandPool);
@@ -204,17 +202,6 @@ void ave::VulkanEngine::CreatePipelines()
 	inRenderPass.AttachmentFlags = static_cast<vkUtil::AttachmentFlags>(vkUtil::AttachmentFlags::Color | vkUtil::AttachmentFlags::Depth);
 	m_RenderPassUPtr = std::make_unique<vkInit::RenderPass>(inRenderPass);
 
-	vkInit::Pipeline<vkUtil::Vertex2D>::GraphicsPipelineInBundle specification2D{};
-	specification2D.Device = m_Device;
-	specification2D.SwapchainExtent = m_SwapchainExtent;
-	specification2D.DescriptorSetLayoutVec.emplace_back(m_DescriptorSetLayoutFrame);
-	specification2D.DescriptorSetLayoutVec.emplace_back(m_DescriptorSetLayoutMesh);
-	specification2D.VertexFilePath = "shaders/Shader2D.vert.spv";
-	specification2D.FragmentFilePath = "shaders/Shader2D.frag.spv";
-	specification2D.RenderPass = m_RenderPassUPtr->GetRenderPass();
-
-	m_Pipeline2DUPtr = std::make_unique<vkInit::Pipeline<vkUtil::Vertex2D>>(specification2D);
-
 	vkInit::Pipeline<vkUtil::Vertex3D>::GraphicsPipelineInBundle specification3D{};
 	specification3D.Device = m_Device;
 	specification3D.SwapchainExtent = m_SwapchainExtent;
@@ -254,111 +241,7 @@ void ave::VulkanEngine::SetUpRendering()
 
 	m_CameraUPtr = std::make_unique<Camera>(m_WindowPtr, glm::vec3{ 0, 0, -300 }, 20, m_SwapchainExtent.width, m_SwapchainExtent.height);
 
-	Create2DScene();
-
 	Create3DScene();
-}
-
-void ave::VulkanEngine::Create2DScene()
-{
-	using V2D = vkUtil::Vertex2D;
-	m_InstancedScene2DUPtr = std::make_unique<InstancedScene<V2D>>();
-
-	vkUtil::MeshInBundle meshIn
-	{
-		m_GraphicsQueue,
-		m_MainCommandBuffer,
-		m_Device,
-		m_PhysicalDevice
-	};
-
-	std::vector<vkUtil::Vertex2D> vertexRectVec{};
-	std::vector<uint32_t> indexRectVec{};
-	vertexRectVec.emplace_back(vkUtil::Vertex2D{ { 0.2f, 0.0f }, { 0.f, 1.f } });
-	vertexRectVec.emplace_back(vkUtil::Vertex2D{ { 0.0f, 0.0f }, { 1.f, 1.f } });
-	vertexRectVec.emplace_back(vkUtil::Vertex2D{ { 0.2f, 0.2f }, { 0.f, 0.f } });
-	vertexRectVec.emplace_back(vkUtil::Vertex2D{ { 0.0f, 0.2f }, { 1.f, 0.f } });
-	indexRectVec.emplace_back(2);
-	indexRectVec.emplace_back(1);
-	indexRectVec.emplace_back(0);
-	indexRectVec.emplace_back(1);
-	indexRectVec.emplace_back(2);
-	indexRectVec.emplace_back(3);
-
-	std::vector<glm::mat4> positionRectVec{};
-	float x = -1.f;
-	for (float y = -0.5f; y < 0.5f; y += 0.2f)
-	{
-		positionRectVec.emplace_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f)));
-	}
-
-	vkInit::TextureInBundle textureIn{};
-	textureIn.CommandBuffer = m_MainCommandBuffer;
-	textureIn.Queue = m_GraphicsQueue;
-	textureIn.Device = m_Device;
-	textureIn.PhysicalDevice = m_PhysicalDevice;
-	textureIn.DescriptorSetLayout = m_DescriptorSetLayoutMesh;
-	textureIn.DescriptorPool = m_DescriptorPoolMesh;
-
-	textureIn.FileName = "Resources/vehicle_diffuse.png";
-
-	m_InstancedScene2DUPtr->AddMesh(std::move(std::make_unique<ave::InstancedMesh<vkUtil::Vertex2D>>(meshIn, vertexRectVec, indexRectVec, positionRectVec, textureIn)));
-
-	std::vector<vkUtil::Vertex2D> vertexCircleVec{};
-	std::vector<uint32_t> indexCircleVec{};
-	constexpr double radius{ 0.1f };
-	constexpr int nrOfPoints{ 100 };
-	constexpr float centerX{ 0.1f };
-	constexpr float centerY{ -0.1f };
-
-	std::vector<vkUtil::Vertex2D> tempVertexVec;
-	tempVertexVec.reserve(nrOfPoints);
-	for (int idx{ 0 }; idx < nrOfPoints; ++idx)
-	{
-		double theta = 2.0 * 3.14 * idx / nrOfPoints;
-		vkUtil::Vertex2D vert{};
-		vert.Position.x = static_cast<float>(centerX + radius * std::cos(theta));
-		vert.Position.y = static_cast<float>(centerY + radius * std::sin(theta));
-		tempVertexVec.emplace_back(vert);
-	}
-
-	std::vector<uint32_t> tempIdxVec;
-	uint32_t vIdx{};
-	for (int idx{ 0 }; idx < tempVertexVec.size(); ++idx)
-	{
-		if (idx < tempVertexVec.size() - 1)
-		{
-			vertexCircleVec.emplace_back(tempVertexVec[idx + 1]);
-			indexCircleVec.emplace_back(vIdx);
-			++vIdx;
-			vertexCircleVec.emplace_back(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec2{ 1, 1 } });
-			indexCircleVec.emplace_back(vIdx);
-			++vIdx;
-			vertexCircleVec.emplace_back(tempVertexVec[idx]);
-			indexCircleVec.emplace_back(vIdx);
-			++vIdx;
-		}
-		else
-		{
-			vertexCircleVec.emplace_back(tempVertexVec[0]);
-			indexCircleVec.emplace_back(vIdx);
-			++vIdx;
-			vertexCircleVec.emplace_back(vkUtil::Vertex2D{ glm::vec2{ centerX, centerY }, glm::vec2{ 1, 1 } });
-			indexCircleVec.emplace_back(vIdx);
-			++vIdx;
-			vertexCircleVec.emplace_back(tempVertexVec[idx]);
-			indexCircleVec.emplace_back(vIdx);
-			++vIdx;
-		}
-	}
-
-	std::vector<glm::mat4> positionCircleVec{};
-	x = 0.8f;
-	for (float y = -0.5f; y < 0.5; y += 0.2f)
-	{
-		positionCircleVec.emplace_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f)));
-	}
-	m_InstancedScene2DUPtr->AddMesh(std::move(std::make_unique<ave::InstancedMesh<vkUtil::Vertex2D>>(meshIn, vertexCircleVec, indexCircleVec, positionCircleVec, textureIn)));
 }
 
 void ave::VulkanEngine::Create3DScene()
@@ -508,20 +391,7 @@ void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
 		pressedTThisFrame = false;
 	}
 
-
-	m_InstancedScene3DUPtr->RotateAllInstancesMesh(0, 10 * ave::Clock::GetInstance().GetDeltaTime(), glm::vec3(0, 1, 0));
-
-	m_InstancedScene3DUPtr->RotateAllInstancesMesh(1, -10 * ave::Clock::GetInstance().GetDeltaTime(), glm::vec3(0, 0, 1));
-
-	m_InstancedScene3DUPtr->ScaleMeshInstanceOneByOne(0);
-
-	m_InstancedScene3DUPtr->ScaleMeshInstanceOneByOne(1);
-
 	int idx{};
-	for (auto const& worldMatrix : m_InstancedScene2DUPtr->GetWorldMatrices())
-	{
-		swapchainFrame.WMatrixVec[idx++] = worldMatrix;
-	}
 	for (auto const& worldMatrix : m_InstancedScene3DUPtr->GetWorldMatrices())
 	{
 		swapchainFrame.WMatrixVec[idx++] = worldMatrix;
@@ -599,11 +469,7 @@ void ave::VulkanEngine::RecordDrawCommands(const vk::CommandBuffer& commandBuffe
 
 	m_RenderPassUPtr->BeginRenderPass(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent);
 	
-	m_Pipeline2DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].DescriptorSet);
-
 	std::int64_t drawnInstances{};
-
-	drawnInstances += m_InstancedScene2DUPtr->Draw(commandBuffer, m_Pipeline2DUPtr->GetPipelineLayout(), drawnInstances);
 
 	m_Pipeline3DUPtr->Record(commandBuffer, m_SwapchainFrameVec[imageIndex].Framebuffer, m_SwapchainExtent, m_SwapchainFrameVec[imageIndex].DescriptorSet);
 
