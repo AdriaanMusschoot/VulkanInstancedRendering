@@ -18,4 +18,5 @@ This first step actually took the longest, although it was probably the simplest
 
 ![Alt text](Readme/NotInstanceRendering.png)
 
-This was supposed to be a simple step. But some silly issues arose that I couldn't have foreseen. The first issue was that I was missing one third of my vertices. It took some time before I realised this made a lot of sense. When I started transforming the pipeline from 2D to 3D, I forgot to change the size value of a vertex. Thus litterly transferring only two thirds of my data to the GPU. Another issue and a way more pressing issue was that it seemed I had an inverted depth buffer.
+This was supposed to be a simple step. But some silly issues arose that I couldn't have foreseen. The first issue was that I was missing one third of my vertices. It took some time before I realised this made a lot of sense. When I started transforming the pipeline from 2D to 3D, I forgot to change the size value of a vertex. Thus litterly transferring only two thirds of my data to the GPU. 
+Another issue and a way more pressing issue was that it seemed I had an inverted depth buffer. I started looking into the depth pass and everything else related to depth to see if I messed something up.
