@@ -6,7 +6,7 @@ Welcome to this Vulkan application showcasing instanced rendering for 2D as well
 
 # Journey
 
-Let me take you on the journey I went through to get to the final result.
+Let me take you on a journey and explain some of the issues I ran into to get to the final result.
 
 ## Step 1: Rendering that first triangle!
 
