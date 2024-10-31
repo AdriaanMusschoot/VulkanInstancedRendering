@@ -10,3 +10,4 @@ Let me take you on the journey I went through to get to the final result.
 
 ## Step 1: Rendering that first triangle!
 
+![Alt text](Readme/RenderingTriangles.png)
