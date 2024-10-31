@@ -19,3 +19,10 @@ This also caused the camera movement to be incorrect.
 After going through my code multiple times, I was suggested to use renderdoc. I then found relatively quickly that the issue was in the viewport, the minDepth and maxDepth were inverted. So I was looking for the correct issue, just not in the right place. For about 2 weeks I was stuck with this inverted depth buffer, once that issue was gone I was able to finish up basic 3D rendering and using single textures for objects. However as you could see in the image above performance really took a hit when I was trying to render the same mesh a couple times. My camera issues were also fixed after inverting the inverted depth buffer.
 ## Step3: Instanced Rendering!
 ![Alt text](Readme/Thumbnail.png)
+
+The final step was the coolest one. In my approach to instanced rendering I push one giant buffer to the vertex shader, and I read from it using the gl_InstanceIndex. This approach does have some drawbacks, since I wanted to render 2D and 3D at the same time.
+It meant that I would have to do some bookkeeping on the cpu side of things. After every draw command on the cpu I would have to store the number of instances drawn there, so I could pass it along to the next drawcall as to not start the instancing from zero again.
+As an extra challenge I decided to template the pipeline so I could render 2D, 3D and any other vertex type at the same time (maybe 4D in the future). This step proved more work than anticipated as alot of other stuff also had to be templated. 
+
+# Sources
+https://www.youtube.com/playlist?list=PLn3eTxaOtL2NH5nbPHMK7gE07SqhcAjmk
