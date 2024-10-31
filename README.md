@@ -17,3 +17,5 @@ This was supposed to be a simple step. But some silly issues arose that I couldn
 This also caused the camera movement to be incorrect.
 ### Renderdoc to the rescue
 After going through my code multiple times, I was suggested to use renderdoc. I then found relatively quickly that the issue was in the viewport, the minDepth and maxDepth were inverted. So I was looking for the correct issue, just not in the right place. For about 2 weeks I was stuck with this inverted depth buffer, once that issue was gone I was able to finish up basic 3D rendering and using single textures for objects. However as you could see in the image above performance really took a hit when I was trying to render the same mesh a couple times. My camera issues were also fixed after inverting the inverted depth buffer.
+## Step3: Instanced Rendering!
+![Alt text](Readme/Overview.png)
