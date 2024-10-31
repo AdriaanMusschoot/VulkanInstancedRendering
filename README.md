@@ -18,4 +18,4 @@ Exceptions played an important role here, although they were mostly for null che
 
 ## Step 2: 3D rendering and texturing!
 
-![Alt text](Readme/NotInstancedRendering.png)
+![Alt text](Readme/NotInstanceRendering.png)
