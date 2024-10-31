@@ -263,25 +263,22 @@ void ave::VulkanEngine::Create3DScene()
 	vkUtil::ParseOBJ<V3D>("Resources/ferrari.obj", ferrariVertexVec, ferrariIndexVec, false);
 
 	std::vector<glm::mat4> ferrariPositionVec{};
-	int numRows = 2;  
-	int numCols = 2;  
-	float spacingX = 40;
-	float spacingY = 40;
-	float xStartPos = 20;
+	int numRows = 100;  
+	int numCols = 100;  
+	float spacingX = 30;
+	float spacingY = 90;
 	for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) 
 	{
 		for (int colIdx = 0; colIdx < numCols; ++colIdx)
 		{
-			glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(xStartPos + colIdx * spacingX, 0.0f, rowIdx * spacingY));
+			glm::mat4 const translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(colIdx * spacingX, 0.0f, rowIdx * spacingY));
 
-			float angle = glm::radians(float(rand() % 360));
-			glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
+			glm::mat4 const rotationMatrix = glm::rotate(glm::mat4(1.0f), 0.f, glm::vec3(0.0f, 1.0f, 0.0f));
 
-			float scale = (rand() % 5 + 5) / 10.0f;
-			glm::vec3 scaleVec = glm::vec3(scale, scale, scale);
-			glm::mat4 scalingMatrix = glm::scale(glm::mat4(1.0f), scaleVec);
+			glm::vec3 const scaleVec = glm::vec3(1.f);
+			glm::mat4 const scalingMatrix = glm::scale(glm::mat4(1.0f), scaleVec);
 
-			glm::mat4 modelMatrix = translationMatrix * rotationMatrix * scalingMatrix;
+			glm::mat4 const modelMatrix = translationMatrix * rotationMatrix * scalingMatrix;
 
 			ferrariPositionVec.emplace_back(modelMatrix);
 		}
@@ -299,33 +296,31 @@ void ave::VulkanEngine::Create3DScene()
 	m_InstancedScene3DUPtr->AddMesh(std::move(std::make_unique<ave::InstancedMesh<V3D>>(meshIn, ferrariVertexVec, ferrariIndexVec, ferrariPositionVec, textureIn)));
 
 	//////////////////////////
-	std::vector<V3D> vehicleVertexVec{};
-	std::vector<uint32_t> vehicleIndexVec{};
-
-	vkUtil::ParseOBJ<V3D>("Resources/vehicle.obj", vehicleVertexVec, vehicleIndexVec, true);
-	std::vector<glm::mat4> vehiclePositionVec{};
-
-	for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) 
-	{
-		for (int colIdx = 0; colIdx >= -numCols + 1; --colIdx)
-		{
-			glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-xStartPos + colIdx * spacingX, 0.0f, rowIdx * spacingY));
-
-			float angle = glm::radians(float(rand() % 360));
-			glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 0.0f, 1.0f));
-
-			float scale = (rand() % 5 + 5) / 10.0f;
-			glm::vec3 scaleVec = glm::vec3(scale, scale, scale);
-			glm::mat4 scalingMatrix = glm::scale(glm::mat4(1.0f), scaleVec);
-
-			glm::mat4 modelMatrix = translationMatrix * rotationMatrix * scalingMatrix;
-
-			vehiclePositionVec.emplace_back(modelMatrix);
-		}
-	}
-
-	textureIn.FileName = "Resources/vehicle_diffuse.png";
-	m_InstancedScene3DUPtr->AddMesh(std::move(std::make_unique<ave::InstancedMesh<V3D>>(meshIn, vehicleVertexVec, vehicleIndexVec, vehiclePositionVec, textureIn)));
+	//std::vector<V3D> vehicleVertexVec{};
+	//std::vector<uint32_t> vehicleIndexVec{};
+	//
+	//vkUtil::ParseOBJ<V3D>("Resources/vehicle.obj", vehicleVertexVec, vehicleIndexVec, true);
+	//std::vector<glm::mat4> vehiclePositionVec{};
+	//
+	//for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) 
+	//{
+	//	for (int colIdx = 0; colIdx >= -numCols + 1; --colIdx)
+	//	{
+	//		glm::mat4 const translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(colIdx * spacingX, 50.0f, rowIdx* spacingY));
+	//
+	//		glm::mat4 const rotationMatrix = glm::rotate(glm::mat4(1.0f), 0.f, glm::vec3(0.0f, 0.0f, 1.0f));
+	//
+	//		glm::vec3 scaleVec = glm::vec3(1.f);
+	//		glm::mat4 const scalingMatrix = glm::scale(glm::mat4(1.0f), scaleVec);
+	//
+	//		glm::mat4 const modelMatrix = translationMatrix * rotationMatrix * scalingMatrix;
+	//
+	//		vehiclePositionVec.emplace_back(modelMatrix);
+	//	}
+	//}
+	//
+	//textureIn.FileName = "Resources/vehicle_diffuse.png";
+	//m_InstancedScene3DUPtr->AddMesh(std::move(std::make_unique<ave::InstancedMesh<V3D>>(meshIn, vehicleVertexVec, vehicleIndexVec, vehiclePositionVec, textureIn)));
 }
 
 void ave::VulkanEngine::PrepareFrame(uint32_t imgIdx)
