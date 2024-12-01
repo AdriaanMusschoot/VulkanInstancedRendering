@@ -20,7 +20,7 @@ After going through my code multiple times, I was suggested to use renderdoc. I 
 ## Step3: Instanced Rendering!
 ![Alt text](Readme/Thumbnail.png)
 
-The final step was the coolest one. In my approach to instanced rendering I push one giant buffer to the vertex shader, and I read from it using the gl_InstanceIndex. This approach does have some drawbacks, As an extra challenge I decided to template the pipeline so I could render 2D, 3D and any other vertex type at the same time (maybe 4D in the future). This step proved more work than anticipated as alot of other stuff also had to be templated. It also meant that I would have to do some bookkeeping on the cpu side of things. After every draw command on the cpu I would have to store the number of instances drawn there, so I could pass it along to the next drawcall as to not start the instancing from zero again in the giant buffer.
+The final step was the coolest one. In my approach to instanced rendering I push one giant buffer to the vertex shader, and I read from it using the gl_InstanceIndex. This approach does have some drawbacks, you have to do some additional bookkeeping on the CPU. As an extra challenge I decided to template the pipeline so I could render 2D, 3D and any other vertex type at the same time (maybe 4D in the future). This step proved more work than anticipated as alot of other stuff also had to be templated. It also meant that I would have to do some bookkeeping on the cpu side of things. After every draw command on the cpu I would have to store the number of instances drawn there, so I could pass it along to the next drawcall as to not start the instancing from zero again in the giant buffer.
 
 # Sources
 https://www.youtube.com/playlist?list=PLn3eTxaOtL2NH5nbPHMK7gE07SqhcAjmk
